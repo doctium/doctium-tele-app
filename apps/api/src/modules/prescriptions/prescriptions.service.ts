@@ -1,10 +1,15 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { prisma } from '@doctium/database';
-import { JwtPayload } from '@doctium/types';
-import { CryptoSignService } from './crypto-sign.service';
-import { PdfService, RxPdfData } from './pdf.service';
-import { PharmacyService } from './pharmacy.service';
-import { CloudinaryService } from './cloudinary.service';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { prisma } from "@doctium/database";
+import { JwtPayload } from "@doctium/types";
+import { CryptoSignService } from "./crypto-sign.service";
+import { PdfService, RxPdfData } from "./pdf.service";
+import { PharmacyService } from "./pharmacy.service";
+import { CloudinaryService } from "./cloudinary.service";
 
 interface ItemInput {
   drugName: string;
@@ -24,7 +29,17 @@ interface CreateInput {
 }
 
 const fullInclude = {
-  doctor: { select: { id: true, name: true, designation: true, mobile: true, clinicName: true, image: true, signatureImage: true } },
+  doctor: {
+    select: {
+      id: true,
+      name: true,
+      designation: true,
+      mobile: true,
+      clinicName: true,
+      image: true,
+      signatureImage: true,
+    },
+  },
   user: { select: { id: true, name: true, image: true } },
   subPatient: { select: { name: true } },
   items: true,
@@ -41,28 +56,42 @@ export class PrescriptionsService {
 
   private verifyUrl(code: string): string {
     // QR resolves to the hosted public web verify page (admin-panel /verify/:code).
-    const base = process.env.PUBLIC_WEB_URL ?? `http://localhost:${process.env.ADMIN_PORT ?? 3000}`;
+    const base =
+      process.env.PUBLIC_WEB_URL ??
+      `http://localhost:${process.env.ADMIN_PORT ?? 3000}`;
     return `${base}/verify/${code}`;
   }
 
   // ── Issue ───────────────────────────────────────────────────
   async create(doctorId: string, dto: CreateInput) {
-    if (!dto.items?.length) throw new BadRequestException('At least one medication is required');
+    if (!dto.items?.length)
+      throw new BadRequestException("At least one medication is required");
 
     let userId = dto.userId;
     let subPatientId = dto.subPatientId;
-    let appointmentId = dto.appointmentId;
+    const appointmentId = dto.appointmentId;
 
     if (appointmentId) {
-      const appt = await prisma.appointment.findUnique({ where: { id: appointmentId } });
-      if (!appt) throw new NotFoundException('Appointment not found');
-      if (appt.doctorId !== doctorId) throw new ForbiddenException('Not your appointment');
+      const appt = await prisma.appointment.findUnique({
+        where: { id: appointmentId },
+      });
+      if (!appt) throw new NotFoundException("Appointment not found");
+      if (appt.doctorId !== doctorId)
+        throw new ForbiddenException("Not your appointment");
       userId = appt.userId;
       subPatientId = appt.subPatientId ?? undefined;
-      const existing = await prisma.prescription.findUnique({ where: { appointmentId } });
-      if (existing) throw new BadRequestException('A prescription already exists for this appointment');
+      const existing = await prisma.prescription.findUnique({
+        where: { appointmentId },
+      });
+      if (existing)
+        throw new BadRequestException(
+          "A prescription already exists for this appointment",
+        );
     }
-    if (!userId) throw new BadRequestException('A patient (userId or appointmentId) is required');
+    if (!userId)
+      throw new BadRequestException(
+        "A patient (userId or appointmentId) is required",
+      );
 
     // Create first so the auto-generated `code` exists, then sign and persist the signature.
     const created = await prisma.prescription.create({
@@ -71,17 +100,17 @@ export class PrescriptionsService {
         doctorId,
         userId,
         subPatientId,
-        diagnosis: dto.diagnosis ?? '',
-        notes: dto.notes ?? '',
-        signature: '',
+        diagnosis: dto.diagnosis ?? "",
+        notes: dto.notes ?? "",
+        signature: "",
         items: {
           create: dto.items.map((i) => ({
             drugName: i.drugName,
-            dosage: i.dosage ?? '',
-            frequency: i.frequency ?? '',
-            duration: i.duration ?? '',
+            dosage: i.dosage ?? "",
+            frequency: i.frequency ?? "",
+            duration: i.duration ?? "",
             refills: Number(i.refills) || 0,
-            instructions: i.instructions ?? '',
+            instructions: i.instructions ?? "",
           })),
         },
       },
@@ -92,10 +121,20 @@ export class PrescriptionsService {
       code: created.code,
       doctorId: created.doctorId,
       userId: created.userId,
-      items: created.items.map((i) => ({ drugName: i.drugName, dosage: i.dosage, frequency: i.frequency, duration: i.duration, refills: i.refills })),
+      items: created.items.map((i) => ({
+        drugName: i.drugName,
+        dosage: i.dosage,
+        frequency: i.frequency,
+        duration: i.duration,
+        refills: i.refills,
+      })),
     });
     const signature = await this.signer.sign(payload);
-    const signed = await prisma.prescription.update({ where: { id: created.id }, data: { signature }, include: fullInclude });
+    const signed = await prisma.prescription.update({
+      where: { id: created.id },
+      data: { signature },
+      include: fullInclude,
+    });
 
     // Fire the pharmacy hook (non-blocking).
     void this.pharmacy.onPrescriptionIssued({
@@ -105,7 +144,14 @@ export class PrescriptionsService {
       patientName: signed.subPatient?.name || signed.user.name,
       issuedAt: signed.signedAt.toISOString(),
       verifyUrl: this.verifyUrl(signed.code),
-      items: signed.items.map((i) => ({ drugName: i.drugName, dosage: i.dosage, frequency: i.frequency, duration: i.duration, refills: i.refills, instructions: i.instructions })),
+      items: signed.items.map((i) => ({
+        drugName: i.drugName,
+        dosage: i.dosage,
+        frequency: i.frequency,
+        duration: i.duration,
+        refills: i.refills,
+        instructions: i.instructions,
+      })),
     });
 
     // Archive the issued PDF to Cloudinary (best-effort, non-blocking).
@@ -120,16 +166,28 @@ export class PrescriptionsService {
    * otherwise verifyByCode/QR verification would report the Rx as tampered.
    */
   async resign(prescriptionId: string) {
-    const rx = await prisma.prescription.findUnique({ where: { id: prescriptionId }, include: { items: true } });
-    if (!rx) throw new NotFoundException('Prescription not found');
+    const rx = await prisma.prescription.findUnique({
+      where: { id: prescriptionId },
+      include: { items: true },
+    });
+    if (!rx) throw new NotFoundException("Prescription not found");
     const payload = this.signer.canonical({
       code: rx.code,
       doctorId: rx.doctorId,
       userId: rx.userId,
-      items: rx.items.map((i) => ({ drugName: i.drugName, dosage: i.dosage, frequency: i.frequency, duration: i.duration, refills: i.refills })),
+      items: rx.items.map((i) => ({
+        drugName: i.drugName,
+        dosage: i.dosage,
+        frequency: i.frequency,
+        duration: i.duration,
+        refills: i.refills,
+      })),
     });
     const signature = await this.signer.sign(payload);
-    const updated = await prisma.prescription.update({ where: { id: prescriptionId }, data: { signature } });
+    const updated = await prisma.prescription.update({
+      where: { id: prescriptionId },
+      data: { signature },
+    });
     // The PDF (refill counts + signature) changed — refresh the archived copy.
     void this.archive(prescriptionId);
     return updated;
@@ -139,11 +197,21 @@ export class PrescriptionsService {
   async archive(prescriptionId: string): Promise<void> {
     if (!this.cloudinary.isConfigured()) return;
     try {
-      const rx = await prisma.prescription.findUnique({ where: { id: prescriptionId }, include: fullInclude });
+      const rx = await prisma.prescription.findUnique({
+        where: { id: prescriptionId },
+        include: fullInclude,
+      });
       if (!rx) return;
       const buffer = await this.renderPdf(rx);
-      const url = await this.cloudinary.uploadPdf(buffer, `doctium/prescriptions/${rx.code}`);
-      if (url) await prisma.prescription.update({ where: { id: prescriptionId }, data: { pdfUrl: url } });
+      const url = await this.cloudinary.uploadPdf(
+        buffer,
+        `doctium/prescriptions/${rx.code}`,
+      );
+      if (url)
+        await prisma.prescription.update({
+          where: { id: prescriptionId },
+          data: { pdfUrl: url },
+        });
     } catch {
       /* archival is best-effort — on-demand generation remains the fallback */
     }
@@ -153,25 +221,40 @@ export class PrescriptionsService {
   getDoctorMine(doctorId: string) {
     return prisma.prescription.findMany({
       where: { doctorId },
-      include: { user: { select: { name: true, image: true } }, subPatient: { select: { name: true } }, items: true },
-      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { name: true, image: true } },
+        subPatient: { select: { name: true } },
+        items: true,
+      },
+      orderBy: { createdAt: "desc" },
     });
   }
 
   getUserMine(userId: string) {
     return prisma.prescription.findMany({
       where: { userId },
-      include: { doctor: { select: { name: true, image: true, designation: true } }, subPatient: { select: { name: true } }, items: true },
-      orderBy: { createdAt: 'desc' },
+      include: {
+        doctor: { select: { name: true, image: true, designation: true } },
+        subPatient: { select: { name: true } },
+        items: true,
+      },
+      orderBy: { createdAt: "desc" },
     });
   }
 
   // ── Detail (authorized) ─────────────────────────────────────
   async getById(id: string, requester: JwtPayload) {
-    const rx = await prisma.prescription.findUnique({ where: { id }, include: fullInclude });
-    if (!rx) throw new NotFoundException('Prescription not found');
-    const allowed = requester.role === 'admin' || requester.sub === rx.doctorId || requester.sub === rx.userId;
-    if (!allowed) throw new ForbiddenException('Not allowed to view this prescription');
+    const rx = await prisma.prescription.findUnique({
+      where: { id },
+      include: fullInclude,
+    });
+    if (!rx) throw new NotFoundException("Prescription not found");
+    const allowed =
+      requester.role === "admin" ||
+      requester.sub === rx.doctorId ||
+      requester.sub === rx.userId;
+    if (!allowed)
+      throw new ForbiddenException("Not allowed to view this prescription");
     return rx;
   }
 
@@ -191,7 +274,9 @@ export class PrescriptionsService {
     return this.renderPdf(rx);
   }
 
-  private renderPdf(rx: Awaited<ReturnType<PrescriptionsService['getById']>>): Promise<Buffer> {
+  private renderPdf(
+    rx: Awaited<ReturnType<PrescriptionsService["getById"]>>,
+  ): Promise<Buffer> {
     const data: RxPdfData = {
       code: rx.code,
       issuedAt: rx.signedAt,
@@ -205,7 +290,14 @@ export class PrescriptionsService {
         signatureImage: rx.doctor.signatureImage,
       },
       patient: { name: rx.user.name, forName: rx.subPatient?.name },
-      items: rx.items.map((i) => ({ drugName: i.drugName, dosage: i.dosage, frequency: i.frequency, duration: i.duration, refills: i.refills, instructions: i.instructions })),
+      items: rx.items.map((i) => ({
+        drugName: i.drugName,
+        dosage: i.dosage,
+        frequency: i.frequency,
+        duration: i.duration,
+        refills: i.refills,
+        instructions: i.instructions,
+      })),
       verifyUrl: this.verifyUrl(rx.code),
     };
     return this.pdf.build(data);
@@ -213,19 +305,28 @@ export class PrescriptionsService {
 
   // ── Public verification ─────────────────────────────────────
   async verifyByCode(code: string) {
-    const rx = await prisma.prescription.findUnique({ where: { code }, include: fullInclude });
-    if (!rx) return { valid: false as const, reason: 'not_found' as const };
+    const rx = await prisma.prescription.findUnique({
+      where: { code },
+      include: fullInclude,
+    });
+    if (!rx) return { valid: false as const, reason: "not_found" as const };
 
     const payload = this.signer.canonical({
       code: rx.code,
       doctorId: rx.doctorId,
       userId: rx.userId,
-      items: rx.items.map((i) => ({ drugName: i.drugName, dosage: i.dosage, frequency: i.frequency, duration: i.duration, refills: i.refills })),
+      items: rx.items.map((i) => ({
+        drugName: i.drugName,
+        dosage: i.dosage,
+        frequency: i.frequency,
+        duration: i.duration,
+        refills: i.refills,
+      })),
     });
     const valid = await this.signer.verify(payload, rx.signature);
     return {
       valid,
-      reason: valid ? ('ok' as const) : ('tampered' as const),
+      reason: valid ? ("ok" as const) : ("tampered" as const),
       prescription: {
         code: rx.code,
         doctorName: rx.doctor.name,
@@ -240,18 +341,26 @@ export class PrescriptionsService {
 
   // ── Pharmacy partner ────────────────────────────────────────
   async getByCode(code: string) {
-    const rx = await prisma.prescription.findUnique({ where: { code }, include: fullInclude });
-    if (!rx) throw new NotFoundException('Prescription not found');
+    const rx = await prisma.prescription.findUnique({
+      where: { code },
+      include: fullInclude,
+    });
+    if (!rx) throw new NotFoundException("Prescription not found");
     return rx;
   }
 
   async dispense(code: string, dispensedBy?: string) {
     const rx = await prisma.prescription.findUnique({ where: { code } });
-    if (!rx) throw new NotFoundException('Prescription not found');
-    if (rx.status === 'CANCELLED') throw new BadRequestException('Prescription is cancelled');
+    if (!rx) throw new NotFoundException("Prescription not found");
+    if (rx.status === "CANCELLED")
+      throw new BadRequestException("Prescription is cancelled");
     return prisma.prescription.update({
       where: { code },
-      data: { status: 'DISPENSED', dispensedAt: new Date(), dispensedBy: dispensedBy ?? 'pharmacy-partner' },
+      data: {
+        status: "DISPENSED",
+        dispensedAt: new Date(),
+        dispensedBy: dispensedBy ?? "pharmacy-partner",
+      },
     });
   }
 }

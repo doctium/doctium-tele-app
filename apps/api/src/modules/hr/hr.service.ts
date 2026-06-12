@@ -34,7 +34,7 @@ export class HrService {
     emp: T,
     canSeePay: boolean,
   ): Partial<T> {
-    const { password, ...rest } = emp;
+    const { password: _password, ...rest } = emp;
     if (!canSeePay) {
       delete (rest as EmployeeRow).salary;
       delete (rest as EmployeeRow).currency;

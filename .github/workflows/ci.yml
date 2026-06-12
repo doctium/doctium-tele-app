@@ -26,6 +26,8 @@ jobs:
       - run: npm ci
       - name: Generate Prisma client
         run: npm run db:generate
+      - name: Lint API
+        run: npm run lint
       - name: Typecheck API
         run: npm run typecheck --workspace=@doctium/api
       - name: Unit tests (API)

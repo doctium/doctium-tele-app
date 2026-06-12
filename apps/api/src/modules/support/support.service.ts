@@ -8,8 +8,6 @@ import { CloudinaryService } from "../prescriptions/cloudinary.service";
 import { SupportGateway } from "./support.gateway";
 import { SendSupportMessageDto } from "./dto/support.dto";
 
-type Sender = "USER" | "ADMIN";
-
 @Injectable()
 export class SupportService {
   constructor(

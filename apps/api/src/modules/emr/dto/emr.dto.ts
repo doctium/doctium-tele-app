@@ -1,4 +1,4 @@
-import { IsIn, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsNumber, IsOptional, IsString } from "class-validator";
 
 /**
  * EMR write payloads. These are shared by the patient (`me/*`) and doctor

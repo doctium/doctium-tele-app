@@ -9,7 +9,8 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
-    "lint": "turbo lint",
+    "lint": "eslint apps/api/src",
+    "lint:fix": "eslint apps/api/src --fix",
     "typecheck": "turbo typecheck",
     "db:generate": "turbo db:generate",
     "db:migrate": "npm run db:migrate --workspace=@doctium/database",
@@ -18,6 +19,7 @@
     "format": "prettier --write ."
   },
   "lint-staged": {
+    "apps/api/src/**/*.ts": "eslint --fix",
     "*.{ts,tsx,js,jsx,cjs,mjs,json,md,css}": "prettier --write"
   },
   "dependencies": {
@@ -25,12 +27,15 @@
     "react-dom": "19.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "prettier": "^3.2.5",
     "subset-font": "^2.5.0",
     "turbo": "^2.0.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^8.61.0"
   },
   "overrides": {
     "react": "19.1.0",
