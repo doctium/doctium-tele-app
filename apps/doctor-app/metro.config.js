@@ -14,12 +14,11 @@ const config = getDefaultConfig(projectRoot);
 config.watchFolders = [workspaceRoot];
 
 // 2. Resolve modules from the app first, then the workspace root.
+// (Hierarchical lookup stays ON so Metro can still walk up to npm-hoisted
+// transitive deps like semver; React is deduped by the root pin + overrides.)
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(workspaceRoot, "node_modules"),
 ];
-
-// 3. Don't walk up the tree past nodeModulesPaths — avoids duplicate React copies.
-config.resolver.disableHierarchicalLookup = true;
 
 module.exports = config;
