@@ -33,6 +33,12 @@ export class AuthController {
     return this.authService.loginUser(dto);
   }
 
+  /** Exchange a refresh token for a fresh access + refresh token (mobile silent refresh). */
+  @Post("refresh")
+  refresh(@Body("refreshToken") refreshToken: string) {
+    return this.authService.refresh(refreshToken ?? "");
+  }
+
   @Post("user/otp/send")
   sendOtp(@Body() dto: OtpRequestDto) {
     return this.authService.sendOtp(dto.mobile);

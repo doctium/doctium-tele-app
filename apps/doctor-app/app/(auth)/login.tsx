@@ -12,7 +12,6 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import * as SecureStore from "expo-secure-store";
 import { Input } from "../../src/components/common/Input";
 import { Button } from "../../src/components/common/Button";
 import { AnimatedPressable, Txt } from "../../src/components/ui";
@@ -52,8 +51,13 @@ export default function DoctorLoginScreen() {
         email,
         password,
       })) as { data: { accessToken: string; refreshToken: string } };
-      await SecureStore.setItemAsync("doctorAccessToken", res.data.accessToken);
-      dispatch(setTokens({ accessToken: res.data.accessToken, doctorId: "" }));
+      dispatch(
+        setTokens({
+          accessToken: res.data.accessToken,
+          refreshToken: res.data.refreshToken,
+          doctorId: "",
+        }),
+      );
       router.replace("/(app)/(dashboard)");
     } catch (e: unknown) {
       setError((e as { message?: string })?.message ?? "Invalid credentials");

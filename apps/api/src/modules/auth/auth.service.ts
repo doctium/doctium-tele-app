@@ -520,6 +520,39 @@ export class AuthService {
     return this.generateTokens(user.id, user.email ?? "", "user");
   }
 
+  /**
+   * Exchange a valid refresh token for a fresh access + refresh token (rotation).
+   * Re-verifies the principal still exists and isn't blocked — mirrors jwt.strategy
+   * so a deleted/blocked account can't keep minting access tokens.
+   */
+  async refresh(refreshToken: string): Promise<AuthTokens> {
+    let payload: JwtPayload;
+    try {
+      payload = this.jwtService.verify<JwtPayload>(refreshToken, {
+        secret: requireEnv("JWT_REFRESH_SECRET"),
+      });
+    } catch {
+      throw new UnauthorizedException("Invalid or expired refresh token");
+    }
+
+    const { sub, email, role } = payload;
+    if (role === "user") {
+      const user = await prisma.user.findUnique({ where: { id: sub } });
+      if (!user || user.isDelete || user.isBlock)
+        throw new UnauthorizedException();
+    } else if (role === "doctor") {
+      const doctor = await prisma.doctor.findUnique({ where: { id: sub } });
+      if (!doctor || doctor.isDelete || doctor.isBlock)
+        throw new UnauthorizedException();
+    } else if (role === "admin") {
+      const employee = await prisma.employee.findUnique({ where: { id: sub } });
+      if (!employee || !employee.isActive || !employee.canLogin)
+        throw new UnauthorizedException();
+    }
+
+    return this.generateTokens(sub, email ?? "", role);
+  }
+
   private generateTokens(
     sub: string,
     email: string,

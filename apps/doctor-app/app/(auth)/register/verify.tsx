@@ -11,7 +11,6 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import * as SecureStore from "expo-secure-store";
 import { Button } from "../../../src/components/common/Button";
 import { AnimatedPressable, AppHeader, Txt } from "../../../src/components/ui";
 import {
@@ -74,8 +73,13 @@ export default function DoctorRegisterVerifyScreen() {
         phoneCode,
       })) as { data: { accessToken: string; refreshToken: string } };
 
-      await SecureStore.setItemAsync("doctorAccessToken", res.data.accessToken);
-      dispatch(setTokens({ accessToken: res.data.accessToken, doctorId: "" }));
+      dispatch(
+        setTokens({
+          accessToken: res.data.accessToken,
+          refreshToken: res.data.refreshToken,
+          doctorId: "",
+        }),
+      );
       router.replace("/(app)/(dashboard)");
     } catch (e: unknown) {
       setError((e as { message?: string })?.message ?? "Verification failed");
