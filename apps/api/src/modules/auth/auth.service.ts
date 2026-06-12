@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -23,6 +24,13 @@ import { requireEnv } from "../../common/env";
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
+  /** Never log live codes in production — only as a dev convenience when no provider is wired. */
+  private get isDev(): boolean {
+    return process.env.NODE_ENV !== "production";
+  }
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly mailer: MailerProvider,
@@ -176,8 +184,10 @@ export class AuthService {
       </div>`,
     );
     // Dev convenience when SMTP isn't configured yet (mirrors sendOtp).
-    if (!this.mailer.isConfigured())
-      console.log(`Email verification code for ${email}: ${code} (${link})`);
+    if (!this.mailer.isConfigured() && this.isDev)
+      this.logger.debug(
+        `Email verification code for ${email}: ${code} (${link})`,
+      );
     return { message: "Verification email sent" };
   }
 
@@ -482,8 +492,9 @@ export class AuthService {
     await prisma.otp.deleteMany({ where: { mobile } });
     await prisma.otp.create({ data: { mobile, otp, expiresAt } });
 
-    // TODO: send OTP via SMS provider (Termii, Twilio, etc.)
-    console.log(`OTP for ${mobile}: ${otp}`);
+    await this.sms.sendSms(mobile, `Your Doctium verification code is ${otp}`);
+    // Dev convenience when no SMS provider is configured — never log codes in production.
+    if (this.isDev) this.logger.debug(`OTP for ${mobile}: ${otp}`);
     return { message: "OTP sent successfully" };
   }
 
