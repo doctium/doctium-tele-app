@@ -28,6 +28,8 @@ jobs:
         run: npm run db:generate
       - name: Lint API
         run: npm run lint
+      - name: Lint apps (admin + mobile — warnings allowed, gates new errors)
+        run: npm run lint:apps
       - name: Typecheck API
         run: npm run typecheck --workspace=@doctium/api
       - name: Unit tests (API)

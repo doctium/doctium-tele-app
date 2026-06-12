@@ -11,6 +11,7 @@
     "dev": "turbo dev",
     "lint": "eslint apps/api/src",
     "lint:fix": "eslint apps/api/src --fix",
+    "lint:apps": "eslint apps/admin-panel apps/user-app apps/doctor-app",
     "typecheck": "turbo typecheck",
     "db:generate": "turbo db:generate",
     "db:migrate": "npm run db:migrate --workspace=@doctium/database",
@@ -28,7 +29,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@next/eslint-plugin-next": "^15.5.19",
     "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "prettier": "^3.2.5",
