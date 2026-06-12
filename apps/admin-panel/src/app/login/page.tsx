@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ShieldCheck, ArrowRight } from "lucide-react";
 import { apiClient } from "@/lib/api";
-import { setToken } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,10 +24,8 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const res = (await apiClient.post("/auth/admin/login", form)) as {
-        data: { accessToken: string };
-      };
-      setToken(res.data.accessToken);
+      // The API sets an httpOnly session cookie on success; nothing to store here.
+      await apiClient.post("/auth/admin/login", form);
       router.push("/dashboard");
     } catch (e: unknown) {
       setError((e as { message?: string })?.message ?? "Invalid credentials");

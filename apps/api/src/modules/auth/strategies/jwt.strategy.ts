@@ -1,15 +1,25 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
+import type { Request } from "express";
 import { JwtPayload, ALL_PERMISSIONS } from "@doctium/types";
 import { prisma } from "@doctium/database";
 import { requireEnv } from "../../../common/env";
+import { ADMIN_COOKIE, parseCookies } from "../../../common/cookie.util";
+
+/** Admin browser sends the JWT as an httpOnly cookie; mobile sends a Bearer header. */
+const cookieExtractor = (req: Request): string | null => {
+  return parseCookies(req?.headers?.cookie)[ADMIN_COOKIE] ?? null;
+};
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        cookieExtractor,
+      ]),
       ignoreExpiration: false,
       secretOrKey: requireEnv("JWT_SECRET"),
     });

@@ -19,7 +19,7 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { clearToken } from "@/lib/auth";
+import { logout as adminLogout } from "@/lib/auth";
 import { useAdminAuth } from "@/lib/auth-context";
 
 interface NavChild {
@@ -387,8 +387,8 @@ export function Sidebar() {
     setCollapsed(false);
   };
 
-  const handleLogout = () => {
-    clearToken();
+  const handleLogout = async () => {
+    await adminLogout();
     router.push("/login");
   };
 

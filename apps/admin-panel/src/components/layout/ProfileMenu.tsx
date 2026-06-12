@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/lib/auth-context";
-import { clearToken } from "@/lib/auth";
+import { logout as adminLogout } from "@/lib/auth";
 import { useTheme, type ThemeMode } from "@/lib/theme-context";
 
 const THEME_OPTIONS: { mode: ThemeMode; icon: typeof Sun; label: string }[] = [
@@ -40,8 +40,8 @@ export function ProfileMenu() {
     setOpen(false);
     router.push(path);
   };
-  const logout = () => {
-    clearToken();
+  const logout = async () => {
+    await adminLogout();
     router.push("/login");
   };
 

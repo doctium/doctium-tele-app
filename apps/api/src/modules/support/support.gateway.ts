@@ -5,6 +5,7 @@ import {
 } from "@nestjs/websockets";
 import { JwtService } from "@nestjs/jwt";
 import { Server, Socket } from "socket.io";
+import { ADMIN_COOKIE, parseCookies } from "../../common/cookie.util";
 
 /**
  * Live delivery for the patient ↔ admin support chat.
@@ -12,7 +13,10 @@ import { Server, Socket } from "socket.io";
  * REST handlers persist the message (and upload attachments), then call the
  * broadcast helpers here so connected clients update in real time.
  */
-@WebSocketGateway({ cors: { origin: "*" }, namespace: "support" })
+@WebSocketGateway({
+  cors: { origin: true, credentials: true },
+  namespace: "support",
+})
 export class SupportGateway implements OnGatewayConnection {
   @WebSocketServer() server: Server;
 
@@ -22,7 +26,10 @@ export class SupportGateway implements OnGatewayConnection {
     try {
       const token =
         (client.handshake.auth?.token as string) ||
-        (client.handshake.query?.token as string);
+        (client.handshake.query?.token as string) ||
+        // Admin browser authenticates the socket with its httpOnly session cookie.
+        parseCookies(client.handshake.headers?.cookie)[ADMIN_COOKIE] ||
+        "";
       const payload = this.jwt.verify(token, {
         secret: process.env.JWT_SECRET,
       }) as {

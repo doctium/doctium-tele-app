@@ -88,10 +88,8 @@ const API_BASE =
 
 async function downloadFhir(userId: string, name: string) {
   try {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("adminToken") : null;
     const res = await fetch(`${API_BASE}/admin/emr/patient/${userId}/fhir`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: "include", // send the httpOnly admin session cookie
     });
     if (!res.ok) throw new Error();
     const body = await res.json();

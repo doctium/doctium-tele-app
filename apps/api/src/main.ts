@@ -36,10 +36,13 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   app.enableCors({
+    // Credentialed requests (the admin's httpOnly cookie) cannot use "*". In prod
+    // restrict to known origins; in dev reflect the requesting origin. Native mobile
+    // apps don't send an Origin header, so this doesn't affect them.
     origin:
       process.env.NODE_ENV === "production"
         ? ["https://admin.doctium.com", "https://doctium.com"]
-        : "*",
+        : true,
     credentials: true,
   });
 

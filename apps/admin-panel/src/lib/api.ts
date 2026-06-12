@@ -7,14 +7,10 @@ const API_URL =
 export const apiClient = axios.create({
   baseURL: API_URL,
   timeout: 30000,
+  // Send the httpOnly session cookie with every request. The JWT is no longer
+  // kept in localStorage (so an XSS payload can't read it).
+  withCredentials: true,
   headers: { "Content-Type": "application/json" },
-});
-
-apiClient.interceptors.request.use((config) => {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("adminToken") : null;
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
 });
 
 /** Pull a human-readable message out of the API's { statusCode, message, error } error body. */
@@ -34,17 +30,15 @@ apiClient.interceptors.response.use(
     const onLogin =
       typeof window !== "undefined" &&
       window.location.pathname.includes("/login");
-    const hadSession =
-      typeof window !== "undefined" && !!localStorage.getItem("adminToken");
 
-    if (status === 401 && hadSession) {
-      // An authenticated session went stale — surface it and bounce to login.
-      localStorage.removeItem("adminToken");
-      toast.error("Your session expired. Please sign in again.");
-      if (!onLogin) window.location.href = "/login";
-    } else if (status !== 401 || !onLogin) {
-      // Surface every other failure. (A 401 on the login screen is just bad
-      // credentials — the login form shows that inline, so don't double-toast.)
+    if (status === 401) {
+      // No/expired session. On the login screen a 401 is just bad credentials
+      // (the form shows that inline); elsewhere, surface it and bounce to login.
+      if (!onLogin && typeof window !== "undefined") {
+        toast.error("Your session expired. Please sign in again.");
+        window.location.href = "/login";
+      }
+    } else {
       toast.error(errorMessage(err));
     }
 

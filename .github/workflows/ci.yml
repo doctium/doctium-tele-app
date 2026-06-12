@@ -91,6 +91,8 @@ jobs:
         run: node scripts/test-money-kobo.cjs
       - name: Run recording lifecycle integration test
         run: node scripts/test-recording.cjs
+      - name: Run admin cookie-auth integration test
+        run: node scripts/test-admin-cookie-auth.cjs
       - name: API logs on failure
         if: failure()
         run: cat api.log || true

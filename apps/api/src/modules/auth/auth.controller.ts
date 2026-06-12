@@ -3,6 +3,7 @@ import { ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import type { Response } from "express";
 import { AuthService } from "./auth.service";
+import { ADMIN_COOKIE, adminCookieOptions } from "../../common/cookie.util";
 import { renderEmailVerifiedPage } from "./email-verified.page";
 import {
   LoginDto,
@@ -85,7 +86,20 @@ export class AuthController {
   }
 
   @Post("admin/login")
-  loginAdmin(@Body() dto: LoginDto) {
-    return this.authService.loginAdmin(dto);
+  async loginAdmin(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const tokens = await this.authService.loginAdmin(dto);
+    // httpOnly session cookie for the admin browser (not readable by XSS). The
+    // tokens are still returned in the body for non-browser/programmatic clients.
+    res.cookie(ADMIN_COOKIE, tokens.accessToken, adminCookieOptions());
+    return tokens;
+  }
+
+  @Post("admin/logout")
+  logoutAdmin(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie(ADMIN_COOKIE, { path: "/" });
+    return { ok: true };
   }
 }

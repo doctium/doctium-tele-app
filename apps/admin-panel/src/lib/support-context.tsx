@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { CalendarPlus, X } from "lucide-react";
 import { io, type Socket } from "socket.io-client";
 import { apiClient } from "./api";
+import { useAdminAuth } from "./auth-context";
 import { formatMoney } from "./money";
 import { toast } from "./toast";
 
@@ -112,6 +113,7 @@ export function SupportProvider({ children }: { children: React.ReactNode }) {
   const listeners = useRef<Set<Listener>>(new Set());
   const socketRef = useRef<Socket | null>(null);
   const router = useRouter();
+  const { me } = useAdminAuth();
 
   const refreshUnread = useCallback(() => {
     (
@@ -131,17 +133,16 @@ export function SupportProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("adminToken") : null;
-    if (!token) return;
+    if (!me) return; // only connect once the admin session is established
 
     refreshUnread();
 
     const api =
       process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1";
     const origin = api.replace(/\/api\/v1\/?$/, "");
+    // Authenticate the socket with the httpOnly admin cookie (no JS-readable token).
     const socket = io(`${origin}/support`, {
-      auth: { token },
+      withCredentials: true,
       transports: ["websocket"],
     });
     socketRef.current = socket;
@@ -174,7 +175,7 @@ export function SupportProvider({ children }: { children: React.ReactNode }) {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [refreshUnread]);
+  }, [me, refreshUnread]);
 
   const checkItOut = () => {
     if (!bookingAlert) return;

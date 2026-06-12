@@ -59,12 +59,10 @@ const STATUS_LABEL: Record<Rx["status"], string> = {
 
 async function openPdf(id: string) {
   try {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("adminToken") : null;
     const base =
       process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1";
     const res = await fetch(`${base}/prescriptions/${id}/pdf`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: "include", // send the httpOnly admin session cookie
     });
     if (!res.ok) throw new Error("Could not load PDF");
     const url = URL.createObjectURL(await res.blob());
