@@ -1,0 +1,4 @@
+{
+  "extends": "@doctium/tsconfig/react-native.json",
+  "include": ["src"]
+}

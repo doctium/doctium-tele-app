@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@doctium/brand": "*",
+    "@doctium/mobile-ui": "*",
     "@doctium/types": "*",
     "@doctium/validation": "*",
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
