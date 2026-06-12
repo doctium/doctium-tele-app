@@ -4,8 +4,12 @@ import { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
 import { ResponseInterceptor } from "./common/interceptors/response.interceptor";
+import { assertRequiredSecrets } from "./common/env";
 
 async function bootstrap() {
+  // Fail fast on a misconfigured deploy rather than booting with forgeable tokens.
+  assertRequiredSecrets();
+
   // rawBody lets the Paystack webhook verify its HMAC signature against the exact bytes.
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,

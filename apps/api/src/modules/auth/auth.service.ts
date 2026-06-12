@@ -19,6 +19,7 @@ import {
 } from "./dto";
 import { MailerProvider } from "../notifications/channels/mailer.provider";
 import { SmsProvider } from "../notifications/channels/sms.provider";
+import { requireEnv } from "../../common/env";
 
 @Injectable()
 export class AuthService {
@@ -495,7 +496,7 @@ export class AuthService {
     return {
       accessToken: this.jwtService.sign(payload),
       refreshToken: this.jwtService.sign(payload, {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret: requireEnv("JWT_REFRESH_SECRET"),
         expiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? "30d",
       }),
     };

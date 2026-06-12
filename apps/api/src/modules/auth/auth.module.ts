@@ -7,12 +7,13 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
 import { prisma } from "@doctium/database";
 import { MailerProvider } from "../notifications/channels/mailer.provider";
 import { SmsProvider } from "../notifications/channels/sms.provider";
+import { requireEnv } from "../../common/env";
 
 @Module({
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET,
+      secret: requireEnv("JWT_SECRET"),
       signOptions: { expiresIn: process.env.JWT_EXPIRES_IN ?? "7d" },
     }),
   ],

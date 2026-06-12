@@ -35,25 +35,6 @@ export class PaymentsService {
     );
   }
 
-  /** Legacy/dev direct credit. Real funding goes through Paystack (initTopup → webhook). */
-  async topUpWallet(userId: string, amount: number) {
-    if (amount <= 0) throw new BadRequestException("Amount must be positive");
-    const wallet = await prisma.userWallet.upsert({
-      where: { userId },
-      update: { balance: { increment: amount } },
-      create: { userId, balance: amount },
-    });
-    await prisma.userWalletHistory.create({
-      data: {
-        walletId: wallet.id,
-        amount,
-        type: "DEPOSIT",
-        description: "Wallet top-up",
-      },
-    });
-    return wallet;
-  }
-
   // ── Paystack card top-up ────────────────────────────────────
   async initTopup(userId: string, amount: number) {
     // Setting is in major naira; amounts are kobo — convert before comparing.
