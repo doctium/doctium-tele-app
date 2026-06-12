@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Fast, dependency-light gate: types + unit tests. Must pass for every push/PR.
+  quality:
+    name: Typecheck + unit tests
+    runs-on: ubuntu-latest
+    env:
+      # prisma generate needs DATABASE_URL defined (it does not connect here).
+      DATABASE_URL: postgresql://user:pass@localhost:5432/placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Generate Prisma client
+        run: npm run db:generate
+      - name: Typecheck API
+        run: npm run typecheck --workspace=@doctium/api
+      - name: Unit tests (API)
+        run: npm test --workspace=@doctium/api
+
+  # Heavier gate: run the integration scripts against a real Postgres + booted API.
+  integration:
+    name: Integration (money flow)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: doctium
+          POSTGRES_PASSWORD: doctium
+          POSTGRES_DB: doctium_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U doctium"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://doctium:doctium@localhost:5432/doctium_test
+      JWT_SECRET: ci-test-jwt-secret
+      JWT_REFRESH_SECRET: ci-test-refresh-secret
+      NODE_ENV: test
+      PORT: 3001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Generate Prisma client
+        run: npm run db:generate
+      - name: Apply migrations
+        # Call prisma directly (the db:migrate:prod script wraps it in dotenv -e .env,
+        # which doesn't exist in CI — DATABASE_URL comes from the job env instead).
+        run: npx prisma migrate deploy --schema packages/database/prisma/schema.prisma
+      - name: Seed test data
+        run: |
+          node scripts/seed-rx-test.cjs   # rxdoc doctor + patient 08000000002
+          node scripts/seed-kyc.cjs       # verify the doctor so it is bookable
+      - name: Start API
+        run: |
+          npm run dev --workspace=@doctium/api > api.log 2>&1 &
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3001/api/v1/health/ready > /dev/null; then
+              echo "API ready"; exit 0
+            fi
+            sleep 2
+          done
+          echo "API failed to become ready"; cat api.log; exit 1
+      - name: Run money-flow integration test
+        run: node scripts/test-money-kobo.cjs
+      - name: API logs on failure
+        if: failure()
+        run: cat api.log || true
