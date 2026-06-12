@@ -43,6 +43,10 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // Run provider shutdown hooks (e.g. Prisma $disconnect) on SIGTERM/SIGINT so
+  // rolling deploys drain cleanly instead of leaking DB connections.
+  app.enableShutdownHooks();
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle("Doctium API")
     .setDescription("Doctium telemedicine platform API")

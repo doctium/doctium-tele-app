@@ -29,6 +29,7 @@ import { AnalyticsModule } from "./modules/analytics/analytics.module";
 import { SatisfactionModule } from "./modules/satisfaction/satisfaction.module";
 import { CareProgramsModule } from "./modules/care-programs/care-programs.module";
 import { TriageModule } from "./modules/triage/triage.module";
+import { HealthModule } from "./modules/health/health.module";
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { TriageModule } from "./modules/triage/triage.module";
     SatisfactionModule,
     CareProgramsModule,
     TriageModule,
+    HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
