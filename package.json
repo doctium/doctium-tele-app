@@ -13,13 +13,20 @@
     "typecheck": "turbo typecheck",
     "db:generate": "turbo db:generate",
     "db:migrate": "npm run db:migrate --workspace=@doctium/database",
-    "db:studio": "npm run db:studio --workspace=@doctium/database"
+    "db:studio": "npm run db:studio --workspace=@doctium/database",
+    "prepare": "husky",
+    "format": "prettier --write ."
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,cjs,mjs,json,md,css}": "prettier --write"
   },
   "dependencies": {
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.2.5",
     "subset-font": "^2.5.0",
     "turbo": "^2.0.0",

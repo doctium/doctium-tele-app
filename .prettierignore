@@ -1,0 +1,10 @@
+node_modules
+dist
+.next
+.expo
+.turbo
+coverage
+package-lock.json
+**/migrations/**
+**/*.hbc
+apps/*/dist
