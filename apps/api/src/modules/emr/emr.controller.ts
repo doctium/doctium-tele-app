@@ -18,6 +18,15 @@ import { JwtPayload } from "@doctium/types";
 import { EmrService } from "./emr.service";
 import { FhirService } from "./fhir.service";
 import { ScribeService } from "./scribe.service";
+import {
+  CreateAllergyDto,
+  CreateConditionDto,
+  CreateImmunizationDto,
+  CreateMedicalFileDto,
+  CreateSurgeryDto,
+  UpdateHealthProfileDto,
+  UpsertClinicalNoteDto,
+} from "./dto/emr.dto";
 
 @ApiTags("EMR")
 @ApiBearerAuth()
@@ -63,13 +72,9 @@ export class EmrController {
   @Put("me/profile")
   updateProfile(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: Record<string, unknown>,
+    @Body() dto: UpdateHealthProfileDto,
   ) {
-    return this.emr.upsertProfile(
-      user.sub,
-      dto,
-      dto.subPatientId as string | undefined,
-    );
+    return this.emr.upsertProfile(user.sub, { ...dto }, dto.subPatientId);
   }
 
   @UseGuards(RolesGuard)
@@ -77,37 +82,35 @@ export class EmrController {
   @Post("me/conditions")
   addCondition(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: Record<string, unknown>,
+    @Body() dto: CreateConditionDto,
   ) {
-    return this.emr.addCondition(user.sub, dto, {
-      subPatientId: dto.subPatientId as string | undefined,
-    });
+    return this.emr.addCondition(
+      user.sub,
+      { ...dto },
+      {
+        subPatientId: dto.subPatientId,
+      },
+    );
   }
 
   @UseGuards(RolesGuard)
   @Roles("user")
   @Post("me/allergies")
-  addAllergy(
-    @CurrentUser() user: JwtPayload,
-    @Body() dto: Record<string, unknown>,
-  ) {
-    return this.emr.addAllergy(user.sub, dto, {
-      subPatientId: dto.subPatientId as string | undefined,
-    });
+  addAllergy(@CurrentUser() user: JwtPayload, @Body() dto: CreateAllergyDto) {
+    return this.emr.addAllergy(
+      user.sub,
+      { ...dto },
+      {
+        subPatientId: dto.subPatientId,
+      },
+    );
   }
 
   @UseGuards(RolesGuard)
   @Roles("user")
   @Post("me/surgeries")
-  addSurgery(
-    @CurrentUser() user: JwtPayload,
-    @Body() dto: Record<string, unknown>,
-  ) {
-    return this.emr.addSurgery(
-      user.sub,
-      dto,
-      dto.subPatientId as string | undefined,
-    );
+  addSurgery(@CurrentUser() user: JwtPayload, @Body() dto: CreateSurgeryDto) {
+    return this.emr.addSurgery(user.sub, { ...dto }, dto.subPatientId);
   }
 
   @UseGuards(RolesGuard)
@@ -115,13 +118,9 @@ export class EmrController {
   @Post("me/immunizations")
   addImmunization(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: Record<string, unknown>,
+    @Body() dto: CreateImmunizationDto,
   ) {
-    return this.emr.addImmunization(
-      user.sub,
-      dto,
-      dto.subPatientId as string | undefined,
-    );
+    return this.emr.addImmunization(user.sub, { ...dto }, dto.subPatientId);
   }
 
   @UseGuards(RolesGuard)
@@ -140,13 +139,17 @@ export class EmrController {
   @Post("me/files")
   addMyFile(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: Record<string, unknown>,
+    @Body() dto: CreateMedicalFileDto,
   ) {
-    return this.emr.addFile(user.sub, dto, {
-      by: "PATIENT",
-      id: user.sub,
-      subPatientId: dto.subPatientId as string | undefined,
-    });
+    return this.emr.addFile(
+      user.sub,
+      { ...dto },
+      {
+        by: "PATIENT",
+        id: user.sub,
+        subPatientId: dto.subPatientId,
+      },
+    );
   }
 
   @UseGuards(RolesGuard)
@@ -186,12 +189,16 @@ export class EmrController {
   docAddCondition(
     @CurrentUser() doctor: JwtPayload,
     @Param("userId") userId: string,
-    @Body() dto: Record<string, unknown>,
+    @Body() dto: CreateConditionDto,
   ) {
-    return this.emr.addCondition(userId, dto, {
-      doctorId: doctor.sub,
-      subPatientId: dto.subPatientId as string | undefined,
-    });
+    return this.emr.addCondition(
+      userId,
+      { ...dto },
+      {
+        doctorId: doctor.sub,
+        subPatientId: dto.subPatientId,
+      },
+    );
   }
 
   @UseGuards(RolesGuard)
@@ -200,12 +207,16 @@ export class EmrController {
   docAddAllergy(
     @CurrentUser() doctor: JwtPayload,
     @Param("userId") userId: string,
-    @Body() dto: Record<string, unknown>,
+    @Body() dto: CreateAllergyDto,
   ) {
-    return this.emr.addAllergy(userId, dto, {
-      doctorId: doctor.sub,
-      subPatientId: dto.subPatientId as string | undefined,
-    });
+    return this.emr.addAllergy(
+      userId,
+      { ...dto },
+      {
+        doctorId: doctor.sub,
+        subPatientId: dto.subPatientId,
+      },
+    );
   }
 
   @UseGuards(RolesGuard)
@@ -214,13 +225,17 @@ export class EmrController {
   docAddFile(
     @CurrentUser() doctor: JwtPayload,
     @Param("userId") userId: string,
-    @Body() dto: Record<string, unknown>,
+    @Body() dto: CreateMedicalFileDto,
   ) {
-    return this.emr.addFile(userId, dto, {
-      by: "DOCTOR",
-      id: doctor.sub,
-      subPatientId: dto.subPatientId as string | undefined,
-    });
+    return this.emr.addFile(
+      userId,
+      { ...dto },
+      {
+        by: "DOCTOR",
+        id: doctor.sub,
+        subPatientId: dto.subPatientId,
+      },
+    );
   }
 
   // ─── SOAP clinical notes ─────────────────────────────────
@@ -229,9 +244,9 @@ export class EmrController {
   @Post("notes")
   upsertNote(
     @CurrentUser() doctor: JwtPayload,
-    @Body() dto: Record<string, unknown>,
+    @Body() dto: UpsertClinicalNoteDto,
   ) {
-    return this.emr.upsertNote(doctor.sub, dto);
+    return this.emr.upsertNote(doctor.sub, { ...dto });
   }
 
   /** Scribe: AI-draft a SOAP note from the consult chat or a dictation. Returns a draft for review — never saves SOAP text. */

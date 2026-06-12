@@ -8,8 +8,9 @@ import {
 import { Cron } from "@nestjs/schedule";
 import * as crypto from "crypto";
 import { prisma, AppointmentStatus } from "@doctium/database";
-import { PricingService, AppointmentMode } from "./pricing.service";
+import { PricingService } from "./pricing.service";
 import { EntitlementsService } from "../subscriptions/entitlements.service";
+import { BookAppointmentDto } from "./dto/book-appointment.dto";
 import { FollowUpsService } from "./follow-ups.service";
 import { SupportGateway } from "../support/support.gateway";
 import { ReferralBonusService } from "../referral-bonus/referral-bonus.service";
@@ -55,11 +56,11 @@ export class AppointmentsService {
     return row?.value || fallback;
   }
 
-  async bookAppointment(userId: string, dto: Record<string, unknown>) {
+  async bookAppointment(userId: string, dto: BookAppointmentDto) {
     const {
       doctorId,
-      date,
-      time,
+      date = "",
+      time = "",
       serviceId,
       subPatientId,
       type,
@@ -68,19 +69,7 @@ export class AppointmentsService {
       couponCode,
       details,
       referralId,
-    } = dto as {
-      doctorId: string;
-      date: string;
-      time: string;
-      serviceId?: string;
-      subPatientId?: string;
-      type: "ONLINE" | "CLINIC";
-      mode?: AppointmentMode;
-      paymentMethod?: "WALLET" | "PAYSTACK";
-      couponCode?: string;
-      details?: string;
-      referralId?: string;
-    };
+    } = dto;
 
     const doctor = await prisma.doctor.findUnique({ where: { id: doctorId } });
     if (!doctor) throw new NotFoundException("Doctor not found");
