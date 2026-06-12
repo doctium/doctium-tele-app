@@ -30,6 +30,7 @@ import { SatisfactionModule } from "./modules/satisfaction/satisfaction.module";
 import { CareProgramsModule } from "./modules/care-programs/care-programs.module";
 import { TriageModule } from "./modules/triage/triage.module";
 import { HealthModule } from "./modules/health/health.module";
+import { RecordingModule } from "./modules/recording/recording.module";
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { HealthModule } from "./modules/health/health.module";
     CareProgramsModule,
     TriageModule,
     HealthModule,
+    RecordingModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

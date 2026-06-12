@@ -29,6 +29,7 @@ import { KycService } from "../kyc/kyc.service";
 import { AuditService } from "../hr/audit.service";
 import { AppointmentRemindersService } from "../appointments/appointment-reminders.service";
 import { AppointmentsService } from "../appointments/appointments.service";
+import { RecordingService } from "../recording/recording.service";
 import { FollowUpsService } from "../appointments/follow-ups.service";
 import { ReferralsService } from "../referrals/referrals.service";
 import { EmrService } from "../emr/emr.service";
@@ -53,6 +54,7 @@ export class AdminController {
     private readonly kyc: KycService,
     private readonly audit: AuditService,
     private readonly appointmentsSvc: AppointmentsService,
+    private readonly recordingSvc: RecordingService,
     private readonly reminders: AppointmentRemindersService,
     private readonly followUps: FollowUpsService,
     private readonly referralsSvc: ReferralsService,
@@ -268,7 +270,7 @@ export class AdminController {
     @Query("page") page = 1,
     @Query("limit") limit = 20,
   ) {
-    return this.appointmentsSvc.adminListRecordings({
+    return this.recordingSvc.adminListRecordings({
       status,
       retention,
       search,
@@ -280,7 +282,7 @@ export class AdminController {
   @Permissions("appointments.view")
   @Get("recordings/:appointmentId")
   recordingDetail(@Param("appointmentId") appointmentId: string) {
-    return this.appointmentsSvc.adminGetRecording(appointmentId);
+    return this.recordingSvc.adminGetRecording(appointmentId);
   }
 
   @Permissions("appointments.manage_recordings")
@@ -290,7 +292,7 @@ export class AdminController {
     @CurrentUser() admin: JwtPayload,
     @Body() body: Record<string, unknown>,
   ) {
-    return this.appointmentsSvc.registerRecordingAssets(
+    return this.recordingSvc.registerRecordingAssets(
       appointmentId,
       body,
       admin,
@@ -303,16 +305,13 @@ export class AdminController {
     @Param("assetId") assetId: string,
     @Body() body: Record<string, unknown>,
   ) {
-    return this.appointmentsSvc.adminUpdateRecordingAssetRetention(
-      assetId,
-      body,
-    );
+    return this.recordingSvc.adminUpdateRecordingAssetRetention(assetId, body);
   }
 
   @Permissions("appointments.manage_recordings")
   @Post("recordings/run-retention")
   runRecordingRetention() {
-    return this.appointmentsSvc.runRecordingRetention();
+    return this.recordingSvc.runRecordingRetention();
   }
 
   @Permissions("appointments.view")
@@ -323,7 +322,7 @@ export class AdminController {
     @Query("page") page = 1,
     @Query("limit") limit = 20,
   ) {
-    return this.appointmentsSvc.adminListRecordingRequests({
+    return this.recordingSvc.adminListRecordingRequests({
       status,
       type,
       page: +page,
@@ -338,7 +337,7 @@ export class AdminController {
     @CurrentUser() admin: JwtPayload,
     @Body() body: Record<string, unknown>,
   ) {
-    return this.appointmentsSvc.adminDecideRecordingRequest(
+    return this.recordingSvc.adminDecideRecordingRequest(
       requestId,
       admin,
       body,

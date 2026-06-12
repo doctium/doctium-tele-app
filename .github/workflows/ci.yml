@@ -72,6 +72,7 @@ jobs:
         run: npx prisma migrate deploy --schema packages/database/prisma/schema.prisma
       - name: Seed test data
         run: |
+          node scripts/seed-admin.cjs     # admin@doctium.com (recording test logs in as admin)
           node scripts/seed-rx-test.cjs   # rxdoc doctor + patient 08000000002
           node scripts/seed-kyc.cjs       # verify the doctor so it is bookable
       - name: Start API
@@ -86,6 +87,8 @@ jobs:
           echo "API failed to become ready"; cat api.log; exit 1
       - name: Run money-flow integration test
         run: node scripts/test-money-kobo.cjs
+      - name: Run recording lifecycle integration test
+        run: node scripts/test-recording.cjs
       - name: API logs on failure
         if: failure()
         run: cat api.log || true

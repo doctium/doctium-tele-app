@@ -1,12 +1,18 @@
-import { BadRequestException, Controller, Headers, Post, Req } from "@nestjs/common";
+import {
+  BadRequestException,
+  Controller,
+  Headers,
+  Post,
+  Req,
+} from "@nestjs/common";
 import { ApiExcludeEndpoint } from "@nestjs/swagger";
 import * as crypto from "crypto";
 import { Request } from "express";
-import { AppointmentsService } from "./appointments.service";
+import { RecordingService } from "./recording.service";
 
 @Controller("recording")
 export class RecordingWebhookController {
-  constructor(private readonly appointments: AppointmentsService) {}
+  constructor(private readonly recording: RecordingService) {}
 
   @ApiExcludeEndpoint()
   @Post("assets/callback")
@@ -15,13 +21,19 @@ export class RecordingWebhookController {
     @Headers("x-doctium-recording-signature") signature?: string,
   ) {
     const secret = process.env.RECORDING_WEBHOOK_SECRET;
-    if (!secret) throw new BadRequestException("Recording webhook is not configured");
+    if (!secret)
+      throw new BadRequestException("Recording webhook is not configured");
 
     if (!req.rawBody) {
-      throw new BadRequestException("Raw request body is required for webhook verification");
+      throw new BadRequestException(
+        "Raw request body is required for webhook verification",
+      );
     }
     const raw = req.rawBody;
-    const expected = crypto.createHmac("sha256", secret).update(raw).digest("hex");
+    const expected = crypto
+      .createHmac("sha256", secret)
+      .update(raw)
+      .digest("hex");
     if (
       !signature ||
       signature.length !== expected.length ||
@@ -31,15 +43,22 @@ export class RecordingWebhookController {
     }
 
     const appointmentId = String(
-      req.body.appointmentId ?? req.body.AppointmentId ?? req.body.appointment_id ?? "",
+      req.body.appointmentId ??
+        req.body.AppointmentId ??
+        req.body.appointment_id ??
+        "",
     );
-    if (!appointmentId) throw new BadRequestException("appointmentId is required");
+    if (!appointmentId)
+      throw new BadRequestException("appointmentId is required");
 
-    return this.appointments.registerRecordingAssets(appointmentId, {
+    return this.recording.registerRecordingAssets(appointmentId, {
       taskId: typeof req.body.taskId === "string" ? req.body.taskId : undefined,
-      provider: typeof req.body.provider === "string" ? req.body.provider : "ZEGO",
+      provider:
+        typeof req.body.provider === "string" ? req.body.provider : "ZEGO",
       storageVendor:
-        typeof req.body.storageVendor === "string" ? req.body.storageVendor : undefined,
+        typeof req.body.storageVendor === "string"
+          ? req.body.storageVendor
+          : undefined,
       files: Array.isArray(req.body.files)
         ? (req.body.files as Record<string, unknown>[])
         : Array.isArray(req.body.Files)

@@ -5,7 +5,6 @@ import { PricingService } from "./pricing.service";
 import { AppointmentRemindersService } from "./appointment-reminders.service";
 import { FollowUpsService } from "./follow-ups.service";
 import { FollowUpsController } from "./follow-ups.controller";
-import { RecordingWebhookController } from "./recording-webhook.controller";
 import { AuthModule } from "../auth/auth.module";
 import { SubscriptionsModule } from "../subscriptions/subscriptions.module";
 import { NotificationsModule } from "../notifications/notifications.module";
@@ -22,11 +21,7 @@ import { ReferralBonusModule } from "../referral-bonus/referral-bonus.module";
     SupportModule,
     ReferralBonusModule,
   ],
-  controllers: [
-    AppointmentsController,
-    FollowUpsController,
-    RecordingWebhookController,
-  ],
+  controllers: [AppointmentsController, FollowUpsController],
   providers: [
     AppointmentsService,
     PricingService,

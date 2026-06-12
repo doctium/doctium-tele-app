@@ -8,6 +8,7 @@ import { KycModule } from "../kyc/kyc.module";
 import { HrModule } from "../hr/hr.module";
 import { NotificationsModule } from "../notifications/notifications.module";
 import { AppointmentsModule } from "../appointments/appointments.module";
+import { RecordingModule } from "../recording/recording.module";
 import { EmrModule } from "../emr/emr.module";
 import { ReferralsModule } from "../referrals/referrals.module";
 import { CloudinaryService } from "../prescriptions/cloudinary.service";
@@ -21,6 +22,7 @@ import { CloudinaryService } from "../prescriptions/cloudinary.service";
     HrModule,
     NotificationsModule,
     AppointmentsModule,
+    RecordingModule,
     EmrModule,
     ReferralsModule,
   ],
