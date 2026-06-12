@@ -17,18 +17,35 @@ export class EmrService {
    * consultation. When the record is for a family member (subPatientId), the
    * appointment must be for that member — appointment-gated, minimum-necessary.
    */
+  /** EMR access window: a doctor keeps record access for 90 days after a consult. */
+  private static readonly ACCESS_WINDOW_DAYS = 90;
+
   async assertDoctorCanAccess(
     doctorId: string,
     userId: string,
     subPatientId?: string | null,
   ) {
+    // Scope access to an ACTIVE, RECENT care relationship — not "any appointment, ever":
+    //  - never a CANCELLED appointment, and
+    //  - either created within the access window, or scheduled for today/the future
+    //    (so a doctor can prepare for an upcoming consult).
+    const cutoff = new Date(
+      Date.now() - EmrService.ACCESS_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+    );
+    const today = new Date().toISOString().slice(0, 10);
     const link = await prisma.appointment.findFirst({
-      where: { doctorId, userId, ...(subPatientId ? { subPatientId } : {}) },
+      where: {
+        doctorId,
+        userId,
+        ...(subPatientId ? { subPatientId } : {}),
+        status: { not: "CANCELLED" },
+        OR: [{ createdAt: { gte: cutoff } }, { date: { gte: today } }],
+      },
       select: { id: true },
     });
     if (!link) {
       throw new ForbiddenException(
-        "You can only access records of patients you have a consultation with.",
+        "You can only access records of patients you have a recent consultation with.",
       );
     }
   }
