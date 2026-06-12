@@ -4,6 +4,8 @@
   "private": true,
   "main": "./src/index.ts",
   "peerDependencies": {
+    "@expo/vector-icons": "*",
+    "expo-linear-gradient": "*",
     "expo-secure-store": "*",
     "react": "*",
     "react-native": "*"
