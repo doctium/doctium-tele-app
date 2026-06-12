@@ -71,6 +71,7 @@ export default tseslint.config(
       "apps/admin-panel/**/*.{ts,tsx}",
       "apps/user-app/**/*.{ts,tsx}",
       "apps/doctor-app/**/*.{ts,tsx}",
+      "packages/mobile-ui/**/*.{ts,tsx}",
     ],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     plugins: { "react-hooks": reactHooks },
