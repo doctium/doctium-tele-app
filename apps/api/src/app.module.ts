@@ -1,5 +1,7 @@
 import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
 import { ScheduleModule } from "@nestjs/schedule";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 import { DoctorsModule } from "./modules/doctors/doctors.module";
@@ -31,6 +33,10 @@ import { TriageModule } from "./modules/triage/triage.module";
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    // Global rate limiting. A generous default protects every route from abuse;
+    // auth/OTP routes apply much stricter per-route limits via @Throttle, and the
+    // Paystack webhook opts out with @SkipThrottle (it must accept provider retries).
+    ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 100 }]),
     AuthModule,
     UsersModule,
     DoctorsModule,
@@ -59,5 +65,6 @@ import { TriageModule } from "./modules/triage/triage.module";
     CareProgramsModule,
     TriageModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query, Res } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import type { Response } from "express";
 import { AuthService } from "./auth.service";
 import { renderEmailVerifiedPage } from "./email-verified.page";
@@ -14,6 +15,9 @@ import {
 } from "./dto";
 
 @ApiTags("Auth")
+// Brute-force defense on every auth route: 10 requests / minute / IP. This caps
+// password and OTP guessing; per-OTP attempt limits in AuthService add a second layer.
+@Throttle({ default: { ttl: 60_000, limit: 10 } })
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

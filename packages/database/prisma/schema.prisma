@@ -1831,6 +1831,7 @@ model Otp {
   email     String   @default("")   // email-targeted OTP (doctor signup verification)
   otp       String
   expiresAt DateTime
+  attempts  Int      @default(0)    // failed verifications → lock after a cap
 
   createdAt DateTime @default(now())
 

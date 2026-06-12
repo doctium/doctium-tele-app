@@ -5,9 +5,9 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { randomBytes } from "crypto";
+import { randomBytes, randomInt } from "crypto";
 import * as bcrypt from "bcrypt";
-import { prisma } from "@doctium/database";
+import { prisma, Prisma } from "@doctium/database";
 import { AuthTokens, JwtPayload } from "@doctium/types";
 import {
   LoginDto,
@@ -33,13 +33,56 @@ export class AuthService {
   /** Unambiguous charset (no 0/O/1/I) so codes survive being read aloud. */
   private static readonly CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
+  /** Max wrong guesses before an OTP is burned and the user must request a new one. */
+  private static readonly OTP_MAX_ATTEMPTS = 5;
+
   private generateReferralCode(): string {
     let code = "";
     for (let i = 0; i < 10; i++)
       code += AuthService.CODE_CHARS.charAt(
-        Math.floor(Math.random() * AuthService.CODE_CHARS.length),
+        randomInt(AuthService.CODE_CHARS.length),
       );
     return code;
+  }
+
+  /** Cryptographically-random 6-digit code (100000–999999). */
+  private sixDigit(): string {
+    return randomInt(100000, 1000000).toString();
+  }
+
+  /**
+   * Validate a submitted code against the active OTP for an identifier, counting
+   * failures and burning the code once the attempt cap is hit. Returns the row id
+   * on success so the caller can finalise/delete it. Brute-forcing a 6-digit code
+   * is already throttled per-IP at the controller; this caps guesses per code too.
+   */
+  private async verifyOtpRecord(
+    where: Prisma.OtpWhereInput,
+    code: string,
+  ): Promise<string> {
+    const record = await prisma.otp.findFirst({
+      where,
+      orderBy: { createdAt: "desc" },
+    });
+    if (!record) throw new BadRequestException("Invalid or expired code");
+    if (record.expiresAt < new Date()) {
+      await prisma.otp.delete({ where: { id: record.id } });
+      throw new BadRequestException("Code expired — request a new one");
+    }
+    if (record.attempts >= AuthService.OTP_MAX_ATTEMPTS) {
+      await prisma.otp.delete({ where: { id: record.id } });
+      throw new BadRequestException(
+        "Too many incorrect attempts — request a new code",
+      );
+    }
+    if (record.otp !== code.trim()) {
+      await prisma.otp.update({
+        where: { id: record.id },
+        data: { attempts: { increment: 1 } },
+      });
+      throw new BadRequestException("Invalid code");
+    }
+    return record.id;
   }
 
   /** Generate a code that isn't taken yet (collisions are ~impossible, but cheap to guard). */
@@ -141,16 +184,11 @@ export class AuthService {
   /** In-app path: the 6-digit code typed on the verify screen. */
   async verifyUserEmail(rawEmail: string, code: string) {
     const email = rawEmail.trim().toLowerCase();
-    const record = await prisma.otp.findFirst({
-      where: {
-        email,
-        mobile: "",
-        otp: code.trim(),
-        expiresAt: { gt: new Date() },
-      },
-    });
-    if (!record)
-      throw new BadRequestException("Invalid or expired verification code");
+    // Match the numeric code row, not the one-click link row (prefixed evl_).
+    await this.verifyOtpRecord(
+      { email, mobile: "", NOT: { otp: { startsWith: "evl_" } } },
+      code,
+    );
     await this.markEmailVerified(email);
     return { verified: true };
   }
@@ -195,10 +233,6 @@ export class AuthService {
   }
 
   // ── Doctor self-signup with email + phone OTP ──────────────
-  private sixDigit(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
-
   private otpEmailHtml(code: string): string {
     return `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#0F1B2D">
       <h2 style="color:#133157;margin:0 0 8px">Verify your email</h2>
@@ -256,18 +290,9 @@ export class AuthService {
   async signupDoctor(dto: DoctorSignupDto): Promise<AuthTokens> {
     const email = dto.email.trim().toLowerCase();
     const phone = dto.phone.trim();
-    const now = new Date();
 
-    const emailOtp = await prisma.otp.findFirst({
-      where: { email, otp: dto.emailCode, expiresAt: { gt: now } },
-    });
-    if (!emailOtp)
-      throw new BadRequestException("Invalid or expired email code");
-    const phoneOtp = await prisma.otp.findFirst({
-      where: { mobile: phone, otp: dto.phoneCode, expiresAt: { gt: now } },
-    });
-    if (!phoneOtp)
-      throw new BadRequestException("Invalid or expired phone code");
+    await this.verifyOtpRecord({ email, mobile: "" }, dto.emailCode);
+    await this.verifyOtpRecord({ mobile: phone, email: "" }, dto.phoneCode);
 
     const existing = await prisma.doctor.findFirst({
       where: { OR: [{ email }, { mobile: phone }] },
@@ -451,7 +476,7 @@ export class AuthService {
   }
 
   async sendOtp(mobile: string): Promise<{ message: string }> {
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = this.sixDigit();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     await prisma.otp.deleteMany({ where: { mobile } });
@@ -463,14 +488,11 @@ export class AuthService {
   }
 
   async verifyOtp(dto: OtpVerifyDto): Promise<AuthTokens> {
-    const record = await prisma.otp.findFirst({
-      where: { mobile: dto.mobile, otp: dto.otp },
-    });
-    if (!record) throw new BadRequestException("Invalid OTP");
-    if (record.expiresAt < new Date())
-      throw new BadRequestException("OTP expired");
-
-    await prisma.otp.delete({ where: { id: record.id } });
+    const otpId = await this.verifyOtpRecord(
+      { mobile: dto.mobile, email: "" },
+      dto.otp,
+    );
+    await prisma.otp.delete({ where: { id: otpId } });
 
     let user = await prisma.user.findFirst({ where: { mobile: dto.mobile } });
     if (user?.isBlock)
