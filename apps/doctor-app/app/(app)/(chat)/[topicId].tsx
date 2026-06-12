@@ -1,0 +1,272 @@
+import React, { useEffect, useRef, useState } from "react";
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { io, Socket } from "socket.io-client";
+import * as SecureStore from "expo-secure-store";
+import {
+  Gradients,
+  Radius,
+  Shadow,
+  Space,
+  Type,
+  useColors,
+  useThemedStyles,
+  type Palette,
+} from "../../../src/theme";
+import { Avatar } from "../../../src/components/common/Avatar";
+import { AnimatedPressable } from "../../../src/components/ui";
+import { doctorApi } from "../../../src/api/doctor.api";
+
+interface Message {
+  id: string;
+  role: string;
+  message?: string;
+  createdAt: string;
+}
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3001";
+
+export default function DoctorChatConversation() {
+  const { topicId, patientName, userId } = useLocalSearchParams<{
+    topicId: string;
+    patientName?: string;
+    userId?: string;
+  }>();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const socketRef = useRef<Socket | null>(null);
+  const listRef = useRef<FlatList>(null);
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
+
+  useEffect(() => {
+    doctorApi
+      .getChatMessages(topicId)
+      .then((r: unknown) => setMessages((r as { data: Message[] }).data ?? []));
+    SecureStore.getItemAsync("doctorAccessToken").then((token) => {
+      const socket = io(`${API_URL}/chat`, {
+        query: { topicId },
+        auth: { token },
+      });
+      socketRef.current = socket;
+      socket.on("newMessage", (msg: Message) =>
+        setMessages((prev) => [...prev, msg]),
+      );
+    });
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, [topicId]);
+
+  const send = () => {
+    if (!input.trim() || !socketRef.current) return;
+    socketRef.current.emit("sendMessage", {
+      chatTopicId: topicId,
+      userId,
+      role: "doctor",
+      messageType: "TEXT",
+      message: input,
+    });
+    setInput("");
+  };
+
+  return (
+    <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      <View style={styles.header}>
+        <AnimatedPressable
+          haptic="light"
+          onPress={() => router.back()}
+          style={styles.back}
+        >
+          <Ionicons name="chevron-back" size={22} color={colors.navy} />
+        </AnimatedPressable>
+        <Avatar name={patientName} size={42} ring />
+        <View style={styles.headerInfo}>
+          <Text style={styles.headerName} numberOfLines={1}>
+            {patientName ?? "Patient"}
+          </Text>
+          <Text style={styles.headerSub}>Patient</Text>
+        </View>
+        <AnimatedPressable
+          haptic="light"
+          onPress={() =>
+            router.push({ pathname: "/(app)/(chat)/call", params: { topicId } })
+          }
+          style={styles.callBtn}
+        >
+          <Ionicons name="videocam" size={20} color={colors.teal} />
+        </AnimatedPressable>
+      </View>
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <FlatList
+          ref={listRef}
+          data={messages}
+          keyExtractor={(m) => m.id}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={() =>
+            listRef.current?.scrollToEnd({ animated: true })
+          }
+          renderItem={({ item: m }) => {
+            const mine = m.role === "doctor";
+            const time = new Date(m.createdAt).toLocaleTimeString("en-NG", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            return (
+              <View
+                style={[
+                  styles.bubbleWrap,
+                  mine ? styles.wrapMine : styles.wrapTheirs,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.bubble,
+                    mine ? styles.bubbleMine : styles.bubbleTheirs,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.bubbleText,
+                      { color: mine ? "#fff" : colors.text.primary },
+                    ]}
+                  >
+                    {m.message}
+                  </Text>
+                </View>
+                <Text style={styles.bubbleTime}>{time}</Text>
+              </View>
+            );
+          }}
+        />
+        <View style={styles.bar}>
+          <TextInput
+            style={styles.input}
+            placeholder="Type a message…"
+            placeholderTextColor={colors.text.tertiary}
+            value={input}
+            onChangeText={setInput}
+            multiline
+          />
+          <AnimatedPressable
+            haptic="medium"
+            onPress={send}
+            style={styles.sendWrap}
+          >
+            <LinearGradient
+              colors={Gradients.teal}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.sendBtn}
+            >
+              <Ionicons name="arrow-up" size={20} color="#fff" />
+            </LinearGradient>
+          </AnimatedPressable>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingHorizontal: Space.lg,
+      paddingVertical: 12,
+      backgroundColor: c.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    back: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: c.background,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    headerInfo: { flex: 1 },
+    headerName: { ...Type.title, color: c.text.primary },
+    headerSub: { ...Type.caption, color: c.text.tertiary, marginTop: 1 },
+    callBtn: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: c.tealSoft,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    list: { padding: Space.lg, gap: 4 },
+    bubbleWrap: { maxWidth: "78%", marginBottom: 8 },
+    wrapMine: { alignSelf: "flex-end", alignItems: "flex-end" },
+    wrapTheirs: { alignSelf: "flex-start", alignItems: "flex-start" },
+    bubble: {
+      borderRadius: Radius.lg,
+      paddingHorizontal: 14,
+      paddingVertical: 11,
+    },
+    bubbleMine: { backgroundColor: c.navy, borderBottomRightRadius: 6 },
+    bubbleTheirs: {
+      backgroundColor: c.surface,
+      borderBottomLeftRadius: 6,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.hairline,
+      ...Shadow.card,
+    },
+    bubbleText: { ...Type.bodyMed, lineHeight: 21 },
+    bubbleTime: {
+      ...Type.caption,
+      color: c.text.tertiary,
+      fontSize: 11,
+      marginTop: 4,
+      marginHorizontal: 4,
+    },
+    bar: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      gap: 10,
+      paddingHorizontal: Space.lg,
+      paddingVertical: 10,
+      backgroundColor: c.surface,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
+    },
+    input: {
+      flex: 1,
+      backgroundColor: c.surfaceAlt,
+      borderRadius: Radius.lg,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      ...Type.bodyMed,
+      color: c.text.primary,
+      maxHeight: 110,
+    },
+    sendWrap: { ...Shadow.cta, borderRadius: 23 },
+    sendBtn: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+  });

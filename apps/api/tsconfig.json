@@ -1,0 +1,16 @@
+{
+  "extends": "@doctium/tsconfig/nestjs.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "baseUrl": ".",
+    "strictPropertyInitialization": false,
+    "declaration": false,
+    "declarationMap": false,
+    "paths": {
+      "@doctium/database": ["../../packages/database/src"],
+      "@doctium/types": ["../../packages/types/src"],
+      "@doctium/validation": ["../../packages/validation/src"]
+    }
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,14 @@
+node_modules
+dist
+.next
+.expo
+*.env
+.env
+.env.local
+.env.production
+.turbo
+coverage
+*.log
+.codex-logs/
+# NOTE: prisma/migrations is intentionally NOT ignored — DB migrations are
+# source-of-truth and must be committed.

@@ -1,0 +1,13 @@
+{
+  "name": "@doctium/validation",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@doctium/tsconfig": "*",
+    "typescript": "^5.4.5"
+  }
+}

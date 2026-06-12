@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Doctium Brand Guidelines</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 16mm 15mm 18mm;
+    }
+
+    :root {
+      --navy: #133157;
+      --sky: #8BBBE9;
+      --teal: #2CB7A7;
+      --blue: #2563EB;
+      --surface: #0B1726;
+      --text: #111827;
+      --muted: #4B5563;
+      --line: #E5E7EB;
+      --canvas: #F7FAFC;
+      --white: #FFFFFF;
+      --success: #12B76A;
+      --warning: #F79009;
+      --error: #D92D20;
+      --info: #38BDF8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--white);
+      color: var(--text);
+      font-family: "Plus Jakarta Sans", Inter, "Segoe UI", Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.48;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      color: var(--white);
+      font-size: 34pt;
+      line-height: 1;
+      margin-bottom: 12mm;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      color: var(--navy);
+      font-size: 19pt;
+      line-height: 1.15;
+      margin: 0 0 4mm;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      color: var(--navy);
+      font-size: 11pt;
+      line-height: 1.25;
+      margin: 0 0 2mm;
+      page-break-after: avoid;
+    }
+
+    p {
+      color: var(--muted);
+      margin-bottom: 4mm;
+    }
+
+    .page {
+      min-height: 263mm;
+      page-break-after: always;
+      position: relative;
+    }
+
+    .page:last-child { page-break-after: auto; }
+
+    .cover {
+      margin: -16mm -15mm -18mm;
+      min-height: 297mm;
+      padding: 22mm 18mm;
+      background: var(--surface);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .cover-logo {
+      width: 112mm;
+      display: block;
+    }
+
+    .cover .eyebrow {
+      color: var(--sky);
+      font-size: 9pt;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 7mm;
+    }
+
+    .cover-copy {
+      color: #D9E8F9;
+      width: 128mm;
+      font-size: 13pt;
+      line-height: 1.5;
+    }
+
+    .cover-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 5mm;
+      border-top: 1px solid rgba(139, 187, 233, 0.35);
+      padding-top: 6mm;
+      color: #D9E8F9;
+      font-size: 9pt;
+    }
+
+    .cover-meta strong {
+      display: block;
+      color: var(--white);
+      font-size: 9.5pt;
+      margin-bottom: 1mm;
+    }
+
+    .section {
+      margin-bottom: 8mm;
+    }
+
+    .lead {
+      color: var(--text);
+      font-size: 12pt;
+      line-height: 1.5;
+      margin-bottom: 6mm;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5mm;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4mm;
+    }
+
+    .band {
+      background: var(--canvas);
+      border: 1px solid var(--line);
+      border-radius: 3mm;
+      padding: 5mm;
+      break-inside: avoid;
+    }
+
+    .dark-band {
+      background: var(--surface);
+      color: var(--white);
+      border-radius: 3mm;
+      padding: 5mm;
+      break-inside: avoid;
+    }
+
+    .dark-band h3,
+    .dark-band p { color: var(--white); }
+
+    .dark-band p { color: #D9E8F9; }
+
+    .logo-sample {
+      width: 100%;
+      display: block;
+      border-radius: 2mm;
+    }
+
+    .asset-row {
+      display: grid;
+      grid-template-columns: 24mm 1fr;
+      gap: 4mm;
+      align-items: center;
+      padding: 3mm 0;
+      border-bottom: 1px solid var(--line);
+      break-inside: avoid;
+    }
+
+    .asset-row:last-child { border-bottom: 0; }
+
+    .asset-row img {
+      width: 22mm;
+      max-height: 22mm;
+      object-fit: contain;
+    }
+
+    .file-name {
+      font-family: Consolas, "SFMono-Regular", monospace;
+      color: var(--navy);
+      font-size: 9pt;
+      font-weight: 700;
+    }
+
+    .palette {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4mm;
+      margin-bottom: 4mm;
+    }
+
+    .swatch {
+      min-height: 28mm;
+      border-radius: 3mm;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      break-inside: avoid;
+    }
+
+    .swatch-color {
+      height: 15mm;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .swatch-body {
+      padding: 3mm;
+      background: var(--white);
+    }
+
+    .swatch-body strong {
+      display: block;
+      color: var(--text);
+      font-size: 8.5pt;
+      margin-bottom: 0.5mm;
+    }
+
+    .hex {
+      color: var(--navy);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 8pt;
+      font-weight: 700;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 3mm 0 6mm;
+      break-inside: avoid;
+    }
+
+    th {
+      text-align: left;
+      color: var(--navy);
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--line);
+      padding: 2.5mm 2mm;
+    }
+
+    td {
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      padding: 2.5mm 2mm;
+      vertical-align: top;
+      font-size: 9pt;
+    }
+
+    .rule-list {
+      margin: 0;
+      padding-left: 5mm;
+      color: var(--muted);
+    }
+
+    .rule-list li { margin-bottom: 2mm; }
+
+    .callout {
+      border-left: 1.2mm solid var(--sky);
+      padding: 3mm 4mm;
+      background: var(--canvas);
+      margin-bottom: 5mm;
+      break-inside: avoid;
+    }
+
+    .signature {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 5mm;
+      align-items: center;
+    }
+
+    .signature-mark {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48mm;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(19,49,87,0.05) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(19,49,87,0.05) 1px, transparent 1px),
+        #fff;
+      background-size: 8mm 8mm;
+      border-radius: 3mm;
+    }
+
+    .signature-mark img {
+      width: 48mm;
+      height: auto;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      color: #8A96A8;
+      font-size: 8pt;
+      border-top: 1px solid var(--line);
+      padding-top: 3mm;
+    }
+
+    .page:last-child .footer { display: none; }
+
+    .no-break { break-inside: avoid; }
+  </style>
+</head>
+<body>
+  <section class="cover page">
+    <div>
+      <img class="cover-logo" src="doctium_app_logo_darkbg.png" alt="Doctium logo on dark background">
+    </div>
+    <div>
+      <div class="eyebrow">Brand Guidelines / Mobile Telemedicine Platform</div>
+      <h1>Doctium Brand System</h1>
+      <p class="cover-copy">
+        A clinical technology identity for trusted virtual care: precise enough for provider workflows,
+        calm enough for patients, and scalable enough for modern Flutter, Next.js, and EHR-integrated software.
+      </p>
+    </div>
+    <div class="cover-meta">
+      <div><strong>Version</strong> 1.0</div>
+      <div><strong>Prepared for</strong> Doctium App</div>
+      <div><strong>Core colors</strong> #133157 / #8BBBE9</div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="section">
+      <h2>Brand Story</h2>
+      <p class="lead">
+        Doctium represents healthcare that is available without friction. The identity combines a medical cross,
+        a D-shaped care loop, and a clean technical wordmark to communicate clinical reliability, continuous access,
+        and engineered product quality.
+      </p>
+      <div class="grid-3">
+        <div class="band">
+          <h3>Trust</h3>
+          <p>Deep navy anchors the brand in clinical seriousness, privacy, and secure patient data handling.</p>
+        </div>
+        <div class="band">
+          <h3>Access</h3>
+          <p>The open circular mark suggests care that is reachable, connected, and always moving with the patient.</p>
+        </div>
+        <div class="band">
+          <h3>Precision</h3>
+          <p>Geometric forms and disciplined spacing align the brand with high-performance software engineering.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section signature">
+      <div>
+        <h2>Logo Concept</h2>
+        <p>
+          The logomark is built from two ideas: a medical cross for care and a structured D form for Doctium.
+          The light-blue cross softens the experience for patients, while the navy D gives the platform a secure,
+          enterprise-ready presence.
+        </p>
+        <div class="callout">
+          The logo should never feel decorative. In product surfaces it functions as a trust signal: calm, precise,
+          readable, and separated from clinical alerts or patient data.
+        </div>
+      </div>
+      <div class="signature-mark">
+        <img src="Doctium App Logo.png" alt="Doctium app logomark">
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Logo Anatomy</h2>
+      <table>
+        <tr><th>Element</th><th>Role</th><th>Usage</th></tr>
+        <tr><td>Logomark</td><td>Medical cross plus D-shaped care loop.</td><td>App icon, favicon, compact navigation, loading identity.</td></tr>
+        <tr><td>Wordmark</td><td>Uppercase technical logotype.</td><td>Primary brand recognition in marketing and large UI surfaces.</td></tr>
+        <tr><td>Tagline</td><td>"Your doctor, anytime, anywhere."</td><td>Use only when the signature is large enough for legible rendering.</td></tr>
+      </table>
+    </div>
+
+    <div class="footer"><span>Doctium Brand Guidelines</span><span>Brand Story</span></div>
+  </section>
+
+  <section class="page">
+    <div class="section">
+      <h2>Logo Variations</h2>
+      <div class="grid-2">
+        <div class="band">
+          <h3>Light Background Version</h3>
+          <img class="logo-sample" src="doctium_app_logo_lightbg.png" alt="Doctium light background logo">
+          <p>Use on white, clinical canvas, app onboarding, app store graphics, and patient-facing communications.</p>
+        </div>
+        <div class="dark-band">
+          <h3>Dark Background Version</h3>
+          <img class="logo-sample" src="doctium_app_logo_darkbg.png" alt="Doctium dark background logo">
+          <p>Use on secure dashboard shells, dark-mode launch screens, presentation covers, and video surfaces.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Usage Rules</h2>
+      <div class="grid-2">
+        <div>
+          <h3>Approved</h3>
+          <ul class="rule-list">
+            <li>Use the full signature for brand introductions and marketing pages.</li>
+            <li>Use the isolated mark for app icons, favicons, launchers, and tight UI spaces.</li>
+            <li>Keep the navy and sky-blue pairing intact for official brand use.</li>
+            <li>Place the logo on clean, high-contrast backgrounds.</li>
+            <li>Keep the tagline only when it remains clearly legible.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Not Allowed</h3>
+          <ul class="rule-list">
+            <li>Do not stretch, skew, rotate, crop, or redraw the symbol.</li>
+            <li>Do not recolor the logo with warning, error, or success colors.</li>
+            <li>Do not add shadows, bevels, glows, gradients, or glass effects.</li>
+            <li>Do not place the logo over patient imagery or busy EHR data surfaces.</li>
+            <li>Do not recreate the wordmark with a standard typed font.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Clear Space and Minimum Size</h2>
+      <p>
+        Define X as the width of the vertical stem in the light-blue medical cross. Maintain at least 1X of clear
+        space around the full logo and 0.75X around the isolated app mark. In dense clinical dashboards, no alerts,
+        patient identifiers, filters, or appointment chips should enter this space.
+      </p>
+      <table>
+        <tr><th>Asset</th><th>Digital minimum</th><th>Print minimum</th><th>Rule</th></tr>
+        <tr><td>Full signature with tagline</td><td>240 px wide</td><td>55 mm wide</td><td>Use for marketing and onboarding only.</td></tr>
+        <tr><td>Full signature without tagline</td><td>160 px wide</td><td>32 mm wide</td><td>Use where the tagline would become too small.</td></tr>
+        <tr><td>Isolated logomark</td><td>24 px wide</td><td>8 mm wide</td><td>Use for compact interface identity.</td></tr>
+      </table>
+    </div>
+
+    <div class="footer"><span>Doctium Brand Guidelines</span><span>Logo System</span></div>
+  </section>
+
+  <section class="page">
+    <div class="section">
+      <h2>Color Palette</h2>
+      <p class="lead">
+        The palette is designed for high-reliability healthcare software: stable brand colors, restrained neutrals,
+        and status colors that are reserved for patient-care and system feedback.
+      </p>
+    </div>
+
+    <div class="section">
+      <h3>Primary, Secondary, and Accent Colors</h3>
+      <div class="palette">
+        <div class="swatch"><div class="swatch-color" style="background:#133157"></div><div class="swatch-body"><strong>Doctium Clinical Navy</strong><span class="hex">#133157</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#8BBBE9"></div><div class="swatch-body"><strong>Precision Sky Blue</strong><span class="hex">#8BBBE9</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#2CB7A7"></div><div class="swatch-body"><strong>Connected Care Teal</strong><span class="hex">#2CB7A7</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#2563EB"></div><div class="swatch-body"><strong>Interface Blue</strong><span class="hex">#2563EB</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#38BDF8"></div><div class="swatch-body"><strong>System Info Cyan</strong><span class="hex">#38BDF8</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#0B1726"></div><div class="swatch-body"><strong>Deep EHR Surface</strong><span class="hex">#0B1726</span></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Neutrals</h3>
+      <div class="palette">
+        <div class="swatch"><div class="swatch-color" style="background:#111827"></div><div class="swatch-body"><strong>Primary Text</strong><span class="hex">#111827</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#4B5563"></div><div class="swatch-body"><strong>Secondary Text</strong><span class="hex">#4B5563</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#E5E7EB"></div><div class="swatch-body"><strong>Divider Gray</strong><span class="hex">#E5E7EB</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#F7FAFC"></div><div class="swatch-body"><strong>Clinical Canvas</strong><span class="hex">#F7FAFC</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#FFFFFF"></div><div class="swatch-body"><strong>White</strong><span class="hex">#FFFFFF</span></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Status Colors</h3>
+      <div class="palette">
+        <div class="swatch"><div class="swatch-color" style="background:#12B76A"></div><div class="swatch-body"><strong>Success</strong><span class="hex">#12B76A</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#F79009"></div><div class="swatch-body"><strong>Warning</strong><span class="hex">#F79009</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#D92D20"></div><div class="swatch-body"><strong>Error / Alert</strong><span class="hex">#D92D20</span></div></div>
+      </div>
+      <div class="callout">
+        Status colors are never logo colors. In a health platform, green, amber, and red must remain reserved for
+        workflow meaning: completed, pending, failed, urgent, or destructive.
+      </div>
+    </div>
+
+    <div class="footer"><span>Doctium Brand Guidelines</span><span>Color System</span></div>
+  </section>
+
+  <section class="page">
+    <div class="section">
+      <h2>Typography</h2>
+      <p class="lead">
+        Doctium typography should be legible before it is expressive. The system uses clean sans-serif families
+        that work across mobile, web dashboards, clinical forms, and marketing surfaces.
+      </p>
+      <table>
+        <tr><th>Role</th><th>Typeface</th><th>Use</th></tr>
+        <tr><td>Primary</td><td>Plus Jakarta Sans</td><td>Marketing headings, onboarding titles, brand moments.</td></tr>
+        <tr><td>Secondary</td><td>Inter</td><td>Body text, clinical UI, forms, tables, labels, developer documentation.</td></tr>
+        <tr><td>System fallback</td><td>SF Pro / Segoe UI / Roboto</td><td>Native mobile and platform-specific rendering.</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Mobile Type Scale</h2>
+      <table>
+        <tr><th>Token</th><th>Size</th><th>Line height</th><th>Weight</th><th>Use</th></tr>
+        <tr><td>display-md</td><td>32 px</td><td>40 px</td><td>700</td><td>Onboarding and major patient-facing titles.</td></tr>
+        <tr><td>heading-lg</td><td>24 px</td><td>32 px</td><td>700</td><td>Screen title and visit summary title.</td></tr>
+        <tr><td>heading-md</td><td>20 px</td><td>28 px</td><td>700</td><td>Appointment detail sections.</td></tr>
+        <tr><td>heading-sm</td><td>18 px</td><td>26 px</td><td>600</td><td>Card and modal titles.</td></tr>
+        <tr><td>body-lg</td><td>16 px</td><td>24 px</td><td>400</td><td>Primary reading text.</td></tr>
+        <tr><td>body-md</td><td>14 px</td><td>20 px</td><td>400</td><td>Standard UI body and helper copy.</td></tr>
+        <tr><td>label-md</td><td>13 px</td><td>18 px</td><td>600</td><td>Form, filter, and chart labels.</td></tr>
+        <tr><td>caption</td><td>12 px</td><td>16 px</td><td>500</td><td>Metadata and timestamps.</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>UI Voice</h2>
+      <div class="grid-2">
+        <div class="band">
+          <h3>Product Language</h3>
+          <p>Clear, calm, direct, and clinically careful. Avoid hype in patient-care flows and reserve urgency for true action states.</p>
+        </div>
+        <div class="band">
+          <h3>Marketing Language</h3>
+          <p>Confident and accessible. Emphasize anytime access, trusted clinicians, secure records, and continuity of care.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer"><span>Doctium Brand Guidelines</span><span>Typography and Voice</span></div>
+  </section>
+
+  <section class="page">
+    <div class="section">
+      <h2>Digital Asset Package</h2>
+      <p class="lead">
+        The following files are available in the brand guidelines directory and should be treated as the current
+        production handoff set for web, mobile, favicon, and documentation use.
+      </p>
+    </div>
+
+    <div class="section">
+      <div class="asset-row">
+        <img src="doctium_app_logo_lightbg.png" alt="">
+        <div><div class="file-name">doctium_app_logo_lightbg.png</div><p>Full logo on white background for light-mode use, app onboarding, and marketing documents.</p></div>
+      </div>
+      <div class="asset-row">
+        <img src="doctium_app_logo_darkbg.png" alt="">
+        <div><div class="file-name">doctium_app_logo_darkbg.png</div><p>Full reversed logo on deep EHR surface for dark-mode screens and presentation covers.</p></div>
+      </div>
+      <div class="asset-row">
+        <img src="Doctium App Logo.png" alt="">
+        <div><div class="file-name">Doctium App Logo.png</div><p>Source logomark reference for compact identity, launcher concepts, and favicon derivation.</p></div>
+      </div>
+      <div class="asset-row">
+        <img src="doctium_logo_main.svg" alt="">
+        <div><div class="file-name">doctium_logo_main.svg</div><p>Outlined SVG brand signature with separate navy and sky-blue paths for scalable product use.</p></div>
+      </div>
+      <div class="asset-row">
+        <img src="Doctium_App_Logo-WhiteBG.png" alt="">
+        <div><div class="file-name">doctium_app_favicon.ico</div><p>Multi-resolution favicon package containing 16x16, 32x32, and 48x48 icon entries.</p></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Implementation Notes</h2>
+      <table>
+        <tr><th>Platform</th><th>Guidance</th></tr>
+        <tr><td>Next.js</td><td>Use SVG for sharp UI rendering. Use the ICO for browser favicon compatibility and PNG assets for Open Graph or app manifest images.</td></tr>
+        <tr><td>Flutter</td><td>Use PNGs for launcher and splash pipelines. Use SVG only where the rendering package is already part of the application stack.</td></tr>
+        <tr><td>App stores</td><td>Use isolated logomark exports for app icons. Do not place the full wordmark or tagline inside launcher icons.</td></tr>
+        <tr><td>EHR dashboards</td><td>Use compact logo placement in navigation chrome. Keep the logo away from urgent alerts, vitals, and patient identifiers.</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Final Brand Principles</h2>
+      <div class="grid-3">
+        <div class="band"><h3>Reliable</h3><p>Every visual choice should support trust in care delivery, identity, and patient data handling.</p></div>
+        <div class="band"><h3>Efficient</h3><p>Interfaces should feel fast, readable, and task-focused for both patients and providers.</p></div>
+        <div class="band"><h3>Human</h3><p>Clinical precision should be balanced with warm, accessible language and patient-friendly hierarchy.</p></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Product Expression</h2>
+      <div class="grid-2">
+        <div>
+          <h3>Patient Experience</h3>
+          <p>
+            Patient-facing screens should reduce anxiety: simple actions, clear appointment status, visible provider
+            context, and calm confirmation states. Use sky blue and teal as supportive cues, not decorative noise.
+          </p>
+        </div>
+        <div>
+          <h3>Provider Experience</h3>
+          <p>
+            Provider-facing workflows should feel dense but ordered. Use navy for structure, neutrals for data-heavy
+            content, and status colors only where they clarify clinical or operational priority.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Release Checklist</h2>
+      <table>
+        <tr><th>Check</th><th>Approval standard</th></tr>
+        <tr><td>Logo contrast</td><td>The logo remains readable on light and dark backgrounds without added effects.</td></tr>
+        <tr><td>Color discipline</td><td>Success, warning, and error colors are used only for status meaning, never brand decoration.</td></tr>
+        <tr><td>Asset fit</td><td>Launcher, favicon, and app store icons use the isolated mark, not the full wordmark.</td></tr>
+        <tr><td>Clinical clarity</td><td>Brand elements never compete with vitals, appointment urgency, prescriptions, or patient identifiers.</td></tr>
+      </table>
+    </div>
+
+    <div class="footer"><span>Doctium Brand Guidelines</span><span>Assets and Implementation</span></div>
+  </section>
+</body>
+</html>

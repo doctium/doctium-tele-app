@@ -1,0 +1,8 @@
+-- AlterEnum
+ALTER TYPE "WalletHistoryType" ADD VALUE 'REFERRAL_COMMISSION';
+
+-- AlterTable
+ALTER TABLE "referrals" ADD COLUMN     "commissionAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "commissionPaidAt" TIMESTAMP(3),
+ADD COLUMN     "commissionPct" DOUBLE PRECISION NOT NULL DEFAULT 0;
+

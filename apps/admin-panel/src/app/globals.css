@@ -1,0 +1,297 @@
+/* Doctium "Calm Clinical Luxury" — Plus Jakarta Sans via next/font (--font-jakarta) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ── Theme tokens (channel triplets for `rgb(var(--x) / a)` in tailwind) ── */
+  :root {
+    --surface: 255 255 255;
+    --surface-alt: 238 243 249;
+    --muted: 244 247 251;
+    --border: 231 237 244;
+    --hairline: 238 242 247;
+    --ink: 15 27 45;
+    /* neutral ramp (Tailwind default gray) */
+    --gray-50: 249 250 251;
+    --gray-100: 243 244 246;
+    --gray-200: 229 231 235;
+    --gray-300: 209 213 219;
+    --gray-400: 156 163 175;
+    --gray-500: 107 114 128;
+    --gray-600: 75 85 99;
+    --gray-700: 55 65 81;
+    --gray-800: 31 41 55;
+    --gray-900: 17 24 39;
+    /* Accent tints (-50/-100 bg) + accent text (-600/-700). Light values. */
+    --red-50: 254 242 242;
+    --red-100: 254 226 226;
+    --red-600: 220 38 38;
+    --red-700: 185 28 28;
+    --orange-50: 255 247 237;
+    --orange-600: 234 88 12;
+    --yellow-600: 202 138 4;
+    --green-50: 240 253 244;
+    --green-100: 220 252 231;
+    --green-600: 22 163 74;
+    --green-700: 21 128 61;
+    --blue-50: 239 246 255;
+    --blue-700: 29 78 216;
+    --purple-50: 250 245 255;
+    --purple-700: 126 34 206;
+    --teal-50: 234 243 252;
+    --teal-600: 39 102 166;
+    --teal-700: 32 95 158;
+    --skyblue-50: 234 244 252;
+    --alert-50: 254 243 242;
+    --alert-100: 254 228 226;
+    --alert-600: 180 35 24;
+    --alert-700: 153 27 18;
+    --success-50: 236 253 243;
+    --success-100: 209 250 223;
+    --success-600: 14 151 84;
+    --caution-50: 255 250 235;
+    --caution-600: 220 104 3;
+    --info-50: 240 249 255;
+    --primary-50: 238 243 255;
+    --primary-600: 12 32 64;
+    --navy-50: 238 243 255;
+  }
+  .dark {
+    --surface: 17 29 49; /* raised card */
+    --surface-alt: 22 36 59;
+    --muted: 10 19 34; /* deep navy canvas */
+    --border: 42 58 82;
+    --hairline: 34 50 74;
+    --ink: 237 242 248;
+    /* INVERTED ramp: bg-grays go dark, text-grays go light */
+    --gray-50: 22 36 59;
+    --gray-100: 27 41 66;
+    --gray-200: 35 49 73;
+    --gray-300: 58 74 99;
+    --gray-400: 124 138 160;
+    --gray-500: 148 163 184;
+    --gray-600: 174 186 201;
+    --gray-700: 203 213 225;
+    --gray-800: 226 232 240;
+    --gray-900: 241 245 249;
+    /* Dark: -50/-100 become dark hue-tinted chips; -600/-700 text brightens. */
+    --red-50: 60 30 32;
+    --red-100: 74 36 38;
+    --red-600: 240 116 116;
+    --red-700: 242 142 142;
+    --orange-50: 58 42 24;
+    --orange-600: 247 165 58;
+    --yellow-600: 240 200 80;
+    --green-50: 24 50 38;
+    --green-100: 30 60 46;
+    --green-600: 39 194 129;
+    --green-700: 64 202 142;
+    --blue-50: 26 40 64;
+    --blue-700: 122 162 240;
+    --purple-50: 44 32 60;
+    --purple-700: 190 150 230;
+    --teal-50: 23 43 68;
+    --teal-600: 94 151 209;
+    --teal-700: 112 166 220;
+    --skyblue-50: 26 42 64;
+    --alert-50: 60 30 30;
+    --alert-100: 74 36 36;
+    --alert-600: 240 116 116;
+    --alert-700: 242 142 142;
+    --success-50: 24 50 38;
+    --success-100: 30 60 46;
+    --success-600: 39 194 129;
+    --caution-50: 58 42 24;
+    --caution-600: 247 165 58;
+    --info-50: 24 44 60;
+    --primary-50: 27 41 66;
+    --primary-600: 124 168 217;
+    --navy-50: 27 41 66;
+  }
+
+  /* Official naira sign: Plus Jakarta Sans draws ₦ with a single crossbar, but
+     the Central Bank glyph is double-barred. This face covers ONLY U+20A6 and
+     pulls it from system fonts (all double-barred), so every other character
+     still renders in Jakarta. Must be first in the body font stack. */
+  @font-face {
+    font-family: "Naira Sign";
+    src:
+      local("Segoe UI"), local("Arial"), local("Helvetica Neue"),
+      local("Roboto");
+    unicode-range: U+20A6;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-muted text-gray-900 antialiased;
+    font-family:
+      "Naira Sign", var(--font-jakarta), "Plus Jakarta Sans", Inter,
+      "SF Pro Display", "Segoe UI", Arial, sans-serif;
+    /* Atmospheric clinical canvas — soft brand-tinted aurora wash */
+    background-color: rgb(var(--muted));
+    background-image:
+      radial-gradient(
+        1200px 600px at 100% -10%,
+        rgba(139, 187, 233, 0.06),
+        transparent 60%
+      ),
+      radial-gradient(
+        900px 500px at -10% 0%,
+        rgba(139, 187, 233, 0.1),
+        transparent 55%
+      );
+    background-attachment: fixed;
+  }
+  .dark body {
+    /* dimmer aurora so the deep canvas stays calm */
+    background-image:
+      radial-gradient(
+        1200px 600px at 100% -10%,
+        rgba(94, 151, 209, 0.05),
+        transparent 60%
+      ),
+      radial-gradient(
+        900px 500px at -10% 0%,
+        rgba(28, 74, 116, 0.18),
+        transparent 55%
+      );
+  }
+  input,
+  select,
+  textarea {
+    @apply outline-none;
+  }
+  ::selection {
+    background: rgba(139, 187, 233, 0.22);
+  }
+
+  /* Refined scrollbars */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(19, 49, 87, 0.14);
+    border-radius: 99px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(19, 49, 87, 0.26);
+    background-clip: content-box;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.16);
+    background-clip: content-box;
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.28);
+    background-clip: content-box;
+  }
+}
+
+@layer components {
+  /* ── Buttons ─────────────────────────────────────────────── */
+  /* Primary CTA — Clinical Navy with depth */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-navy text-white px-5 py-2.5 rounded-xl font-semibold text-body-md
+           shadow-cta-navy transition-all duration-200 hover:-translate-y-0.5 hover:shadow-raised
+           active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none;
+  }
+  /* Secondary CTA — Connected Care Teal gradient */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-gradient-teal text-white px-5 py-2.5 rounded-xl font-semibold text-body-md
+           shadow-cta transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 border border-border bg-surface text-ink px-5 py-2.5 rounded-xl font-semibold text-body-md
+           transition-all duration-200 hover:border-navy/40 hover:bg-surfaceAlt hover:-translate-y-0.5 active:translate-y-0;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 text-gray-500 px-4 py-2.5 rounded-xl font-medium text-body-md
+           transition-colors hover:bg-surfaceAlt hover:text-ink;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 bg-alert text-white px-5 py-2.5 rounded-xl font-semibold text-body-md
+           shadow-[0_8px_20px_-6px_rgba(217,45,32,0.45)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-alert-600 active:translate-y-0 disabled:opacity-50;
+  }
+
+  /* ── Surfaces ────────────────────────────────────────────── */
+  .card {
+    @apply bg-surface rounded-2xl shadow-card border border-hairline p-6 transition-shadow duration-300;
+  }
+  .card-hover {
+    @apply hover:shadow-raised hover:-translate-y-0.5 transition-all duration-300;
+  }
+  /* Frosted glass surface — for navbar / overlays */
+  .glass {
+    @apply border border-white/60;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+  .dark .glass {
+    @apply border-white/10;
+    background: rgba(17, 29, 49, 0.72);
+  }
+
+  /* ── Forms ───────────────────────────────────────────────── */
+  .input {
+    @apply w-full border border-border rounded-xl px-4 py-2.5 text-body-md bg-surface text-gray-900 placeholder:text-gray-400
+           transition-all duration-200 focus:border-teal-400 focus:ring-4 focus:ring-teal-500/10;
+  }
+  .label {
+    @apply block text-label-md text-gray-600 mb-1.5;
+  }
+
+  /* ── Typography helpers ──────────────────────────────────── */
+  .page-title {
+    @apply text-heading-lg font-bold text-ink;
+  }
+  .section-title {
+    @apply text-heading-sm font-bold text-ink;
+  }
+  .eyebrow {
+    @apply text-micro font-bold uppercase tracking-[0.14em] text-teal-600;
+  }
+}
+
+@layer utilities {
+  .text-gradient-teal {
+    background: linear-gradient(120deg, #1c4a74 0%, #2e7cc2 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  /* Subtle grain/sheen for gradient hero panels */
+  .hero-sheen {
+    background-image: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0) 45%
+    );
+  }
+  .animation-delay-100 {
+    animation-delay: 0.06s;
+  }
+  .animation-delay-200 {
+    animation-delay: 0.12s;
+  }
+  .animation-delay-300 {
+    animation-delay: 0.18s;
+  }
+  .animation-delay-400 {
+    animation-delay: 0.24s;
+  }
+}

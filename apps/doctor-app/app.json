@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Doctium Doctor",
+    "slug": "doctium-doctor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/brand/doctium-logo-lightbg.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/brand/splash-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.doctium.doctor",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Doctium needs camera access for video consultations with patients.",
+        "NSMicrophoneUsageDescription": "Doctium needs microphone access for voice and video calls."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/doctium-logomark.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.doctium.doctor",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      ["expo-notifications", { "color": "#133157" }],
+      "expo-audio"
+    ],
+    "scheme": "doctium-doctor"
+  }
+}

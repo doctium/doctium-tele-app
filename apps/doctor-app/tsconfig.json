@@ -1,0 +1,12 @@
+{
+  "extends": "@doctium/tsconfig/react-native.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@doctium/types": ["../../packages/types/src"],
+      "@doctium/validation": ["../../packages/validation/src"]
+    }
+  },
+  "include": ["src", "app", "App.tsx"]
+}

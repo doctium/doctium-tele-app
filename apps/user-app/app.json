@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "Doctium",
+    "slug": "doctium-user",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/brand/doctium-logo-lightbg.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/brand/splash-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.doctium.user",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Doctium needs camera access for video consultations.",
+        "NSMicrophoneUsageDescription": "Doctium needs microphone access for voice and video calls.",
+        "NSPhotoLibraryUsageDescription": "Doctium needs photo access to upload profile pictures and medical images.",
+        "NSLocationWhenInUseUsageDescription": "Doctium uses your location to show doctors available in your region."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/doctium-logomark.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.doctium.user",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#133157"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Doctium uses your location to show doctors available in your region."
+        }
+      ],
+      "expo-audio",
+      "expo-localization"
+    ],
+    "scheme": "doctium"
+  }
+}

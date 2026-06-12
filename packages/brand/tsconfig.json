@@ -1,0 +1,5 @@
+{
+  "extends": "@doctium/tsconfig/base.json",
+  "compilerOptions": { "outDir": "dist" },
+  "include": ["src"]
+}
