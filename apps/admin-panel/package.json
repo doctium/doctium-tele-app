@@ -13,6 +13,7 @@
     "@doctium/brand": "*",
     "@doctium/types": "*",
     "@doctium/validation": "*",
+    "@sentry/nextjs": "^10.57.0",
     "@tanstack/react-query": "^5.40.0",
     "axios": "^1.7.2",
     "clsx": "^2.1.1",
