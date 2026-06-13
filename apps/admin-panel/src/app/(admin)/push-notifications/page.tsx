@@ -193,7 +193,6 @@ export default function PushNotificationsPage() {
               <label className="label">Image (optional)</label>
               {imageDataUrl ? (
                 <div className="relative inline-block">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imageDataUrl}
                     alt="preview"

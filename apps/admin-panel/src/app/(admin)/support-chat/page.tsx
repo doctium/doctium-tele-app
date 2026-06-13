@@ -25,7 +25,6 @@ function Bubble({ m }: { m: SupportMessage }) {
         className={`max-w-[75%] rounded-2xl px-3 py-2 ${mine ? "bg-navy text-white" : "bg-surface border border-border text-gray-800"}`}
       >
         {m.type === "IMAGE" && m.mediaUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={m.mediaUrl}
             alt="attachment"

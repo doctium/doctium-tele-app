@@ -170,7 +170,6 @@ export default function VideosModerationPage() {
         <div className="flex items-center gap-3">
           <div className="relative w-16 h-10 rounded-lg overflow-hidden bg-surfaceAlt grid place-items-center flex-shrink-0">
             {c.videoImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={c.videoImage}
                 alt=""
@@ -350,7 +349,6 @@ export default function VideosModerationPage() {
 
             <div className="rounded-xl overflow-hidden border border-hairline bg-surfaceAlt">
               {detail.videoImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={detail.videoImage}
                   alt=""

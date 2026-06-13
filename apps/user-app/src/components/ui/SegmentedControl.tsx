@@ -46,6 +46,7 @@ export function SegmentedControl({ options, value, onChange, style }: Props) {
 
   useEffect(() => {
     pos.value = withSpring(idx, Motion.spring.fluid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx]);
 
   const slot = width > 0 ? (width - PAD * 2) / options.length : 0;

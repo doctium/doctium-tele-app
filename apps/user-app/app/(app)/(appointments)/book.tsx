@@ -72,10 +72,12 @@ export default function BookAppointmentScreen() {
 
   useEffect(() => {
     if (doctorId) dispatch(fetchDoctor(doctorId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doctorId]);
   useEffect(() => {
     if (doctorId && selectedDate)
       dispatch(fetchSlots({ id: doctorId, date: selectedDate }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doctorId, selectedDate]);
 
   const d = doctor as {

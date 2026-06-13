@@ -65,6 +65,7 @@ export default function AppointmentDetailScreen() {
 
   useEffect(() => {
     if (id) dispatch(fetchAppointment(id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {

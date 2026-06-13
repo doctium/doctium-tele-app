@@ -26,11 +26,11 @@ const appRules = {
   "no-empty": ["error", { allowEmptyCatch: true }],
   // TypeScript already resolves identifiers; no-undef double-reports RN/DOM globals.
   "no-undef": "off",
-  // Still advisory (warn): require() is the idiomatic RN static-asset loader;
-  // exhaustive-deps is risky to bulk-fix; rules-of-hooks has a small backlog.
-  "@typescript-eslint/no-require-imports": "warn",
-  "react-hooks/rules-of-hooks": "warn",
-  "react-hooks/exhaustive-deps": "warn",
+  // require() is forbidden by default (admin/packages); turned off for the mobile
+  // apps below, where require('./asset') is the idiomatic Metro static-asset loader.
+  "@typescript-eslint/no-require-imports": "error",
+  "react-hooks/rules-of-hooks": "error",
+  "react-hooks/exhaustive-deps": "error",
 };
 
 export default tseslint.config(
@@ -69,7 +69,7 @@ export default tseslint.config(
     },
   },
   {
-    // Admin panel + mobile apps — surface tier (warnings only).
+    // Admin panel + mobile apps — shared rule tier (see appRules above).
     files: [
       "apps/admin-panel/**/*.{ts,tsx}",
       "apps/user-app/**/*.{ts,tsx}",
@@ -88,8 +88,15 @@ export default tseslint.config(
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
-      "@next/next/no-img-element": "warn",
+      // Internal admin panel with remote/dynamic images (Cloudinary, data-URLs);
+      // next/image's sizing constraints aren't worth it here. Plain <img> is fine.
+      "@next/next/no-img-element": "off",
       "@next/next/no-html-link-for-pages": "off",
     },
+  },
+  {
+    // React Native: require('./asset') is the idiomatic Metro static-asset loader.
+    files: ["apps/user-app/**/*.{ts,tsx}", "apps/doctor-app/**/*.{ts,tsx}"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
   },
 );

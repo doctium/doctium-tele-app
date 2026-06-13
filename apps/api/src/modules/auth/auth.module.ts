@@ -4,6 +4,7 @@ import { PassportModule } from "@nestjs/passport";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { JwtStrategy } from "./strategies/jwt.strategy";
+import { TokenCleanupService } from "./token-cleanup.service";
 import { prisma } from "@doctium/database";
 import { MailerProvider } from "../notifications/channels/mailer.provider";
 import { SmsProvider } from "../notifications/channels/sms.provider";
@@ -21,6 +22,7 @@ import { requireEnv } from "../../common/env";
   providers: [
     AuthService,
     JwtStrategy,
+    TokenCleanupService,
     MailerProvider,
     SmsProvider,
     { provide: "PRISMA", useValue: prisma },

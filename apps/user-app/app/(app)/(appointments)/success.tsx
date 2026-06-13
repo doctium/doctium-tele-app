@@ -66,6 +66,7 @@ export default function BookingSuccessScreen() {
         withTiming(1, { duration: 1100, easing: Easing.out(Easing.cubic) }),
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduced]);
 
   useEffect(() => {

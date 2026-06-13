@@ -738,7 +738,6 @@ export default function DoctorDetailPage() {
           <div>
             {docModal.mimeType?.startsWith("image") ||
             /\.(png|jpe?g|webp|gif)$/i.test(docModal.fileUrl) ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={docModal.fileUrl}
                 alt={docModal.type}

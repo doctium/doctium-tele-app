@@ -78,6 +78,7 @@ function AuroraBlob({
       -1,
       true,
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduced, duration]);
 
   const animatedStyle = useAnimatedStyle(() => ({

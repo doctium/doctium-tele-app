@@ -280,7 +280,6 @@ export default function EmployeesPage() {
           {/* Photo (≤ 1 MB, stored via image.util — data-URL fallback works without Cloudinary) */}
           <div className="flex items-center gap-4 mb-5">
             {form.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={form.image}
                 alt="Employee photo"

@@ -27,6 +27,7 @@ export default function ReviewsPage() {
   };
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   const handleDelete = async (id: string) => {

@@ -321,7 +321,7 @@ export default function EmployeeDetailPage() {
           <div>
             {docModal.mimeType?.startsWith("image") ||
             /\.(png|jpe?g|webp|gif)$/i.test(docModal.fileUrl) ? (
-              /* eslint-disable-next-line @next/next/no-img-element */ <img
+              <img
                 src={docModal.fileUrl}
                 alt={docModal.type}
                 className="w-full rounded-lg max-h-[70vh] object-contain bg-gray-50"

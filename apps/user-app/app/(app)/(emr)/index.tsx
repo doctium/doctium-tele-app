@@ -646,6 +646,7 @@ function EditProfileSheet({
         heightCm: profile?.heightCm ? String(profile.heightCm) : "",
         weightKg: profile?.weightKg ? String(profile.weightKg) : "",
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
   const save = async () => {
     setSaving(true);

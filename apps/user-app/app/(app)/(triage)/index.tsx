@@ -232,6 +232,7 @@ export default function SymptomCheckerScreen() {
   // Hard stop at 60s — matches the server's size cap.
   useEffect(() => {
     if (recording && recSeconds >= 60) stopRecording(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recording, recSeconds]);
 
   // Voice replies: tap the speaker on any Leenah bubble → TTS → play.

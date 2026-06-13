@@ -94,6 +94,7 @@ export default function PrescriptionDetailScreen() {
       .then((r: unknown) => setRx((r as { data: Rx }).data))
       .catch(() => {});
     loadRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const download = async () => {

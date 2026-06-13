@@ -43,6 +43,7 @@ export default function SubPatientsScreen() {
 
   useEffect(() => {
     dispatch(fetchSubPatients());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const set = (k: keyof typeof form) => (v: string) =>

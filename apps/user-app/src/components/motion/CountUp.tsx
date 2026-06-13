@@ -48,6 +48,7 @@ export function CountUp({
       delay,
       withTiming(value, { duration, easing: Easing.out(Easing.cubic) }),
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, reduced]);
 
   const animatedProps = useAnimatedProps(() => {

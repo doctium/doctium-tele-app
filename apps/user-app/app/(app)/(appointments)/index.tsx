@@ -38,6 +38,7 @@ export default function AppointmentsScreen() {
 
   useEffect(() => {
     dispatch(fetchAppointments(STATUS_MAP[activeTab]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const onRefresh = useCallback(async () => {

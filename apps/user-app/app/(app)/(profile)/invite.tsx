@@ -39,6 +39,7 @@ export default function InviteFriendsScreen() {
 
   useEffect(() => {
     dispatch(fetchProfile());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const shareLink = `https://doctium.com/register?ref=${code}`;

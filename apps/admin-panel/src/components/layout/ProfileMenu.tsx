@@ -52,7 +52,6 @@ export function ProfileMenu() {
         className="flex items-center gap-2.5 h-10 pl-1.5 pr-2.5 rounded-xl bg-surface/70 border border-border hover:border-navy/20 transition-colors"
       >
         {me?.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={me.image}
             alt={me.name}

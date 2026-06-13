@@ -60,6 +60,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDate, endDate]);
 
   const topDoctorCols: Column<TopDoctor>[] = [
@@ -87,9 +88,7 @@ export default function DashboardPage() {
       key: "appointment",
       header: "Appointments",
       render: (r) => (
-        <span className="font-bold text-ink tabular-nums">
-          {r.appointment}
-        </span>
+        <span className="font-bold text-ink tabular-nums">{r.appointment}</span>
       ),
     },
     {

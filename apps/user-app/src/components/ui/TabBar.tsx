@@ -56,6 +56,7 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const pos = useSharedValue(Math.max(activePos, 0));
   useEffect(() => {
     if (activePos >= 0) pos.value = withSpring(activePos, Motion.spring.fluid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePos]);
 
   const indicatorStyle = useAnimatedStyle(() => ({

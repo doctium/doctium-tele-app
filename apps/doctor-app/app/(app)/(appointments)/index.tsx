@@ -51,6 +51,7 @@ export default function DoctorAppointmentsScreen() {
 
   useEffect(() => {
     dispatch(fetchDoctorAppointments(STATUS[tab]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
   const onRefresh = useCallback(async () => {

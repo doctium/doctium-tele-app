@@ -26,6 +26,7 @@ export default function ComplaintsPage() {
   };
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
   const handleResolve = async (id: string) => {

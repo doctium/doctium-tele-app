@@ -290,6 +290,7 @@ function ClipPlayer({
       progress.value = d > 0 ? Math.min(player.currentTime / d, 1) : 0;
     }, 250);
     return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, player, isYoutube]);
 
   const submitReport = useCallback(
@@ -618,6 +619,7 @@ function CommentsSheet({
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [video?.id]);
 
   const send = async () => {

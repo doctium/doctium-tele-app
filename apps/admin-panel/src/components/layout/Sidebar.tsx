@@ -445,7 +445,6 @@ export function Sidebar() {
             title="Go to dashboard"
           >
             <div className="grid place-items-center w-10 h-10 rounded-2xl bg-white shadow-cta-navy overflow-hidden p-1.5 flex-shrink-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/brand/doctium-logo-lightbg.png"
                 alt="Doctium"

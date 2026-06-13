@@ -53,7 +53,6 @@ export default function LoginPage() {
           <div className="relative">
             <div className="flex items-center gap-3">
               <div className="grid place-items-center w-11 h-11 rounded-2xl bg-white shadow-cta overflow-hidden p-1.5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/brand/doctium-logo-lightbg.png"
                   alt="Doctium"
@@ -106,7 +105,6 @@ export default function LoginPage() {
           {/* mobile logo */}
           <div className="mb-8 flex items-center gap-3 lg:hidden">
             <div className="grid place-items-center w-11 h-11 rounded-2xl bg-white shadow-card ring-1 ring-gray-100 overflow-hidden p-1.5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/brand/doctium-logo-lightbg.png"
                 alt="Doctium"
