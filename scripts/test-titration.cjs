@@ -43,6 +43,8 @@ const assert = (cond, label) => {
 
 let patientId = null;
 let originalGenotype = null;
+// Notification copy is localized; pin English so message-text asserts are stable.
+let originalLanguage = null;
 
 const cleanup = async () => {
   if (!patientId) return;
@@ -70,6 +72,12 @@ const cleanup = async () => {
       data: { genotype: originalGenotype },
     });
   }
+  if (originalLanguage !== null) {
+    await prisma.user.update({
+      where: { id: patientId },
+      data: { preferredLanguage: originalLanguage },
+    });
+  }
 };
 
 const DAY = 86_400_000;
@@ -81,7 +89,7 @@ const DAY = 86_400_000;
   });
   const patient = await prisma.user.findFirst({
     where: { mobile: "08000000002" },
-    select: { id: true },
+    select: { id: true, preferredLanguage: true },
   });
   if (!doc || !patient) throw new Error("Seeds missing (rxdoc / 08000000002).");
   patientId = patient.id;
@@ -90,8 +98,17 @@ const DAY = 86_400_000;
     select: { genotype: true },
   });
   originalGenotype = profile?.genotype ?? "";
+  originalLanguage = patient.preferredLanguage ?? "en";
 
   await cleanup();
+
+  // Pin English (after the opening cleanup, which would otherwise restore it)
+  // so the notification-copy assertions below are deterministic regardless of
+  // what language another suite left the patient on.
+  await prisma.user.update({
+    where: { id: patient.id },
+    data: { preferredLanguage: "en" },
+  });
 
   const dl = await call("POST", "/auth/doctor/login", {
     email: "rxdoc@doctium.com",

@@ -8,6 +8,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { prisma } from "@doctium/database";
 import { NotificationsService } from "../notifications/notifications.service";
 import { CareProgramsService, VitalConfig } from "./care-programs.service";
+import { WeatherProvider, WeatherSnapshot } from "./weather.provider";
 
 export interface RiskFactor {
   key: string;
@@ -50,6 +51,7 @@ export class RiskService {
   constructor(
     private readonly care: CareProgramsService,
     private readonly notifications: NotificationsService,
+    private readonly weather: WeatherProvider,
   ) {}
 
   /** Pure rule engine — deterministic and unit-testable. */
@@ -58,6 +60,7 @@ export class RiskService {
     checkInDays: number,
     readings: SignalReading[],
     crises: SignalCrisis[],
+    weather: WeatherSnapshot | null = null,
     now = Date.now(),
   ): RiskResult {
     const factors: RiskFactor[] = [];
@@ -173,16 +176,44 @@ export class RiskService {
       });
     }
 
-    // 6. Season — harmattan/dry season (Nov–Mar) raises trigger exposure.
-    // Deterministic calendar rule; live weather is a later upgrade.
-    const month = new Date(now).getMonth();
-    if (month >= 10 || month <= 2) {
-      factors.push({
-        key: "season",
-        points: 10,
-        label:
-          "Harmattan/dry season — cold, dry air and dehydration risk are higher",
-      });
+    // 6. Environment — live weather for the patient's location when we have it,
+    // else a harmattan/dry-season calendar heuristic. Cold exposure and dry
+    // air (dehydration) are established sickle-cell crisis triggers.
+    if (weather) {
+      let pts = 0;
+      const bits: string[] = [];
+      if (weather.tempC < 18) {
+        pts += 12;
+        bits.push(`${Math.round(weather.tempC)}°C`);
+      } else if (weather.tempC < 23) {
+        pts += 7;
+        bits.push(`${Math.round(weather.tempC)}°C`);
+      }
+      if (weather.humidity < 30) {
+        pts += 6;
+        bits.push(`${Math.round(weather.humidity)}% humidity`);
+      }
+      if (weather.windKph >= 25) {
+        pts += 4;
+        bits.push(`${Math.round(weather.windKph)} km/h wind`);
+      }
+      if (pts > 0) {
+        factors.push({
+          key: "weather",
+          points: Math.min(15, pts),
+          label: `Cold/dry weather in your area (${bits.join(", ")}) — cold exposure and dehydration raise crisis risk`,
+        });
+      }
+    } else {
+      const month = new Date(now).getMonth();
+      if (month >= 10 || month <= 2) {
+        factors.push({
+          key: "season",
+          points: 10,
+          label:
+            "Harmattan/dry season — cold, dry air and dehydration risk are higher",
+        });
+      }
     }
 
     const score = Math.min(
@@ -222,6 +253,7 @@ export class RiskService {
 
   private async computeLoaded(e: {
     id: string;
+    userId: string;
     genotype: string | null;
     thresholds: unknown;
     program: { vitals: unknown; genotypeConfig?: unknown; checkInDays: number };
@@ -232,7 +264,7 @@ export class RiskService {
     );
     const checkInDays = this.care.checkInDaysFor(e.program, e.genotype);
     const windowDays = Math.max(14, 2 * checkInDays);
-    const [readings, crises] = await Promise.all([
+    const [readings, crises, location] = await Promise.all([
       prisma.vitalReading.findMany({
         where: {
           enrollmentId: e.id,
@@ -251,8 +283,23 @@ export class RiskService {
         orderBy: { startedAt: "desc" },
         take: 20,
       }),
+      prisma.user.findUnique({
+        where: { id: e.userId },
+        select: { latitude: true, longitude: true },
+      }),
     ]);
-    return this.assess(configs, checkInDays, readings as never, crises);
+    // Cached + no-op-safe: returns null without coords/network → calendar rule.
+    const weather = await this.weather.current(
+      location?.latitude,
+      location?.longitude,
+    );
+    return this.assess(
+      configs,
+      checkInDays,
+      readings as never,
+      crises,
+      weather,
+    );
   }
 
   /** Risk + 14-day trend for the enrollment detail screens. */

@@ -8,6 +8,7 @@ import { prisma } from "@doctium/database";
 import { LlmProvider } from "../triage/llm.provider";
 import { EntitlementsService } from "../subscriptions/entitlements.service";
 import { NotificationsService } from "../notifications/notifications.service";
+import { AudioExtractorService } from "./audio-extractor.service";
 
 export interface SoapDraft {
   subjective: string;
@@ -136,6 +137,8 @@ const MAX_SOURCE_CHARS = 12_000;
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
 // Whisper's upload ceiling is 25MB — leave headroom for consult recordings.
 const MAX_RECORDING_BYTES = 24 * 1024 * 1024;
+// Above this we won't even attempt audio extraction (runaway ffmpeg guard).
+const MAX_EXTRACTION_INPUT_BYTES = 1024 * 1024 * 1024; // 1GB
 
 /**
  * Doctium Scribe: drafts a SOAP note from the consult chat thread or a
@@ -152,6 +155,7 @@ export class ScribeService {
     private readonly llm: LlmProvider,
     private readonly entitlements: EntitlementsService,
     private readonly notifications: NotificationsService,
+    private readonly audioExtractor: AudioExtractorService,
   ) {}
 
   /** Beta switch: while "true" (or unset), every doctor gets the scribe; flip to "false" to make it plan-gated. */
@@ -434,41 +438,62 @@ export class ScribeService {
         "No recording is available for this appointment yet.",
       );
     }
-    if (
-      asset.sizeBytes != null &&
-      Number(asset.sizeBytes) > MAX_RECORDING_BYTES
-    ) {
+    const knownSize = asset.sizeBytes != null ? Number(asset.sizeBytes) : null;
+    if (knownSize != null && knownSize > MAX_EXTRACTION_INPUT_BYTES) {
       throw new BadRequestException(
-        "This recording is too large to transcribe automatically — use dictation instead.",
+        "This recording is too large to process automatically — use dictation instead.",
       );
     }
 
     let buffer: Buffer;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 60_000);
-    try {
-      const res = await fetch(asset.providerUrl, {
-        signal: controller.signal,
-      });
-      if (!res.ok) throw new Error(`storage ${res.status}`);
-      buffer = Buffer.from(await res.arrayBuffer());
-    } catch {
-      throw new BadRequestException(
-        "Couldn't fetch the recording from storage — please try again shortly.",
-      );
-    } finally {
-      clearTimeout(timer);
-    }
-    if (buffer.length > MAX_RECORDING_BYTES) {
-      throw new BadRequestException(
-        "This recording is too large to transcribe automatically — use dictation instead.",
-      );
+    let mime = asset.mimeType || "video/mp4";
+
+    if (knownSize != null && knownSize > MAX_RECORDING_BYTES) {
+      // Large recording: pull out a compressed mono audio track that clears
+      // Whisper's ceiling instead of rejecting the whole consult.
+      const audio = await this.extractRecordingAudio(asset.providerUrl);
+      if (!audio) {
+        throw new BadRequestException(
+          "This recording is too large to transcribe automatically — use dictation instead.",
+        );
+      }
+      buffer = audio;
+      mime = "audio/mpeg";
+    } else {
+      // Small/unknown size: download directly.
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60_000);
+      try {
+        const res = await fetch(asset.providerUrl, {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`storage ${res.status}`);
+        buffer = Buffer.from(await res.arrayBuffer());
+      } catch {
+        throw new BadRequestException(
+          "Couldn't fetch the recording from storage — please try again shortly.",
+        );
+      } finally {
+        clearTimeout(timer);
+      }
+      // Unknown size that turned out to exceed the ceiling → extract & retry.
+      if (buffer.length > MAX_RECORDING_BYTES) {
+        const audio = await this.extractRecordingAudio(asset.providerUrl);
+        if (!audio) {
+          throw new BadRequestException(
+            "This recording is too large to transcribe automatically — use dictation instead.",
+          );
+        }
+        buffer = audio;
+        mime = "audio/mpeg";
+      }
     }
     if (buffer.length < 1_000) {
       throw new BadRequestException("The recording appears to be empty.");
     }
 
     // Compliance: AI access to a consult recording is auditable like playback.
+    // Logged only once we actually have audio in hand — never on a failed read.
     await prisma.appointmentRecordingAccessLog.create({
       data: {
         appointmentId,
@@ -479,15 +504,26 @@ export class ScribeService {
       },
     });
 
-    const transcript = (
-      await this.llm.transcribe(buffer, asset.mimeType || "video/mp4", "en")
-    ).trim();
+    const transcript = (await this.llm.transcribe(buffer, mime, "en")).trim();
     if (transcript.length < 40) {
       throw new BadRequestException(
         "Couldn't make out the consultation audio in this recording.",
       );
     }
     return transcript;
+  }
+
+  /**
+   * Extract a Whisper-sized audio track from a large recording via ffmpeg.
+   * Returns null when extraction isn't possible or the result still exceeds
+   * the ceiling (a marathon recording) — the caller then rejects gracefully.
+   */
+  private async extractRecordingAudio(url: string): Promise<Buffer | null> {
+    const audio = await this.audioExtractor.extractAudio(url, {
+      timeoutMs: 180_000,
+    });
+    if (!audio || audio.length > MAX_RECORDING_BYTES) return null;
+    return audio;
   }
 
   /** Post-visit dictation: base64 (or data-URL) audio → Whisper transcript. */

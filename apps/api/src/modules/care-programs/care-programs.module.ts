@@ -6,6 +6,7 @@ import {
 } from "./care-programs.controller";
 import { CareProgramsService } from "./care-programs.service";
 import { RiskService } from "./risk.service";
+import { WeatherProvider } from "./weather.provider";
 import { TitrationService } from "./titration.service";
 import { ScdOutcomesService } from "./scd-outcomes.service";
 import { OrganizationsService } from "./organizations.service";
@@ -21,6 +22,7 @@ import { AdminOrganizationsController } from "./organizations.controller";
   providers: [
     CareProgramsService,
     RiskService,
+    WeatherProvider,
     TitrationService,
     ScdOutcomesService,
     OrganizationsService,
