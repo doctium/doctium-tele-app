@@ -4,7 +4,7 @@
  *   node --env-file=.env scripts/test-termii.cjs
  */
 const apiKey = process.env.TERMII_API_KEY;
-const senderId = process.env.TERMII_SENDER_ID || "Doctium";
+const senderId = process.env.TERMII_SENDER_ID || "N-Alert";
 
 if (!apiKey) {
   console.error("❌ Missing TERMII_API_KEY in .env");

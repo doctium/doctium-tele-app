@@ -18,7 +18,9 @@ export class SmsProvider {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to,
-          from: process.env.TERMII_SENDER_ID || "Doctium",
+          // N-Alert is Termii's pre-approved shared sender ID — works without
+          // brand-name verification (override once a custom sender ID is approved).
+          from: process.env.TERMII_SENDER_ID || "N-Alert",
           sms: message,
           type: "plain",
           channel: "generic",
