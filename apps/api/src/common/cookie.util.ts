@@ -5,6 +5,14 @@
  */
 export const ADMIN_COOKIE = "doctium_admin_token";
 
+/**
+ * CSRF double-submit token. Set as a JS-READABLE cookie at admin login; the admin
+ * client echoes it in the X-CSRF-Token header on mutating requests, and the server
+ * checks header === cookie. Defense-in-depth on top of the SameSite session cookie.
+ */
+export const CSRF_COOKIE = "doctium_csrf";
+export const CSRF_HEADER = "x-csrf-token";
+
 /** Minimal cookie-header parser (avoids pulling in cookie-parser middleware). */
 export function parseCookies(header?: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -27,5 +35,16 @@ export function adminCookieOptions() {
     sameSite: "lax" as const,
     path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7d — matches the access-token lifetime
+  };
+}
+
+/** CSRF cookie — deliberately NOT httpOnly so the admin client can read + echo it. */
+export function csrfCookieOptions() {
+  return {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 }

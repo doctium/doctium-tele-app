@@ -65,7 +65,8 @@ async function main() {
     "login still returns a bearer token in the body (mobile/programmatic)",
   );
 
-  const cookieHeader = `${COOKIE}=${cookie ? cookie.value : ""}`;
+  const csrf = cookieValue(setCookies, "doctium_csrf");
+  const cookieHeader = `${COOKIE}=${cookie ? cookie.value : ""}; doctium_csrf=${csrf ? csrf.value : ""}`;
 
   // ── /admin/me via cookie only (no Authorization header) ──
   let r = await fetch(`${BASE}/admin/me`, {
@@ -94,7 +95,10 @@ async function main() {
   // ── Logout clears the cookie ─────────────────────────────
   r = await fetch(`${BASE}/auth/admin/logout`, {
     method: "POST",
-    headers: { Cookie: cookieHeader },
+    headers: {
+      Cookie: cookieHeader,
+      "X-CSRF-Token": csrf ? csrf.value : "",
+    },
   });
   const cleared = cookieValue(getSetCookie(r), COOKIE);
   assert(r.status === 200 || r.status === 201, "logout succeeds");

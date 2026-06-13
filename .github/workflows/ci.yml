@@ -95,6 +95,8 @@ jobs:
         run: node scripts/test-admin-cookie-auth.cjs
       - name: Run token-refresh integration test
         run: node scripts/test-token-refresh.cjs
+      - name: Run admin CSRF integration test
+        run: node scripts/test-admin-csrf.cjs
       - name: API logs on failure
         if: failure()
         run: cat api.log || true

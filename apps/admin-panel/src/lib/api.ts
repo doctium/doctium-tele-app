@@ -13,6 +13,23 @@ export const apiClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+/** Read a non-httpOnly cookie value in the browser. */
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+// CSRF double-submit: echo the readable CSRF cookie in a header on mutating requests.
+apiClient.interceptors.request.use((config) => {
+  const method = (config.method ?? "get").toLowerCase();
+  if (["post", "put", "patch", "delete"].includes(method)) {
+    const csrf = readCookie("doctium_csrf");
+    if (csrf) config.headers["X-CSRF-Token"] = csrf;
+  }
+  return config;
+});
+
 /** Pull a human-readable message out of the API's { statusCode, message, error } error body. */
 function errorMessage(err: {
   response?: { data?: { message?: string | string[] } };

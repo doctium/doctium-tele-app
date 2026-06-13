@@ -3,7 +3,13 @@ import { ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import type { Response } from "express";
 import { AuthService } from "./auth.service";
-import { ADMIN_COOKIE, adminCookieOptions } from "../../common/cookie.util";
+import { randomBytes } from "crypto";
+import {
+  ADMIN_COOKIE,
+  CSRF_COOKIE,
+  adminCookieOptions,
+  csrfCookieOptions,
+} from "../../common/cookie.util";
 import { renderEmailVerifiedPage } from "./email-verified.page";
 import {
   LoginDto,
@@ -100,12 +106,19 @@ export class AuthController {
     // httpOnly session cookie for the admin browser (not readable by XSS). The
     // tokens are still returned in the body for non-browser/programmatic clients.
     res.cookie(ADMIN_COOKIE, tokens.accessToken, adminCookieOptions());
+    // JS-readable CSRF token (double-submit) — the client echoes it in X-CSRF-Token.
+    res.cookie(
+      CSRF_COOKIE,
+      randomBytes(24).toString("hex"),
+      csrfCookieOptions(),
+    );
     return tokens;
   }
 
   @Post("admin/logout")
   logoutAdmin(@Res({ passthrough: true }) res: Response) {
     res.clearCookie(ADMIN_COOKIE, { path: "/" });
+    res.clearCookie(CSRF_COOKIE, { path: "/" });
     return { ok: true };
   }
 }
