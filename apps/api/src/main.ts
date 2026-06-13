@@ -1,3 +1,6 @@
+// Must be first — initialises Sentry before any other module loads so it can
+// instrument them (no-op unless SENTRY_DSN is set).
+import "./instrument";
 import { NestFactory } from "@nestjs/core";
 import { Logger, ValidationPipe } from "@nestjs/common";
 import { NestExpressApplication } from "@nestjs/platform-express";

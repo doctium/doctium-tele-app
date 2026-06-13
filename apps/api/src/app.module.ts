@@ -1,5 +1,7 @@
 import { Module } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_GUARD, APP_FILTER } from "@nestjs/core";
+import { SentryModule } from "@sentry/nestjs/setup";
+import { SentryGlobalFilter } from "@sentry/nestjs/setup";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { CsrfGuard } from "./common/csrf.guard";
@@ -35,6 +37,7 @@ import { RecordingModule } from "./modules/recording/recording.module";
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ScheduleModule.forRoot(),
     // Global rate limiting. A generous default protects every route from abuse;
     // auth/OTP routes apply much stricter per-route limits via @Throttle, and the
@@ -71,6 +74,9 @@ import { RecordingModule } from "./modules/recording/recording.module";
     RecordingModule,
   ],
   providers: [
+    // Captures unhandled exceptions to Sentry (then delegates to Nest's default
+    // handling, so error responses are unchanged). No-op when SENTRY_DSN is unset.
+    { provide: APP_FILTER, useClass: SentryGlobalFilter },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: CsrfGuard },
   ],
