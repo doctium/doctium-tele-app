@@ -58,16 +58,33 @@ async function main() {
     "refresh succeeds",
   );
   assert(!!newAccess, "refresh returns a fresh access token");
-  // Stateless JWTs: a new refresh token is issued (byte-identical if minted in the
-  // same second, since iat is second-granular). True rotation/reuse-detection needs
-  // a per-token jti + server-side tracking — a documented follow-up.
-  assert(!!newRefresh, "refresh returns a refresh token");
+  assert(
+    !!newRefresh && newRefresh !== refreshToken,
+    "refresh rotates the refresh token (new jti)",
+  );
 
   // New access token authenticates a protected route
   const mine = await call("GET", "/appointments/mine", null, newAccess);
   assert(
     mine.status === 200,
     "new access token authenticates a protected route",
+  );
+
+  // Reuse detection: the ORIGINAL token was already rotated above → replaying it
+  // must be rejected AND must revoke the whole family.
+  const reuse = await call("POST", "/auth/refresh", { refreshToken });
+  assert(
+    reuse.status === 401,
+    "reusing a rotated refresh token is rejected (401)",
+  );
+
+  // The successor token is in the same (now-revoked) family → also rejected.
+  const successor = await call("POST", "/auth/refresh", {
+    refreshToken: newRefresh,
+  });
+  assert(
+    successor.status === 401,
+    "reuse revokes the whole token family (successor rejected)",
   );
 
   // Invalid refresh token → 401

@@ -1840,6 +1840,25 @@ model Otp {
   @@map("otps")
 }
 
+/// Issued refresh tokens, for rotation + reuse detection. Each login starts a
+/// family; every refresh marks the old jti used and mints a new one in the same
+/// family. Presenting an already-used (or revoked) token revokes the whole family.
+model RefreshToken {
+  id        String    @id @default(cuid())
+  jti       String    @unique // unique id embedded in the refresh JWT
+  familyId  String // rotation lineage from a single login
+  subjectId String // user/doctor/employee id
+  role      String // "user" | "doctor" | "admin"
+  usedAt    DateTime? // set when this token is rotated; presenting it again = reuse
+  revoked   Boolean   @default(false)
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([familyId])
+  @@index([subjectId])
+  @@map("refresh_tokens")
+}
+
 /// Broadcast notifications for the admin panel bell (e.g. new doctor signups).
 model AdminNotification {
   id        String   @id @default(cuid())

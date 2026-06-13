@@ -141,7 +141,7 @@ export class AuthService {
     await prisma.userWallet.create({ data: { userId: user.id } });
     // Kick off email verification (fire-and-forget; no-op without an email).
     if (user.email) this.sendUserEmailVerification(user.email).catch(() => {});
-    return this.generateTokens(user.id, user.email ?? "", "user");
+    return this.issueTokens(user.id, user.email ?? "", "user");
   }
 
   // ── Patient email verification (6-digit OTP or emailed link) ──
@@ -239,7 +239,7 @@ export class AuthService {
     });
 
     await prisma.doctorWallet.create({ data: { doctorId: doctor.id } });
-    return this.generateTokens(doctor.id, doctor.email, "doctor");
+    return this.issueTokens(doctor.id, doctor.email, "doctor");
   }
 
   // ── Doctor self-signup with email + phone OTP ──────────────
@@ -365,7 +365,7 @@ export class AuthService {
       designation: doctor.designation,
     }).catch(() => {});
 
-    return this.generateTokens(doctor.id, doctor.email, "doctor");
+    return this.issueTokens(doctor.id, doctor.email, "doctor");
   }
 
   private doctorWelcomeHtml(firstName: string): string {
@@ -449,7 +449,7 @@ export class AuthService {
     const valid = await bcrypt.compare(dto.password, user.password);
     if (!valid) throw new UnauthorizedException("Invalid credentials");
 
-    return this.generateTokens(user.id, user.email ?? "", "user");
+    return this.issueTokens(user.id, user.email ?? "", "user");
   }
 
   async loginDoctor(dto: LoginDto): Promise<AuthTokens> {
@@ -466,7 +466,7 @@ export class AuthService {
     const valid = await bcrypt.compare(dto.password, doctor.password);
     if (!valid) throw new UnauthorizedException("Invalid credentials");
 
-    return this.generateTokens(doctor.id, doctor.email, "doctor");
+    return this.issueTokens(doctor.id, doctor.email, "doctor");
   }
 
   async loginAdmin(dto: LoginDto): Promise<AuthTokens> {
@@ -482,7 +482,7 @@ export class AuthService {
     const valid = await bcrypt.compare(dto.password, employee.password);
     if (!valid) throw new UnauthorizedException("Invalid credentials");
 
-    return this.generateTokens(employee.id, employee.email, "admin");
+    return this.issueTokens(employee.id, employee.email, "admin");
   }
 
   async sendOtp(mobile: string): Promise<{ message: string }> {
@@ -517,7 +517,7 @@ export class AuthService {
       await prisma.userWallet.create({ data: { userId: user.id } });
     }
 
-    return this.generateTokens(user.id, user.email ?? "", "user");
+    return this.issueTokens(user.id, user.email ?? "", "user");
   }
 
   /**
@@ -526,16 +526,35 @@ export class AuthService {
    * so a deleted/blocked account can't keep minting access tokens.
    */
   async refresh(refreshToken: string): Promise<AuthTokens> {
-    let payload: JwtPayload;
+    let payload: JwtPayload & { jti?: string };
     try {
-      payload = this.jwtService.verify<JwtPayload>(refreshToken, {
-        secret: requireEnv("JWT_REFRESH_SECRET"),
-      });
+      payload = this.jwtService.verify<JwtPayload & { jti?: string }>(
+        refreshToken,
+        { secret: requireEnv("JWT_REFRESH_SECRET") },
+      );
     } catch {
       throw new UnauthorizedException("Invalid or expired refresh token");
     }
 
-    const { sub, email, role } = payload;
+    const { sub, email, role, jti } = payload;
+    // Pre-rotation tokens (no jti) are no longer accepted — the client re-logs in.
+    if (!jti) throw new UnauthorizedException("Invalid refresh token");
+
+    const stored = await prisma.refreshToken.findUnique({ where: { jti } });
+    if (!stored || stored.revoked || stored.expiresAt < new Date())
+      throw new UnauthorizedException("Invalid or expired refresh token");
+
+    if (stored.usedAt) {
+      // An already-rotated token is being replayed → the family is compromised.
+      // Revoke every token in the lineage so the attacker's branch dies too.
+      await prisma.refreshToken.updateMany({
+        where: { familyId: stored.familyId },
+        data: { revoked: true },
+      });
+      throw new UnauthorizedException("Refresh token reuse detected");
+    }
+
+    // Principal must still exist and be active (mirrors jwt.strategy).
     if (role === "user") {
       const user = await prisma.user.findUnique({ where: { id: sub } });
       if (!user || user.isDelete || user.isBlock)
@@ -550,21 +569,46 @@ export class AuthService {
         throw new UnauthorizedException();
     }
 
-    return this.generateTokens(sub, email ?? "", role);
+    // Rotate: mark the presented token used, mint a successor in the same family.
+    await prisma.refreshToken.update({
+      where: { jti },
+      data: { usedAt: new Date() },
+    });
+    return this.issueTokens(sub, email ?? "", role, stored.familyId);
   }
 
-  private generateTokens(
+  /**
+   * Issue an access token + a tracked, rotating refresh token. A new login starts
+   * a fresh family; a rotation continues the caller's family.
+   */
+  private async issueTokens(
     sub: string,
     email: string,
     role: JwtPayload["role"],
-  ): AuthTokens {
-    const payload: JwtPayload = { sub, email, role };
+    familyId?: string,
+  ): Promise<AuthTokens> {
+    const jti = randomBytes(16).toString("hex");
+    const family = familyId ?? randomBytes(16).toString("hex");
+    const refreshDays =
+      parseInt(
+        (process.env.JWT_REFRESH_EXPIRES_IN ?? "30d").replace(/\D/g, ""),
+        10,
+      ) || 30;
+    const expiresAt = new Date(Date.now() + refreshDays * 24 * 60 * 60 * 1000);
+
+    await prisma.refreshToken.create({
+      data: { jti, familyId: family, subjectId: sub, role, expiresAt },
+    });
+
     return {
-      accessToken: this.jwtService.sign(payload),
-      refreshToken: this.jwtService.sign(payload, {
-        secret: requireEnv("JWT_REFRESH_SECRET"),
-        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? "30d",
-      }),
+      accessToken: this.jwtService.sign({ sub, email, role }),
+      refreshToken: this.jwtService.sign(
+        { sub, email, role, jti },
+        {
+          secret: requireEnv("JWT_REFRESH_SECRET"),
+          expiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? "30d",
+        },
+      ),
     };
   }
 }
