@@ -36,8 +36,14 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      ["expo-notifications", { "color": "#133157" }],
-      "expo-audio"
+      [
+        "expo-notifications",
+        {
+          "color": "#133157"
+        }
+      ],
+      "expo-audio",
+      "@sentry/react-native"
     ],
     "scheme": "doctium-doctor"
   }

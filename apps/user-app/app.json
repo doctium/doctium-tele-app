@@ -53,7 +53,8 @@
         }
       ],
       "expo-audio",
-      "expo-localization"
+      "expo-localization",
+      "@sentry/react-native"
     ],
     "scheme": "doctium"
   }
