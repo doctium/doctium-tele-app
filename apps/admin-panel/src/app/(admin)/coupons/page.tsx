@@ -9,7 +9,6 @@ import { apiClient } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { formatMoney, toStoredAmount } from "@/lib/money";
 import type { Coupon } from "@/types";
-import { format } from "date-fns";
 
 export default function CouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);

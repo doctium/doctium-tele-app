@@ -6,7 +6,6 @@ import SignatureScreenView, {
   SignatureViewRef,
 } from "react-native-signature-canvas";
 import {
-  Fonts,
   Palette,
   Radius,
   Space,

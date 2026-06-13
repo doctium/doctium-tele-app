@@ -32,6 +32,11 @@ jobs:
         run: npm run lint:apps
       - name: Typecheck API
         run: npm run typecheck --workspace=@doctium/api
+      - name: Typecheck apps (admin + mobile)
+        run: |
+          npm run typecheck --workspace=@doctium/admin-panel
+          npm run typecheck --workspace=@doctium/user-app
+          npm run typecheck --workspace=@doctium/doctor-app
       - name: Unit tests (API)
         run: npm test --workspace=@doctium/api
 

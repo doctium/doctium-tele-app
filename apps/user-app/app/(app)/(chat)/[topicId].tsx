@@ -16,7 +16,6 @@ import { io, Socket } from "socket.io-client";
 import * as SecureStore from "expo-secure-store";
 import {
   Gradients,
-  Fonts,
   Palette,
   Radius,
   Shadow,

@@ -64,7 +64,8 @@ export default function RolesPage() {
   const toggle = (key: string) =>
     setForm((f) => {
       const next = new Set(f.permissions);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return { ...f, permissions: next };
     });
 

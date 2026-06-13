@@ -26,7 +26,7 @@ export default function PricingScreen() {
   const [scheduled, setScheduled] = useState("");
   const [instantDay, setInstantDay] = useState("");
   const [instantNight, setInstantNight] = useState("");
-  const [currency, setCurrency] = useState("₦");
+  const [currency] = useState("₦");
   const [discountActive, setDiscountActive] = useState(false);
   const [discountPercent, setDiscountPercent] = useState("");
   const [discountLabel, setDiscountLabel] = useState("");

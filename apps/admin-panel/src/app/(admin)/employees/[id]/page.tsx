@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Upload,
   Trash2,
-  FileText,
   ExternalLink,
   Check,
   Eye,

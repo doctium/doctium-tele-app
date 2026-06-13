@@ -20,12 +20,7 @@ import {
 } from "../../../src/theme";
 import { Avatar } from "../../../src/components/common/Avatar";
 import { Button } from "../../../src/components/common/Button";
-import {
-  AppHeader,
-  AnimatedPressable,
-  Card,
-  Txt,
-} from "../../../src/components/ui";
+import { AppHeader, AnimatedPressable, Card } from "../../../src/components/ui";
 import { followupsApi } from "../../../src/api/followups.api";
 
 type FollowUpType =

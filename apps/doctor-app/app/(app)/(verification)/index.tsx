@@ -21,12 +21,7 @@ import {
   type Palette,
 } from "../../../src/theme";
 import { Button } from "../../../src/components/common/Button";
-import {
-  AppHeader,
-  AnimatedPressable,
-  Card,
-  Txt,
-} from "../../../src/components/ui";
+import { AppHeader, AnimatedPressable, Card } from "../../../src/components/ui";
 import { doctorApi } from "../../../src/api/doctor.api";
 
 interface KycDoc {

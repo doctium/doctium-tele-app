@@ -14,18 +14,21 @@ import nextPlugin from "@next/eslint-plugin-next";
  */
 const appRules = {
   "@typescript-eslint/no-explicit-any": "warn",
+  // Promoted to error after the backlog was cleared — these now gate CI.
   "@typescript-eslint/no-unused-vars": [
-    "warn",
+    "error",
     { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
   ],
+  "@typescript-eslint/no-unused-expressions": "error",
+  "prefer-const": "error",
+  // Empty blocks gate CI, but an intentional empty catch is an allowed pattern
+  // (admin surfaces errors via a global toast; mobile uses best-effort no-ops).
+  "no-empty": ["error", { allowEmptyCatch: true }],
   // TypeScript already resolves identifiers; no-undef double-reports RN/DOM globals.
   "no-undef": "off",
-  "prefer-const": "warn",
-  "no-empty": "warn",
-  // require() is idiomatic in React Native (static asset imports) — surface, don't block.
+  // Still advisory (warn): require() is the idiomatic RN static-asset loader;
+  // exhaustive-deps is risky to bulk-fix; rules-of-hooks has a small backlog.
   "@typescript-eslint/no-require-imports": "warn",
-  "@typescript-eslint/no-unused-expressions": "warn",
-  // Hooks correctness — the highest-value React check. Warn for now (pre-existing backlog).
   "react-hooks/rules-of-hooks": "warn",
   "react-hooks/exhaustive-deps": "warn",
 };

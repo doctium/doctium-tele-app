@@ -7,7 +7,6 @@ import {
   Globe2,
   Repeat,
   UserPlus,
-  Users,
   Wallet,
 } from "lucide-react";
 import {

@@ -38,7 +38,7 @@ const AnimatedGradient = Animated.createAnimatedComponent(LinearGradient);
 
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const { colors, isDark } = useTheme();
+  const { isDark } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const [width, setWidth] = useState(0);
 

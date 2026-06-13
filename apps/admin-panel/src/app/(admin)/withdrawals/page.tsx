@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle, Download, XCircle } from "lucide-react";
 import { DataTable, Column } from "@/components/ui/DataTable";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge, statusBadge } from "@/components/ui/Badge";
+import { statusBadge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { apiClient } from "@/lib/api";

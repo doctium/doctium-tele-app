@@ -753,9 +753,7 @@ export default function MediGramScreen() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [sheetVideo, setSheetVideo] = useState<VideoItem | null>(null);
   const setCountRef = useRef<((n: number) => void) | null>(null);
-  const [liveCommentCount, setLiveCommentCount] = useState<number | undefined>(
-    undefined,
-  );
+  const [, setLiveCommentCount] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     videosApi

@@ -70,7 +70,8 @@ export default function ScheduleScreen() {
   const toggleDay = (day: string) =>
     setActiveDays((prev) => {
       const n = new Set(prev);
-      n.has(day) ? n.delete(day) : n.add(day);
+      if (n.has(day)) n.delete(day);
+      else n.add(day);
       return n;
     });
   const updateDay = (

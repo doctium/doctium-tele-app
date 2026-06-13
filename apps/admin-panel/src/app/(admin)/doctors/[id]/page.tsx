@@ -7,7 +7,6 @@ import {
   Check,
   X,
   Eye,
-  FileText,
   ExternalLink,
   ShieldCheck,
   Upload,

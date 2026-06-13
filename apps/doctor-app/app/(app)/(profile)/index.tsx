@@ -19,7 +19,6 @@ import {
   useThemedStyles,
 } from "../../../src/theme";
 import { Avatar } from "../../../src/components/common/Avatar";
-import { StarRating } from "../../../src/components/common/StarRating";
 import { formatMoney } from "../../../src/utils/money";
 import { AnimatedPressable } from "../../../src/components/ui";
 import { useAppDispatch } from "../../../src/hooks/useAppDispatch";
