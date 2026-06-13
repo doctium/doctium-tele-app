@@ -37,7 +37,7 @@ export class MailerProvider {
         from:
           process.env.SMTP_FROM ||
           process.env.SMTP_USER ||
-          "no-reply@doctium.com",
+          "no-reply@doctiumhealth.com",
         to,
         subject,
         html,
