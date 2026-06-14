@@ -9,7 +9,8 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.doctiumhealth.com"
-      }
+      },
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",

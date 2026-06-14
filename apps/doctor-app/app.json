@@ -60,15 +60,15 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "93324f5e-0a0c-42f7-8676-655d5b39a2e6"
+        "projectId": "930756ee-f4da-4105-aace-bf33d20e24b7"
       }
     },
-    "owner": "doctium",
     "runtimeVersion": {
       "policy": "appVersion"
     },
+    "owner": "doctiums-team",
     "updates": {
-      "url": "https://u.expo.dev/93324f5e-0a0c-42f7-8676-655d5b39a2e6"
+      "url": "https://u.expo.dev/930756ee-f4da-4105-aace-bf33d20e24b7"
     }
   }
 }

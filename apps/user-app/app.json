@@ -77,15 +77,15 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "40a2cd83-4fd0-4130-9ac8-cfcb60bbf5e9"
+        "projectId": "03ca986d-8fa5-4f62-a42f-52cf0f56f65f"
       }
     },
-    "owner": "doctium",
     "runtimeVersion": {
       "policy": "appVersion"
     },
+    "owner": "doctiums-team",
     "updates": {
-      "url": "https://u.expo.dev/40a2cd83-4fd0-4130-9ac8-cfcb60bbf5e9"
+      "url": "https://u.expo.dev/03ca986d-8fa5-4f62-a42f-52cf0f56f65f"
     }
   }
 }
