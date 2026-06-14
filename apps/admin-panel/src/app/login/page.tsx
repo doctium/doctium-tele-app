@@ -1,11 +1,9 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ShieldCheck, ArrowRight } from "lucide-react";
 import { apiClient } from "@/lib/api";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,10 +24,12 @@ export default function LoginPage() {
     try {
       // The API sets an httpOnly session cookie on success; nothing to store here.
       await apiClient.post("/auth/admin/login", form);
-      router.push("/dashboard");
+      // Full-page navigation (not router.push): guarantees the just-set session
+      // cookie is committed before the dashboard fires its first authed request,
+      // avoiding a 401-bounce back to /login on the first attempt.
+      window.location.href = "/dashboard";
     } catch (e: unknown) {
       setError((e as { message?: string })?.message ?? "Invalid credentials");
-    } finally {
       setLoading(false);
     }
   };
