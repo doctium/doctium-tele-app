@@ -27,6 +27,12 @@ export function parseCookies(header?: string): Record<string, string> {
   return out;
 }
 
+// In production the admin (dashboard.doctiumhealth.com) and API (api.doctiumhealth.com)
+// are different sub-domains, so the cookies must be scoped to the parent domain to be
+// shared. Set COOKIE_DOMAIN=".doctiumhealth.com" in prod. Unset in local dev → host-only
+// cookies (which on localhost are already shared across ports).
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
+
 /** Cookie attributes for the admin session. SameSite=Lax + CORS block CSRF; Secure in prod. */
 export function adminCookieOptions() {
   return {
@@ -34,6 +40,7 @@ export function adminCookieOptions() {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
     path: "/",
+    domain: COOKIE_DOMAIN,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7d — matches the access-token lifetime
   };
 }
@@ -45,6 +52,12 @@ export function csrfCookieOptions() {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
     path: "/",
+    domain: COOKIE_DOMAIN,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
+}
+
+/** Options for clearing the cookies — must match domain + path used when setting. */
+export function cookieClearOptions() {
+  return { path: "/", domain: COOKIE_DOMAIN };
 }

@@ -44,7 +44,11 @@ async function bootstrap() {
     // apps don't send an Origin header, so this doesn't affect them.
     origin:
       process.env.NODE_ENV === "production"
-        ? ["https://admin.doctium.com", "https://doctium.com"]
+        ? [
+            "https://dashboard.doctiumhealth.com",
+            "https://doctiumhealth.com",
+            "https://www.doctiumhealth.com",
+          ]
         : true,
     credentials: true,
   });

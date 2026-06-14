@@ -9,6 +9,7 @@ import {
   CSRF_COOKIE,
   adminCookieOptions,
   csrfCookieOptions,
+  cookieClearOptions,
 } from "../../common/cookie.util";
 import { renderEmailVerifiedPage } from "./email-verified.page";
 import {
@@ -117,8 +118,8 @@ export class AuthController {
 
   @Post("admin/logout")
   logoutAdmin(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie(ADMIN_COOKIE, { path: "/" });
-    res.clearCookie(CSRF_COOKIE, { path: "/" });
+    res.clearCookie(ADMIN_COOKIE, cookieClearOptions());
+    res.clearCookie(CSRF_COOKIE, cookieClearOptions());
     return { ok: true };
   }
 }
