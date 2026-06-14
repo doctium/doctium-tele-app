@@ -12,3 +12,11 @@ coverage
 .codex-logs/
 # NOTE: prisma/migrations is intentionally NOT ignored — DB migrations are
 # source-of-truth and must be committed.
+
+# Mobile signing secrets — never commit. (google-services.json /
+# GoogleService-Info.plist ARE committed: they ship in the app binary and hold
+# no secrets. APNs/keystore private keys must stay out of git.)
+*.p8
+*.keystore
+*.jks
+AuthKey_*.p8

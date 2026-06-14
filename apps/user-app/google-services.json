@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "601760147056",
+    "project_id": "doctium-53130",
+    "storage_bucket": "doctium-53130.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:601760147056:android:cd44e5e4f41965d65b76b5",
+        "android_client_info": {
+          "package_name": "com.doctium.user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB18YdehASRmppnbTreoEDlKRFdFRi8lQo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

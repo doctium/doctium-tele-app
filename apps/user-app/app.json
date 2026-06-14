@@ -14,6 +14,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.doctium.user",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSCameraUsageDescription": "Doctium needs camera access for video consultations.",
         "NSMicrophoneUsageDescription": "Doctium needs microphone access for voice and video calls.",
@@ -27,6 +28,7 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.doctium.user",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",
@@ -34,7 +36,11 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
     "plugins": [
@@ -56,6 +62,13 @@
       "expo-localization",
       "@sentry/react-native"
     ],
-    "scheme": "doctium"
+    "scheme": "doctium",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "40a2cd83-4fd0-4130-9ac8-cfcb60bbf5e9"
+      }
+    },
+    "owner": "doctium"
   }
 }
