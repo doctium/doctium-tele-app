@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  Image,
   Modal,
   Pressable,
   RefreshControl,
@@ -50,7 +49,7 @@ import { useAppDispatch } from "../../../src/hooks/useAppDispatch";
 import { useAppSelector } from "../../../src/hooks/useAppSelector";
 import { fetchDoctors } from "../../../src/store/slices/doctorsSlice";
 import { fetchProfile } from "../../../src/store/slices/userSlice";
-import { bannersApi } from "../../../src/api/banners.api";
+import { BannerCarousel } from "../../../src/components/common/BannerCarousel";
 import { servicesApi } from "../../../src/api/services.api";
 import { satisfactionApi } from "../../../src/api/satisfaction.api";
 import { regionsApi } from "../../../src/api/regions.api";
@@ -61,10 +60,6 @@ interface Service {
   id: string;
   name: string;
   image?: string;
-}
-interface Banner {
-  id: string;
-  image: string;
 }
 interface Region {
   code: string;
@@ -87,7 +82,6 @@ type IoniconName = keyof typeof Ionicons.glyphMap;
 
 // Doctor-carousel geometry (card width + trailing margin) for snap + focus scaling.
 const CAROUSEL_STEP = 170;
-const BANNER_STEP = 314;
 
 function greetingKey() {
   const h = new Date().getHours();
@@ -156,7 +150,6 @@ export default function HomeScreen() {
   const { list: doctors, loading } = useAppSelector((s) => s.doctors);
   const { profile } = useAppSelector((s) => s.user);
   const [services, setServices] = useState<Service[]>([]);
-  const [banners, setBanners] = useState<Banner[]>([]);
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [openSurveys, setOpenSurveys] = useState<
@@ -247,10 +240,6 @@ export default function HomeScreen() {
     servicesApi
       .getAll()
       .then((r: unknown) => setServices((r as { data: Service[] }).data ?? []))
-      .catch(() => {});
-    bannersApi
-      .getActive()
-      .then((r: unknown) => setBanners((r as { data: Banner[] }).data ?? []))
       .catch(() => {});
     satisfactionApi
       .getMine()
@@ -598,27 +587,9 @@ export default function HomeScreen() {
         )}
 
         {/* ─── Banners ─── */}
-        {banners.length > 0 && (
-          <Reveal>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginTop: 22 }}
-              contentContainerStyle={styles.bannerRow}
-              snapToInterval={BANNER_STEP}
-              decelerationRate="fast"
-            >
-              {banners.map((b) => (
-                <Image
-                  key={b.id}
-                  source={{ uri: b.image }}
-                  style={styles.banner}
-                  resizeMode="cover"
-                />
-              ))}
-            </ScrollView>
-          </Reveal>
-        )}
+        <Reveal>
+          <BannerCarousel />
+        </Reveal>
 
         {/* ─── Top doctors (focus-scaling carousel) ─── */}
         <Reveal style={styles.section}>
@@ -1161,7 +1132,4 @@ const makeStyles = (c: Palette) =>
       color: c.text.secondary,
       textAlign: "center",
     },
-
-    bannerRow: { gap: 14, paddingHorizontal: Space.xl },
-    banner: { width: 300, height: 150, borderRadius: Radius.xl },
   });
