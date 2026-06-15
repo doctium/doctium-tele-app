@@ -27,7 +27,9 @@ export class SmsProvider {
           from: process.env.TERMII_SENDER_ID || "N-Alert",
           sms: message,
           type: "plain",
-          channel: "generic",
+          // N-Alert is only valid on Termii's "dnd" route (it 404s on "generic").
+          // Override with TERMII_CHANNEL once a custom generic sender ID is approved.
+          channel: process.env.TERMII_CHANNEL || "dnd",
           api_key: apiKey,
         }),
       });
