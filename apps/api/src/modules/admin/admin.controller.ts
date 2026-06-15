@@ -758,30 +758,7 @@ export class AdminController {
     return this.billing.runRenewals();
   }
 
-  // ─── Banners ─────────────────────────────────────────────
-  @Permissions("catalog.manage")
-  @Get("banners")
-  banners() {
-    return this.adminService.getAllBanners();
-  }
-
-  @Permissions("catalog.manage")
-  @Post("banners")
-  createBanner(@Body() body: Record<string, unknown>) {
-    return this.adminService.createBanner(body);
-  }
-
-  @Permissions("catalog.manage")
-  @Patch("banners/:id/toggle")
-  toggleBanner(@Param("id") id: string, @Body("isActive") isActive: boolean) {
-    return this.adminService.toggleBanner(id, isActive);
-  }
-
-  @Permissions("catalog.manage")
-  @Delete("banners/:id")
-  deleteBanner(@Param("id") id: string) {
-    return this.adminService.deleteBanner(id);
-  }
+  // Banners moved to their own module (BannersModule → /admin/banners).
 
   // ─── Prescriptions ───────────────────────────────────────
   @Permissions("content.view")

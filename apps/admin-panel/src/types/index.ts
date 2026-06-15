@@ -198,11 +198,15 @@ export interface PermissionGroup {
 
 export interface Banner {
   id: string;
+  title: string;
   image: string;
-  type: string;
+  type: "EXTERNAL" | "APP";
+  target: string;
   isActive: boolean;
-  url?: string;
-  service?: { id: string; name: string };
+  sortOrder: number;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  clickCount: number;
 }
 
 export interface Coupon {

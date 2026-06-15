@@ -1013,25 +1013,7 @@ export class AdminService {
     return prisma.coupon.delete({ where: { id } });
   }
 
-  // ─── Banners ───────────────────────────────────────────────
-  createBanner(data: Record<string, unknown>) {
-    return prisma.banner.create({ data: data as never });
-  }
-
-  getAllBanners() {
-    return prisma.banner.findMany({
-      include: { service: { select: { name: true } } },
-      orderBy: { createdAt: "desc" },
-    });
-  }
-
-  toggleBanner(id: string, isActive: boolean) {
-    return prisma.banner.update({ where: { id }, data: { isActive } });
-  }
-
-  deleteBanner(id: string) {
-    return prisma.banner.delete({ where: { id } });
-  }
+  // Banners moved to their own module (BannersService → /admin/banners).
 
   // ─── Prescriptions (read-only oversight) ───────────────────
   getPrescriptions(page = 1, limit = 20) {

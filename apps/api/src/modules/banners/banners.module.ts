@@ -1,6 +1,15 @@
-import { Module } from '@nestjs/common';
-import { BannersController } from './banners.controller';
-import { BannersService } from './banners.service';
+import { Module } from "@nestjs/common";
+import { AuthModule } from "../auth/auth.module";
+import { CloudinaryService } from "../prescriptions/cloudinary.service";
+import { BannersService } from "./banners.service";
+import {
+  BannersController,
+  AdminBannersController,
+} from "./banners.controller";
 
-@Module({ controllers: [BannersController], providers: [BannersService] })
+@Module({
+  imports: [AuthModule],
+  controllers: [BannersController, AdminBannersController],
+  providers: [BannersService, CloudinaryService],
+})
 export class BannersModule {}

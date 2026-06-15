@@ -116,8 +116,8 @@ enum WalletHistoryType {
 }
 
 enum BannerType {
-  SERVICE
-  URL
+  EXTERNAL // target = external URL, opened in a browser
+  APP // target = in-app destination key, navigated within the app
 }
 
 enum ComplainStatus {
@@ -513,7 +513,6 @@ model Service {
 
   doctors      DoctorService[]
   appointments Appointment[]
-  banners      Banner[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -1813,18 +1812,21 @@ model CouponUser {
 }
 
 model Banner {
-  id        String     @id @default(cuid())
-  isActive  Boolean    @default(true)
-  image     String     @default("")
-  type      BannerType
-  serviceId String?
-  url       String?
-  service   Service?   @relation(fields: [serviceId], references: [id])
-
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id         String     @id @default(cuid())
+  title      String     @default("")
+  image      String     @default("")
+  type       BannerType @default(APP)
+  target     String     @default("") // external URL or in-app destination key
+  isActive   Boolean    @default(true)
+  sortOrder  Int        @default(0)
+  startsAt   DateTime? // optional schedule window
+  endsAt     DateTime?
+  clickCount Int        @default(0)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   @@map("banners")
+  @@index([isActive, sortOrder])
 }
 
 // ─────────────────────────────────────────────
