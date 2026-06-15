@@ -59,7 +59,11 @@
       "errRequired": "Suna, waya, da kalmar sirri ana buƙata",
       "errMismatch": "Kalmomin sirri ba su dace ba",
       "errTerms": "Da fatan za a yarda da Sharuɗɗa",
-      "failed": "Rajista ya kasa"
+      "failed": "Rajista ya kasa",
+      "firstName": "Sunan farko",
+      "firstNamePlaceholder": "e.g. Amaka",
+      "lastName": "Sunan karshe",
+      "lastNamePlaceholder": "e.g. Okonkwo"
     }
   },
   "home": {

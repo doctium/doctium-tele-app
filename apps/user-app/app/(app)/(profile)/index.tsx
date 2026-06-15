@@ -252,12 +252,12 @@ export default function ProfileScreen() {
         {
           icon: "document-text-outline",
           label: t("profile.terms"),
-          onPress: () => {},
+          onPress: () => router.push("/legal/terms"),
         },
         {
           icon: "lock-closed-outline",
           label: t("profile.privacy"),
-          onPress: () => {},
+          onPress: () => router.push("/legal/privacy"),
         },
         {
           icon: "information-circle-outline",

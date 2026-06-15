@@ -59,7 +59,11 @@
       "errRequired": "Name, mobile, and password are required",
       "errMismatch": "Passwords do not match",
       "errTerms": "Please accept the Terms & Conditions",
-      "failed": "Registration failed"
+      "failed": "Registration failed",
+      "firstName": "First name",
+      "firstNamePlaceholder": "e.g. Amaka",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "e.g. Okonkwo"
     }
   },
   "home": {
@@ -170,5 +174,22 @@
     "signOut": "Sign out",
     "signOutConfirm": "Are you sure you want to sign out?",
     "version": "Doctium · v1.0.0"
+  },
+  "onboarding": {
+    "slide1": {
+      "title": "Find verified doctors",
+      "subtitle": "Browse licensed specialists and book a consultation in minutes."
+    },
+    "slide2": {
+      "title": "Consult your way",
+      "subtitle": "Chat or video-call trusted doctors from the comfort of home."
+    },
+    "slide3": {
+      "title": "Care that follows you",
+      "subtitle": "Prescriptions, medical records and reminders, all in one place."
+    },
+    "skip": "Skip",
+    "next": "Next",
+    "getStarted": "Get started"
   }
 }

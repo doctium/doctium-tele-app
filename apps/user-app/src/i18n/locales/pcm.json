@@ -59,7 +59,11 @@
       "errRequired": "Name, phone, and password dey compulsory",
       "errMismatch": "Di passwords no match",
       "errTerms": "Abeg accept di Terms & Conditions",
-      "failed": "Registration fail"
+      "failed": "Registration fail",
+      "firstName": "First name",
+      "firstNamePlaceholder": "e.g. Amaka",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "e.g. Okonkwo"
     }
   },
   "home": {

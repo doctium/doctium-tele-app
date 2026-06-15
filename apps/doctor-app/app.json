@@ -4,7 +4,7 @@
     "slug": "doctium-doctor",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/brand/doctium-logo-lightbg.png",
+    "icon": "./assets/brand/app-icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/brand/splash-logo.png",
@@ -22,7 +22,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/brand/doctium-logomark.png",
+        "foregroundImage": "./assets/brand/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.doctium.doctor",

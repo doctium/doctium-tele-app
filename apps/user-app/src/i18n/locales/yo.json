@@ -59,7 +59,11 @@
       "errRequired": "Orúkọ, fóònù, àti ọ̀rọ̀ aṣínà jẹ́ dandan",
       "errMismatch": "Àwọn ọ̀rọ̀ aṣínà kò bára mu",
       "errTerms": "Jọ̀wọ́ gba àwọn Òfin",
-      "failed": "Ìforúkọsílẹ̀ kùnà"
+      "failed": "Ìforúkọsílẹ̀ kùnà",
+      "firstName": "Oruko akoko",
+      "firstNamePlaceholder": "e.g. Amaka",
+      "lastName": "Oruko idile",
+      "lastNamePlaceholder": "e.g. Okonkwo"
     }
   },
   "home": {

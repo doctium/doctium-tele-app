@@ -7,7 +7,8 @@ const unwrap = (res: unknown): AuthTokens => (res as { data: AuthTokens }).data;
 
 export const authApi = {
   register: async (data: {
-    name: string;
+    firstName: string;
+    lastName: string;
     mobile: string;
     email?: string;
     password?: string;

@@ -20,3 +20,9 @@ coverage
 *.keystore
 *.jks
 AuthKey_*.p8
+
+# Source material used to GENERATE committed artifacts — kept locally, not pushed.
+# Icons → apps/*/assets/brand/{app-icon,adaptive-icon}.png; legal docs → src/content/legal.ts
+/App-Icon-User/
+/App-Icon-Doctor/
+/*.docx

@@ -59,7 +59,11 @@
       "errRequired": "Aha, ekwentị, na okwuntụgharị dị mkpa",
       "errMismatch": "Okwuntụgharị abụọ adịghị ekwekọ",
       "errTerms": "Biko kweta na Usoro Ọrụ",
-      "failed": "Ndebanye aha dara"
+      "failed": "Ndebanye aha dara",
+      "firstName": "Aha mbu",
+      "firstNamePlaceholder": "e.g. Amaka",
+      "lastName": "Aha ikpeazu",
+      "lastNamePlaceholder": "e.g. Okonkwo"
     }
   },
   "home": {

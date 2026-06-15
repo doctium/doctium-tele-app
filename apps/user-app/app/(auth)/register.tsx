@@ -36,7 +36,8 @@ export default function RegisterScreen() {
   // A share link (…/register?ref=CODE) lands here with the referrer's code pre-filled.
   const { ref } = useLocalSearchParams<{ ref?: string }>();
   const [form, setForm] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     mobile: "",
     email: "",
     password: "",
@@ -51,7 +52,7 @@ export default function RegisterScreen() {
     setForm((f) => ({ ...f, [key]: val }));
 
   const handleRegister = async () => {
-    if (!form.name || !form.mobile || !form.password) {
+    if (!form.firstName || !form.lastName || !form.mobile || !form.password) {
       setError(t("auth.register.errRequired"));
       return;
     }
@@ -67,7 +68,8 @@ export default function RegisterScreen() {
     setError("");
     try {
       const { accessToken, refreshToken } = await authApi.register({
-        name: form.name,
+        firstName: form.firstName,
+        lastName: form.lastName,
         mobile: form.mobile,
         email: form.email || undefined,
         password: form.password,
@@ -127,10 +129,17 @@ export default function RegisterScreen() {
           ) : null}
 
           <Input
-            label={t("auth.register.name")}
-            placeholder={t("auth.register.namePlaceholder")}
-            value={form.name}
-            onChangeText={set("name")}
+            label={t("auth.register.firstName")}
+            placeholder={t("auth.register.firstNamePlaceholder")}
+            value={form.firstName}
+            onChangeText={set("firstName")}
+            leftIcon={icon("person-outline")}
+          />
+          <Input
+            label={t("auth.register.lastName")}
+            placeholder={t("auth.register.lastNamePlaceholder")}
+            value={form.lastName}
+            onChangeText={set("lastName")}
             leftIcon={icon("person-outline")}
           />
           <Input
@@ -187,9 +196,19 @@ export default function RegisterScreen() {
             </View>
             <Text style={styles.termsText}>
               {t("auth.register.agreePrefix")}
-              <Text style={styles.link}>{t("auth.register.terms")}</Text>
+              <Text
+                style={styles.link}
+                onPress={() => router.push("/legal/terms")}
+              >
+                {t("auth.register.terms")}
+              </Text>
               {t("auth.register.and")}
-              <Text style={styles.link}>{t("auth.register.privacy")}</Text>
+              <Text
+                style={styles.link}
+                onPress={() => router.push("/legal/privacy")}
+              >
+                {t("auth.register.privacy")}
+              </Text>
             </Text>
           </AnimatedPressable>
 
