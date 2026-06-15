@@ -52,7 +52,8 @@ export default function DoctorsPage() {
   const [total, setTotal] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     mobile: "",
     designation: "",
@@ -99,8 +100,8 @@ export default function DoctorsPage() {
   };
 
   const handleAdd = async () => {
-    if (!form.name || !form.email || !form.mobile) {
-      toast.error("Name, email and mobile are required");
+    if (!form.firstName || !form.lastName || !form.email || !form.mobile) {
+      toast.error("First name, last name, email and mobile are required");
       return;
     }
     setSaving(true);
@@ -115,7 +116,8 @@ export default function DoctorsPage() {
       );
       setShowAdd(false);
       setForm({
-        name: "",
+        firstName: "",
+        lastName: "",
         email: "",
         mobile: "",
         designation: "",
@@ -270,11 +272,23 @@ export default function DoctorsPage() {
       >
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="label">Full name</label>
+            <label className="label">First name</label>
             <input
               className="input"
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              value={form.firstName}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, firstName: e.target.value }))
+              }
+            />
+          </div>
+          <div>
+            <label className="label">Last name</label>
+            <input
+              className="input"
+              value={form.lastName}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, lastName: e.target.value }))
+              }
             />
           </div>
           <div>

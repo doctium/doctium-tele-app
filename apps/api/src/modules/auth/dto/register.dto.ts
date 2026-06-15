@@ -10,7 +10,11 @@ import {
 import { DoctorType } from "@doctium/database";
 
 export class RegisterUserDto {
-  @ApiProperty() @IsString() name: string;
+  // Structured name (preferred). `name` is kept optional for older app builds
+  // that still send a single full name; the server derives whichever is missing.
+  @ApiPropertyOptional() @IsString() @IsOptional() firstName?: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() lastName?: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() name?: string;
   @ApiPropertyOptional() @IsEmail() @IsOptional() email?: string;
   @ApiProperty() @IsString() mobile: string;
   @ApiPropertyOptional()

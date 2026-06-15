@@ -196,7 +196,10 @@ enum KycDocumentStatus {
 model User {
   id            String    @id @default(cuid())
   uniqueId      Int       @unique @default(autoincrement())
+  // Denormalized display name, kept in sync with firstName/lastName (source of truth).
   name          String    @default("")
+  firstName     String    @default("")
+  lastName      String    @default("")
   // Nullable: email is optional at signup, and NULLs never collide on the
   // unique index (a "" default did — only one email-less signup could exist).
   email         String?   @unique
@@ -311,7 +314,10 @@ model SubPatient {
 model Doctor {
   id                 String     @id @default(cuid())
   uniqueId           Int        @unique @default(autoincrement())
+  // Denormalized display name, kept in sync with firstName/lastName (source of truth).
   name               String     @default("")
+  firstName          String     @default("")
+  lastName           String     @default("")
   email              String     @unique @default("")
   mobile             String     @default("")
   password           String?

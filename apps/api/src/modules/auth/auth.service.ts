@@ -21,6 +21,7 @@ import {
 import { MailerProvider } from "../notifications/channels/mailer.provider";
 import { SmsProvider } from "../notifications/channels/sms.provider";
 import { requireEnv } from "../../common/env";
+import { resolveName } from "../../common/name.util";
 
 @Injectable()
 export class AuthService {
@@ -113,8 +114,15 @@ export class AuthService {
     if (existing) throw new BadRequestException("Account already exists");
 
     // The incoming code belongs to the REFERRER — never spread it into the
-    // new user's own row.
-    const { referralCode: incomingCode, ...rest } = dto;
+    // new user's own row. Pull name parts out too so we store the resolved trio.
+    const {
+      referralCode: incomingCode,
+      name,
+      firstName,
+      lastName,
+      ...rest
+    } = dto;
+    const names = resolveName({ name, firstName, lastName });
     let referredById: string | null = null;
     if (incomingCode?.trim()) {
       const referrer = await prisma.user.findUnique({
@@ -132,6 +140,7 @@ export class AuthService {
     const user = await prisma.user.create({
       data: {
         ...rest,
+        ...names,
         password,
         referralCode: await this.uniqueReferralCode(),
         referredById,
@@ -235,13 +244,14 @@ export class AuthService {
     if (existing) throw new BadRequestException("Account already exists");
 
     // referralCode is a patient-program field inherited from RegisterUserDto —
-    // the Doctor model has no such column.
-    const { referralCode: _ignored, ...rest } = dto;
+    // the Doctor model has no such column. Resolve the name trio explicitly.
+    const { referralCode: _ignored, name, firstName, lastName, ...rest } = dto;
+    const names = resolveName({ name, firstName, lastName });
     const password = dto.password
       ? await bcrypt.hash(dto.password, 12)
       : undefined;
     const doctor = await prisma.doctor.create({
-      data: { ...rest, password },
+      data: { ...rest, ...names, password },
     });
 
     await prisma.doctorWallet.create({ data: { doctorId: doctor.id } });
@@ -326,7 +336,7 @@ export class AuthService {
     const password = await bcrypt.hash(dto.password, 12);
     const doctor = await prisma.doctor.create({
       data: {
-        name: `${dto.firstName.trim()} ${dto.lastName.trim()}`.trim(),
+        ...resolveName({ firstName: dto.firstName, lastName: dto.lastName }),
         email,
         mobile: phone,
         password,

@@ -8,6 +8,7 @@ import * as bcrypt from "bcrypt";
 import { prisma } from "@doctium/database";
 import { NotificationsService } from "../notifications/notifications.service";
 import { CloudinaryService } from "../prescriptions/cloudinary.service";
+import { resolveName } from "../../common/name.util";
 import {
   CreateDoctorDto,
   ReviewDocDto,
@@ -367,9 +368,14 @@ export class KycService {
     const tempPassword =
       dto.password || Math.random().toString(36).slice(2, 10) + "A1";
     const password = await bcrypt.hash(tempPassword, 12);
+    const names = resolveName({
+      name: dto.name,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+    });
     const doctor = await prisma.doctor.create({
       data: {
-        name: dto.name,
+        ...names,
         email: dto.email,
         mobile: dto.mobile,
         password,
