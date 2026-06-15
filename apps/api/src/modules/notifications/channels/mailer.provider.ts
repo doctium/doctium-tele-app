@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import * as Sentry from "@sentry/nestjs";
 import * as nodemailer from "nodemailer";
 
 /** SMTP email sender. No-ops gracefully until SMTP_HOST is configured. */
@@ -29,11 +30,17 @@ export class MailerProvider {
     return !!this.get();
   }
 
-  async sendEmail(to: string, subject: string, html: string): Promise<void> {
+  async sendEmail(to: string, subject: string, html: string): Promise<boolean> {
     const t = this.get();
-    if (!t || !to) return;
+    if (!t) {
+      this.logger.warn(
+        `Email NOT sent to ${to || "(empty)"}: SMTP not configured (SMTP_HOST missing)`,
+      );
+      return false;
+    }
+    if (!to) return false;
     try {
-      await t.sendMail({
+      const info = await t.sendMail({
         from:
           process.env.SMTP_FROM ||
           process.env.SMTP_USER ||
@@ -42,8 +49,16 @@ export class MailerProvider {
         subject,
         html,
       });
+      this.logger.log(
+        `Email sent to ${to} (subject="${subject}", id=${info?.messageId ?? "n/a"})`,
+      );
+      return true;
     } catch (e) {
-      this.logger.warn(`Email send failed: ${(e as Error).message}`);
+      // Resend/SMTP rejects (e.g. unverified sender domain) surface here — make
+      // them loud instead of swallowing, so prod failures are diagnosable.
+      this.logger.warn(`Email send failed to ${to}: ${(e as Error).message}`);
+      Sentry.captureException(e);
+      return false;
     }
   }
 }

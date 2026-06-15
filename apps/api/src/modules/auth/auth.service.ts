@@ -140,7 +140,13 @@ export class AuthService {
 
     await prisma.userWallet.create({ data: { userId: user.id } });
     // Kick off email verification (fire-and-forget; no-op without an email).
-    if (user.email) this.sendUserEmailVerification(user.email).catch(() => {});
+    // Log failures instead of swallowing them so prod email issues are visible.
+    if (user.email)
+      this.sendUserEmailVerification(user.email).catch((e) =>
+        this.logger.warn(
+          `Initial email verification send failed for ${user.email}: ${(e as Error)?.message}`,
+        ),
+      );
     return this.issueTokens(user.id, user.email ?? "", "user");
   }
 
