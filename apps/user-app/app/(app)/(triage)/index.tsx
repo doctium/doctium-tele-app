@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
   AudioModule,
@@ -125,6 +125,10 @@ export default function SymptomCheckerScreen() {
   const [thinking, setThinking] = useState(false);
   const [qaSuggestion, setQaSuggestion] = useState<QaSuggestion | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+
+  // "voice=1" → launched from the global Talk-to-Leenah button (hands-free mode).
+  const params = useLocalSearchParams<{ voice?: string }>();
+  const voiceMode = params.voice === "1";
 
   // Today's allowance (and the DoctiumPlus unlimited flag) for the setup screen.
   const [quota, setQuota] = useState<{
@@ -269,13 +273,13 @@ export default function SymptomCheckerScreen() {
     }
   };
 
-  const begin = async () => {
+  const begin = async (opts?: { speakGreeting?: boolean }) => {
     setStarting(true);
     try {
       const r: unknown = await triageApi.startSession({ mode, language });
       const d = (r as { data: Session }).data;
       setSession(d);
-      if (autoPlay) speakBubble(0, d); // read the greeting aloud
+      if (autoPlay || opts?.speakGreeting) speakBubble(0, d); // read the greeting aloud
     } catch (e: unknown) {
       setUnavailable(
         (e as { response?: { data?: { message?: string } } })?.response?.data
@@ -285,6 +289,26 @@ export default function SymptomCheckerScreen() {
       setStarting(false);
     }
   };
+
+  // Hands-free voice mode: auto-start the session (speaking the greeting), then
+  // open the mic shortly after so the user can just talk.
+  const voiceBeganRef = useRef(false);
+  const voiceRecRef = useRef(false);
+  useEffect(() => {
+    if (voiceMode && !voiceBeganRef.current && !session && !starting) {
+      voiceBeganRef.current = true;
+      begin({ speakGreeting: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceMode, session, starting]);
+  useEffect(() => {
+    if (voiceMode && session && !voiceRecRef.current && !recording) {
+      voiceRecRef.current = true;
+      const t = setTimeout(() => startRecording(), 1300);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceMode, session, recording]);
 
   useEffect(() => {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
@@ -496,7 +520,7 @@ export default function SymptomCheckerScreen() {
 
           <AnimatedPressable
             haptic="medium"
-            onPress={begin}
+            onPress={() => begin()}
             style={styles.startBtn}
           >
             {starting ? (
