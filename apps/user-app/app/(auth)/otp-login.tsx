@@ -130,7 +130,7 @@ export default function OtpLoginScreen() {
             <>
               <Input
                 label="Mobile number"
-                placeholder="+234 800 000 0000"
+                placeholder="0800 000 0000"
                 value={mobile}
                 onChangeText={setMobile}
                 keyboardType="phone-pad"

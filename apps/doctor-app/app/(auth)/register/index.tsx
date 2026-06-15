@@ -171,7 +171,7 @@ export default function DoctorRegisterScreen() {
 
           <Input
             label="Phone number"
-            placeholder="+234 800 000 0000"
+            placeholder="0800 000 0000"
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
