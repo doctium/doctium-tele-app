@@ -9,6 +9,9 @@ const ROLES = [
     name: "Super Admin",
     description: "Full, unrestricted access.",
     isSystem: true,
+    // Intentionally empty — the "Super Admin" role is granted ALL permissions
+    // by name in code (apps/api/src/common/rbac.util.ts), so it always includes
+    // newly-added permissions without re-seeding.
     permissions: [],
   },
   {

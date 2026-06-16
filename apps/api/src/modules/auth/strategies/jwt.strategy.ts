@@ -6,6 +6,7 @@ import { JwtPayload, ALL_PERMISSIONS } from "@doctium/types";
 import { prisma } from "@doctium/database";
 import { requireEnv } from "../../../common/env";
 import { ADMIN_COOKIE, parseCookies } from "../../../common/cookie.util";
+import { isSuperAdminRole } from "../../../common/rbac.util";
 
 /** Admin browser sends the JWT as an httpOnly cookie; mobile sends a Bearer header. */
 const cookieExtractor = (req: Request): string | null => {
@@ -44,10 +45,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       });
       if (!employee || !employee.isActive || !employee.canLogin)
         throw new UnauthorizedException();
-      const permissions = employee.isSuperAdmin
+      const isSuper =
+        employee.isSuperAdmin || isSuperAdminRole(employee.role?.name);
+      const permissions = isSuper
         ? ALL_PERMISSIONS
         : (employee.role?.permissions ?? []);
-      return { ...payload, permissions, isSuperAdmin: employee.isSuperAdmin };
+      return { ...payload, permissions, isSuperAdmin: isSuper };
     }
 
     return payload;

@@ -11,6 +11,7 @@ import { PaymentsService } from "../payments/payments.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { CloudinaryService } from "../prescriptions/cloudinary.service";
 import { resolveImageUrl } from "../../common/image.util";
+import { isSuperAdminRole } from "../../common/rbac.util";
 
 @Injectable()
 export class AdminService {
@@ -682,7 +683,8 @@ export class AdminService {
       include: { role: { select: { name: true, permissions: true } } },
     });
     if (!emp) throw new NotFoundException("Account not found");
-    const permissions = emp.isSuperAdmin
+    const isSuper = emp.isSuperAdmin || isSuperAdminRole(emp.role?.name);
+    const permissions = isSuper
       ? ALL_PERMISSIONS
       : (emp.role?.permissions ?? []);
     return {
@@ -690,8 +692,8 @@ export class AdminService {
       name: emp.name,
       email: emp.email,
       image: emp.image,
-      roleName: emp.isSuperAdmin ? "Super Admin" : (emp.role?.name ?? null),
-      isSuperAdmin: emp.isSuperAdmin,
+      roleName: isSuper ? "Super Admin" : (emp.role?.name ?? null),
+      isSuperAdmin: isSuper,
       permissions,
     };
   }
