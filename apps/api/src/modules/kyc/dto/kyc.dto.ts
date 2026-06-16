@@ -25,7 +25,10 @@ export interface CreateDoctorDto {
   email: string;
   mobile: string;
   password?: string; // optional; a temp password is generated if omitted
-  designation?: string;
+  speciality?: string; // General Practitioner | Resident Doctor | Consultant
+  consultantSpeciality?: string; // when speciality === "Consultant"
+  languages?: string[]; // language codes the doctor speaks
+  designation?: string; // legacy free-text fallback (derived from speciality if given)
   type?: string; // DoctorType
   verify?: boolean; // if true, create already-VERIFIED (admin vouches)
 }

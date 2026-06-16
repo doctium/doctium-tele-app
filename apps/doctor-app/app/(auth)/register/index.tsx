@@ -30,7 +30,7 @@ import { SPOKEN_LANGUAGES } from "../../../src/constants/languages";
 
 const SPECIALITIES = [
   "General Practitioner",
-  "Senior Registrar",
+  "Resident Doctor",
   "Consultant",
 ] as const;
 

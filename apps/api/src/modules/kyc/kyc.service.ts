@@ -373,13 +373,19 @@ export class KycService {
       firstName: dto.firstName,
       lastName: dto.lastName,
     });
+    // Mirror the doctor self-signup: designation derives from speciality.
+    const designation =
+      dto.speciality === "Consultant" && dto.consultantSpeciality?.trim()
+        ? `Consultant — ${dto.consultantSpeciality.trim()}`
+        : dto.speciality || dto.designation || "";
     const doctor = await prisma.doctor.create({
       data: {
         ...names,
         email: dto.email,
         mobile: dto.mobile,
         password,
-        designation: dto.designation ?? "",
+        designation,
+        language: dto.languages ?? [],
         ...(dto.type && { type: dto.type as never }),
         verificationStatus: dto.verify ? "VERIFIED" : "PENDING_KYC",
         isVerified: !!dto.verify,

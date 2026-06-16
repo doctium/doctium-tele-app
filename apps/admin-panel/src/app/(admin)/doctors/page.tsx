@@ -12,6 +12,10 @@ import { apiClient } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { format } from "date-fns";
 import type { Doctor } from "@/types";
+import { SUPPORTED_LANGUAGES } from "@doctium/types";
+
+// Mirrors the doctor app signup specialty options.
+const SPECIALTIES = ["General Practitioner", "Resident Doctor", "Consultant"];
 
 const TABS: { label: string; status?: string }[] = [
   { label: "All" },
@@ -56,7 +60,10 @@ export default function DoctorsPage() {
     lastName: "",
     email: "",
     mobile: "",
-    designation: "",
+    password: "",
+    speciality: "",
+    consultantSpeciality: "",
+    languages: [] as string[],
     verify: false,
   });
   const [saving, setSaving] = useState(false);
@@ -100,8 +107,17 @@ export default function DoctorsPage() {
   };
 
   const handleAdd = async () => {
-    if (!form.firstName || !form.lastName || !form.email || !form.mobile) {
-      toast.error("First name, last name, email and mobile are required");
+    if (
+      !form.firstName ||
+      !form.lastName ||
+      !form.email ||
+      !form.mobile ||
+      !form.password ||
+      !form.speciality
+    ) {
+      toast.error(
+        "First name, last name, email, mobile, password and specialty are required",
+      );
       return;
     }
     setSaving(true);
@@ -120,7 +136,10 @@ export default function DoctorsPage() {
         lastName: "",
         email: "",
         mobile: "",
-        designation: "",
+        password: "",
+        speciality: "",
+        consultantSpeciality: "",
+        languages: [],
         verify: false,
       });
       load();
@@ -292,16 +311,6 @@ export default function DoctorsPage() {
             />
           </div>
           <div>
-            <label className="label">Designation</label>
-            <input
-              className="input"
-              value={form.designation}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, designation: e.target.value }))
-              }
-            />
-          </div>
-          <div>
             <label className="label">Email</label>
             <input
               className="input"
@@ -321,6 +330,80 @@ export default function DoctorsPage() {
                 setForm((f) => ({ ...f, mobile: e.target.value }))
               }
             />
+          </div>
+          <div>
+            <label className="label">Password</label>
+            <input
+              className="input"
+              type="password"
+              placeholder="Set a temporary password"
+              value={form.password}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, password: e.target.value }))
+              }
+            />
+          </div>
+          <div>
+            <label className="label">Specialty</label>
+            <select
+              className="input"
+              value={form.speciality}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, speciality: e.target.value }))
+              }
+            >
+              <option value="">Select specialty</option>
+              {SPECIALTIES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+          {form.speciality === "Consultant" ? (
+            <div className="col-span-2">
+              <label className="label">Consultant specialty</label>
+              <input
+                className="input"
+                placeholder="e.g. Cardiology"
+                value={form.consultantSpeciality}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    consultantSpeciality: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          ) : null}
+        </div>
+        <div className="mt-4">
+          <label className="label">Languages spoken</label>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {SUPPORTED_LANGUAGES.map((l) => {
+              const on = form.languages.includes(l.code);
+              return (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() =>
+                    setForm((f) => ({
+                      ...f,
+                      languages: on
+                        ? f.languages.filter((c) => c !== l.code)
+                        : [...f.languages, l.code],
+                    }))
+                  }
+                  className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                    on
+                      ? "bg-[#2CB7A7] text-white border-[#2CB7A7]"
+                      : "border-gray-300 text-gray-600 hover:border-gray-400"
+                  }`}
+                >
+                  {l.label}
+                </button>
+              );
+            })}
           </div>
         </div>
         <label className="flex items-center gap-2 mt-4 text-sm text-gray-600">
