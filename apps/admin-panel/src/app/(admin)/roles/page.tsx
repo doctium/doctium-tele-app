@@ -199,7 +199,7 @@ export default function RolesPage() {
           title={editing ? "Edit Role" : "Create Role"}
           maxWidth="max-w-2xl"
         >
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="label">Name</label>
               <input

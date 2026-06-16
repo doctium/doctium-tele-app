@@ -295,7 +295,7 @@ export default function MedicalRecordsPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
                 ["Blood type", d.healthProfile?.bloodType],
                 ["Genotype", d.healthProfile?.genotype],

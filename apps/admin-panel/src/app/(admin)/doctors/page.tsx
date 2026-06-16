@@ -289,7 +289,7 @@ export default function DoctorsPage() {
         title="Add Doctor"
         maxWidth="max-w-lg"
       >
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="label">First name</label>
             <input

@@ -84,7 +84,7 @@ export function Modal({
       <div
         className={`relative w-full ${maxWidth} max-h-[90vh] flex flex-col bg-surface rounded-3xl shadow-floating border border-white/60 animate-scale-in overflow-hidden`}
       >
-        <div className="flex items-center justify-between px-6 py-5 border-b border-hairline flex-shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-hairline flex-shrink-0">
           <h3 className="text-heading-sm font-bold text-ink">{title}</h3>
           <button
             onClick={requestClose}
@@ -95,7 +95,7 @@ export function Modal({
         </div>
         {/* Any typing/selection inside marks the form dirty (events bubble). */}
         <div
-          className="px-6 py-5 overflow-y-auto"
+          className="px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto"
           onInput={markDirty}
           onChangeCapture={markDirty}
         >

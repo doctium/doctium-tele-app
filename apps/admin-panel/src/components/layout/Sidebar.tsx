@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   PanelLeftClose,
   PanelLeftOpen,
+  X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { logout as adminLogout } from "@/lib/auth";
@@ -368,7 +369,27 @@ function NavLink({
   );
 }
 
-export function Sidebar() {
+/** True at md+ (Tailwind's md breakpoint). The collapse-to-rail affordance is
+ *  desktop-only; on mobile the drawer is always full-width with labels. */
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(true);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isDesktop;
+}
+
+export function Sidebar({
+  mobileOpen = false,
+  onClose,
+}: {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}) {
   const router = useRouter();
   const { me, can } = useAdminAuth();
 
@@ -378,6 +399,11 @@ export function Sidebar() {
   useEffect(() => {
     setCollapsed(localStorage.getItem("sidebar-collapsed") === "1");
   }, []);
+
+  // On mobile, ignore the persisted collapsed preference so the drawer always
+  // shows full labels (a narrow icon-rail in a wide drawer looks broken).
+  const isDesktop = useIsDesktop();
+  const showCollapsed = isDesktop && collapsed;
   const toggleCollapsed = () =>
     setCollapsed((c) => {
       localStorage.setItem("sidebar-collapsed", c ? "0" : "1");
@@ -414,141 +440,170 @@ export function Sidebar() {
   );
 
   return (
-    <aside
-      className={clsx(
-        "relative h-screen flex flex-col overflow-hidden flex-shrink-0 bg-gradient-navy text-white transition-[width] duration-300 ease-out",
-        collapsed ? "w-[76px]" : "w-64",
-      )}
-    >
-      <div className="pointer-events-none absolute -top-24 -right-16 h-56 w-56 rounded-full bg-teal-500/20 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-10 -left-20 h-56 w-56 rounded-full bg-skyblue/10 blur-3xl" />
-      <div className="pointer-events-none absolute inset-0 hero-sheen" />
-
-      {/* Logo + collapse toggle */}
+    <>
+      {/* Mobile drawer backdrop — tap to dismiss */}
       <div
         className={clsx(
-          "relative border-b border-white/10",
-          collapsed ? "px-0 py-4" : "px-5 py-5",
+          "fixed inset-0 z-40 bg-navy-deep/50 backdrop-blur-sm transition-opacity duration-300 md:hidden",
+          mobileOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+        onClick={onClose}
+        aria-hidden
+      />
+      <aside
+        className={clsx(
+          "fixed inset-y-0 left-0 z-50 flex h-screen flex-col overflow-hidden bg-gradient-navy text-white",
+          "transition-[transform,width] duration-300 ease-out",
+          "md:relative md:z-auto md:flex-shrink-0",
+          // Width: full drawer on mobile; collapse to a rail only on desktop.
+          collapsed ? "w-64 md:w-[76px]" : "w-64",
+          // Slide off-canvas on mobile; always in view from md up.
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}
       >
+        <div className="pointer-events-none absolute -top-24 -right-16 h-56 w-56 rounded-full bg-teal-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-10 -left-20 h-56 w-56 rounded-full bg-skyblue/10 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 hero-sheen" />
+
+        {/* Logo + collapse toggle */}
         <div
           className={clsx(
-            "flex items-center",
-            collapsed ? "flex-col gap-2" : "gap-3",
+            "relative border-b border-white/10",
+            showCollapsed ? "px-0 py-4" : "px-5 py-5",
           )}
         >
-          <Link
-            href="/dashboard"
-            className={clsx(
-              "flex items-center min-w-0",
-              collapsed ? "flex-col gap-2" : "gap-3 flex-1",
-            )}
-            title="Go to dashboard"
-          >
-            <div className="grid place-items-center w-10 h-10 rounded-2xl bg-white shadow-cta-navy overflow-hidden p-1.5 flex-shrink-0">
-              <img
-                src="/brand/doctium-logo-lightbg.png"
-                alt="Doctium"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            {!collapsed && (
-              <div className="min-w-0 flex-1">
-                <p className="font-extrabold tracking-tight text-[15px] leading-none">
-                  Doctium
-                </p>
-                <p className="text-[11px] text-skyblue-200/70 mt-1 tracking-wide">
-                  Admin Panel
-                </p>
-              </div>
-            )}
-          </Link>
-          <button
-            onClick={toggleCollapsed}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="grid place-items-center w-7 h-7 rounded-lg text-skyblue-100/60 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
-          >
-            {collapsed ? (
-              <PanelLeftOpen size={16} />
-            ) : (
-              <PanelLeftClose size={16} />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Nav */}
-      <nav
-        className={clsx(
-          "relative flex-1 overflow-y-auto py-5",
-          collapsed ? "px-2 space-y-4" : "px-3 space-y-6",
-        )}
-      >
-        {visibleNav.map((section) => (
-          <div key={section.group}>
-            {collapsed ? (
-              <div className="mx-3 mb-2 border-t border-white/10" />
-            ) : (
-              <p className="px-3 mb-2 text-[10px] font-bold text-skyblue-200/45 tracking-[0.16em] uppercase">
-                {section.group}
-              </p>
-            )}
-            <div className="space-y-0.5">
-              {section.items.map((item) => (
-                <NavLink
-                  key={item.label}
-                  item={item}
-                  collapsed={collapsed}
-                  onExpandRequest={expand}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </nav>
-
-      {/* Current user + logout */}
-      <div
-        className={clsx(
-          "relative py-4 border-t border-white/10",
-          collapsed ? "px-2" : "px-3",
-        )}
-      >
-        {me && (
           <div
             className={clsx(
-              "flex items-center pb-3",
-              collapsed ? "justify-center" : "gap-3 px-3",
+              "flex items-center",
+              showCollapsed ? "flex-col gap-2" : "gap-3",
             )}
-            title={
-              collapsed ? `${me.name} · ${me.roleName ?? "Admin"}` : undefined
-            }
           >
-            <div className="grid place-items-center w-9 h-9 rounded-full bg-white/10 text-teal-bright font-bold text-sm flex-shrink-0">
-              {me.name?.[0]?.toUpperCase() ?? "A"}
-            </div>
-            {!collapsed && (
-              <div className="min-w-0">
-                <p className="text-[13px] font-semibold truncate">{me.name}</p>
-                <p className="text-[11px] text-skyblue-200/60 truncate">
-                  {me.roleName ?? "Admin"}
-                </p>
+            <Link
+              href="/dashboard"
+              className={clsx(
+                "flex items-center min-w-0",
+                showCollapsed ? "flex-col gap-2" : "gap-3 flex-1",
+              )}
+              title="Go to dashboard"
+            >
+              <div className="grid place-items-center w-10 h-10 rounded-2xl bg-white shadow-cta-navy overflow-hidden p-1.5 flex-shrink-0">
+                <img
+                  src="/brand/doctium-logo-lightbg.png"
+                  alt="Doctium"
+                  className="w-full h-full object-contain"
+                />
               </div>
-            )}
+              {!showCollapsed && (
+                <div className="min-w-0 flex-1">
+                  <p className="font-extrabold tracking-tight text-[15px] leading-none">
+                    Doctium
+                  </p>
+                  <p className="text-[11px] text-skyblue-200/70 mt-1 tracking-wide">
+                    Admin Panel
+                  </p>
+                </div>
+              )}
+            </Link>
+            {/* Desktop: collapse to an icon rail */}
+            <button
+              onClick={toggleCollapsed}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="hidden md:grid place-items-center w-7 h-7 rounded-lg text-skyblue-100/60 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+            >
+              {collapsed ? (
+                <PanelLeftOpen size={16} />
+              ) : (
+                <PanelLeftClose size={16} />
+              )}
+            </button>
+            {/* Mobile: close the drawer */}
+            <button
+              onClick={onClose}
+              title="Close menu"
+              className="md:hidden grid place-items-center w-8 h-8 rounded-lg text-skyblue-100/70 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+            >
+              <X size={18} />
+            </button>
           </div>
-        )}
-        <button
-          onClick={handleLogout}
-          title={collapsed ? "Sign Out" : undefined}
+        </div>
+
+        {/* Nav */}
+        <nav
           className={clsx(
-            "w-full flex items-center py-2.5 rounded-xl text-[13px] font-medium text-skyblue-100/70 hover:text-white hover:bg-alert-500/15 transition-colors",
-            collapsed ? "justify-center px-0" : "gap-3 px-3",
+            "relative flex-1 overflow-y-auto py-5",
+            showCollapsed ? "px-2 space-y-4" : "px-3 space-y-6",
           )}
         >
-          <LogOut size={18} className="text-skyblue-100/50" />
-          {!collapsed && "Sign Out"}
-        </button>
-      </div>
-    </aside>
+          {visibleNav.map((section) => (
+            <div key={section.group}>
+              {showCollapsed ? (
+                <div className="mx-3 mb-2 border-t border-white/10" />
+              ) : (
+                <p className="px-3 mb-2 text-[10px] font-bold text-skyblue-200/45 tracking-[0.16em] uppercase">
+                  {section.group}
+                </p>
+              )}
+              <div className="space-y-0.5">
+                {section.items.map((item) => (
+                  <NavLink
+                    key={item.label}
+                    item={item}
+                    collapsed={showCollapsed}
+                    onExpandRequest={expand}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* Current user + logout */}
+        <div
+          className={clsx(
+            "relative py-4 border-t border-white/10",
+            showCollapsed ? "px-2" : "px-3",
+          )}
+        >
+          {me && (
+            <div
+              className={clsx(
+                "flex items-center pb-3",
+                showCollapsed ? "justify-center" : "gap-3 px-3",
+              )}
+              title={
+                showCollapsed
+                  ? `${me.name} · ${me.roleName ?? "Admin"}`
+                  : undefined
+              }
+            >
+              <div className="grid place-items-center w-9 h-9 rounded-full bg-white/10 text-teal-bright font-bold text-sm flex-shrink-0">
+                {me.name?.[0]?.toUpperCase() ?? "A"}
+              </div>
+              {!showCollapsed && (
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold truncate">
+                    {me.name}
+                  </p>
+                  <p className="text-[11px] text-skyblue-200/60 truncate">
+                    {me.roleName ?? "Admin"}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            title={showCollapsed ? "Sign Out" : undefined}
+            className={clsx(
+              "w-full flex items-center py-2.5 rounded-xl text-[13px] font-medium text-skyblue-100/70 hover:text-white hover:bg-alert-500/15 transition-colors",
+              showCollapsed ? "justify-center px-0" : "gap-3 px-3",
+            )}
+          >
+            <LogOut size={18} className="text-skyblue-100/50" />
+            {!showCollapsed && "Sign Out"}
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

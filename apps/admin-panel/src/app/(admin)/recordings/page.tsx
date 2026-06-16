@@ -676,7 +676,7 @@ export default function RecordingsPage() {
               value={assetForm.fileName}
               onChange={(fileName) => setAssetForm((f) => ({ ...f, fileName }))}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field
                 label="Storage vendor"
                 value={assetForm.storageVendor}
@@ -692,7 +692,7 @@ export default function RecordingsPage() {
                 }
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field
                 label="Bucket"
                 value={assetForm.bucket}

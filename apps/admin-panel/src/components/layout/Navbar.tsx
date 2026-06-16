@@ -2,6 +2,7 @@
 import {
   CalendarCheck,
   Loader2,
+  Menu,
   Search,
   Stethoscope,
   Syringe,
@@ -289,20 +290,30 @@ function Row({
   );
 }
 
-export function Navbar() {
+export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname();
   const title = titles[pathname] ?? "Doctium Admin";
 
   return (
-    <header className="sticky top-0 z-30 h-16 glass border-b border-white/50 flex items-center justify-between px-6 flex-shrink-0">
-      <div className="min-w-0">
-        <p className="eyebrow leading-none">Doctium Console</p>
-        <h1 className="text-heading-sm font-bold text-ink leading-tight mt-0.5 truncate">
-          {title}
-        </h1>
+    <header className="sticky top-0 z-30 h-16 glass border-b border-white/50 flex items-center justify-between gap-2 px-4 sm:px-6 flex-shrink-0">
+      <div className="flex items-center gap-2 min-w-0">
+        {/* Mobile: open the navigation drawer */}
+        <button
+          onClick={onMenuClick}
+          aria-label="Open menu"
+          className="md:hidden -ml-1 grid place-items-center w-10 h-10 rounded-xl text-gray-500 hover:bg-surfaceAlt hover:text-ink transition-colors flex-shrink-0"
+        >
+          <Menu size={20} />
+        </button>
+        <div className="min-w-0">
+          <p className="eyebrow leading-none">Doctium Console</p>
+          <h1 className="text-heading-sm font-bold text-ink leading-tight mt-0.5 truncate">
+            {title}
+          </h1>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 flex-shrink-0">
         {/* Global search */}
         <GlobalSearch />
 

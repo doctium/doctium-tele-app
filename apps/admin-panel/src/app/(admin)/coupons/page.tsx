@@ -218,7 +218,7 @@ export default function CouponsPage() {
         title="Create Coupon"
         maxWidth="max-w-xl"
       >
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {field("code", "Coupon Code")}
           {field("title", "Title")}
           {field("description", "Description")}

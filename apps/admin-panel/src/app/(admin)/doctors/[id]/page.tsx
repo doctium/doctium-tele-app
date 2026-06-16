@@ -664,7 +664,7 @@ export default function DoctorDetailPage() {
         )}
         {tab === "wallet" && (
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="bg-primary-50 rounded-2xl p-6 text-center">
                 <p className="text-sm text-gray-500">Available Balance</p>
                 <p className="text-3xl font-bold text-primary-600 mt-1">
