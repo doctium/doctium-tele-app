@@ -34,6 +34,7 @@ import { CareProgramsModule } from "./modules/care-programs/care-programs.module
 import { TriageModule } from "./modules/triage/triage.module";
 import { HealthModule } from "./modules/health/health.module";
 import { RecordingModule } from "./modules/recording/recording.module";
+import { MediaModule } from "./modules/media/media.module";
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { RecordingModule } from "./modules/recording/recording.module";
     TriageModule,
     HealthModule,
     RecordingModule,
+    MediaModule,
   ],
   providers: [
     // Captures unhandled exceptions to Sentry (then delegates to Nest's default
