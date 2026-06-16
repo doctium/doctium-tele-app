@@ -127,6 +127,32 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     group: "Audit",
     permissions: [{ key: "audit.view", label: "View audit log" }],
   },
+  {
+    group: "Website & Media",
+    permissions: [
+      { key: "media.blog.view", label: "View blog posts" },
+      {
+        key: "media.blog.manage",
+        label: "Create / edit / publish blog posts & categories",
+      },
+      { key: "media.news.view", label: "View news & press" },
+      {
+        key: "media.news.manage",
+        label: "Create / edit / publish news & press",
+      },
+      { key: "media.careers.view", label: "View job postings" },
+      {
+        key: "media.careers.manage",
+        label: "Create / edit / publish jobs & teams",
+      },
+      { key: "media.applications.view", label: "View job applications" },
+      {
+        key: "media.applications.manage",
+        label: "Manage applications (status, notes)",
+      },
+      { key: "media.landing.manage", label: "Manage SEO landing pages" },
+    ],
+  },
 ];
 
 /** Flat list of all permission keys. */

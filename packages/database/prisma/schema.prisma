@@ -2648,6 +2648,235 @@ model EmployeeDocument {
   @@map("employee_documents")
 }
 
+// ─────────────────────────────────────────────
+// MEDIA / CMS  (Blog · News & Press · Careers · SEO landing pages)
+// Powers the public website (doctiumhealth.com). Fully additive.
+// ─────────────────────────────────────────────
+
+enum ContentStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum NewsKind {
+  ANNOUNCEMENT // Doctium's own post
+  COVERAGE // external press mention (links out)
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum WorkMode {
+  ON_SITE
+  HYBRID
+  REMOTE
+}
+
+enum JobStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
+enum ApplicationStatus {
+  NEW
+  REVIEWING
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+}
+
+enum LandingKind {
+  CONDITION
+  SPECIALTY
+  CITY
+  TOPIC
+}
+
+model Author {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  role        String     @default("")
+  bioMd       String     @default("")
+  avatarUrl   String     @default("")
+  linkedinUrl String     @default("")
+  xUrl        String     @default("")
+  blogPosts   BlogPost[]
+  newsPosts   NewsPost[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  @@map("authors")
+}
+
+model BlogCategory {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String     @default("")
+  posts       BlogPost[] @relation("BlogPostCategories")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  @@map("blog_categories")
+}
+
+model BlogPost {
+  id              String         @id @default(cuid())
+  title           String
+  slug            String         @unique
+  excerpt         String         @default("")
+  bodyMd          String         @default("") // Markdown
+  coverImageUrl   String         @default("")
+  status          ContentStatus  @default(DRAFT)
+  publishedAt     DateTime?
+  readingMins     Int            @default(0)
+  tags            String[]       @default([])
+  authorId        String?
+  author          Author?        @relation(fields: [authorId], references: [id])
+  categories      BlogCategory[] @relation("BlogPostCategories")
+  // SEO
+  metaTitle       String         @default("")
+  metaDescription String         @default("")
+  ogImageUrl      String         @default("")
+  canonicalUrl    String         @default("")
+  noindex         Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  @@index([status])
+  @@index([publishedAt])
+  @@map("blog_posts")
+}
+
+model NewsCategory {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String     @default("")
+  posts       NewsPost[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  @@map("news_categories")
+}
+
+model NewsPost {
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        @unique
+  kind            NewsKind      @default(ANNOUNCEMENT)
+  excerpt         String        @default("")
+  bodyMd          String        @default("") // Markdown (ANNOUNCEMENT)
+  coverImageUrl   String        @default("")
+  status          ContentStatus @default(DRAFT)
+  publishedAt     DateTime?
+  authorId        String?
+  author          Author?       @relation(fields: [authorId], references: [id])
+  categoryId      String?
+  category        NewsCategory? @relation(fields: [categoryId], references: [id])
+  // COVERAGE-only (external press mention)
+  outlet          String        @default("")
+  outletLogoUrl   String        @default("")
+  externalUrl     String        @default("")
+  // SEO
+  metaTitle       String        @default("")
+  metaDescription String        @default("")
+  ogImageUrl      String        @default("")
+  canonicalUrl    String        @default("")
+  noindex         Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  @@index([status])
+  @@index([kind])
+  @@map("news_posts")
+}
+
+model JobTeam {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  description String       @default("")
+  jobs        JobPosting[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  @@map("job_teams")
+}
+
+model JobPosting {
+  id              String           @id @default(cuid())
+  title           String
+  slug            String           @unique
+  teamId          String?
+  team            JobTeam?         @relation(fields: [teamId], references: [id])
+  location        String           @default("")
+  jobType         JobType          @default(FULL_TIME)
+  workMode        WorkMode         @default(ON_SITE)
+  status          JobStatus        @default(DRAFT)
+  summary         String           @default("")
+  bodyMd          String           @default("") // What you'll do / looking for / get (Markdown)
+  salaryNote      String           @default("")
+  postedAt        DateTime?
+  closesAt        DateTime?
+  applications    JobApplication[]
+  // SEO
+  metaTitle       String           @default("")
+  metaDescription String           @default("")
+  noindex         Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  @@index([status])
+  @@map("job_postings")
+}
+
+model JobApplication {
+  id           String            @id @default(cuid())
+  jobId        String
+  job          JobPosting        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  fullName     String
+  email        String
+  phone        String            @default("")
+  linkedinUrl  String            @default("")
+  portfolioUrl String            @default("")
+  cvUrl        String            @default("") // Cloudinary raw URL (data-URL fallback if unconfigured)
+  cvFileName   String            @default("")
+  coverNote    String            @default("")
+  consent      Boolean           @default(false)
+  status       ApplicationStatus @default(NEW)
+  adminNotes   String            @default("")
+  reviewedById String? // Employee id (no FK to keep this fully additive)
+  reviewedAt   DateTime?
+  createdAt    DateTime          @default(now())
+  @@index([jobId])
+  @@index([status])
+  @@map("job_applications")
+}
+
+model LandingPage {
+  id              String        @id @default(cuid())
+  kind            LandingKind   @default(TOPIC)
+  slug            String        @unique
+  h1              String
+  intro           String        @default("")
+  bodyMd          String        @default("") // Markdown
+  status          ContentStatus @default(DRAFT)
+  publishedAt     DateTime?
+  // SEO
+  metaTitle       String        @default("")
+  metaDescription String        @default("")
+  ogImageUrl      String        @default("")
+  noindex         Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  @@index([status])
+  @@index([kind])
+  @@map("landing_pages")
+}
+
 model Payslip {
   id          String        @id @default(cuid())
   employeeId  String
