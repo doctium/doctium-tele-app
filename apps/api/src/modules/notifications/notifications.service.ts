@@ -348,10 +348,13 @@ export class NotificationsService {
   }
 
   private broadcastEmailHtml(subject: string, body: string): string {
-    const safe = body.replace(/\n/g, "<br/>");
+    // The admin composer sends rich HTML; legacy/plain bodies still get
+    // newline → <br/> so they don't collapse to one line.
+    const isHtml = /<[a-z][\s\S]*>/i.test(body);
+    const content = isHtml ? body : body.replace(/\n/g, "<br/>");
     return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0F1B2D">
       <h2 style="color:#133157;margin:0 0 12px">${subject}</h2>
-      <div style="color:#5A6B82;line-height:1.6;font-size:15px">${safe}</div>
+      <div style="color:#5A6B82;line-height:1.6;font-size:15px">${content}</div>
       <p style="color:#93A1B5;font-size:12px;margin-top:28px;border-top:1px solid #E7EDF4;padding-top:14px">Sent by Doctium · You're receiving this because you have a Doctium account.</p>
     </div>`;
   }

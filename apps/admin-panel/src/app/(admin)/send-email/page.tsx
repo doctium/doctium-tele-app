@@ -6,6 +6,42 @@ import { RecipientPicker, type Person } from "@/components/RecipientPicker";
 import { apiClient } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { format } from "date-fns";
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+
+// Quill touches the DOM on import → load it client-only.
+const ReactQuill = dynamic(() => import("react-quill-new"), {
+  ssr: false,
+  loading: () => <div className="input" style={{ height: 180 }} />,
+});
+
+const QUILL_MODULES = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    [{ font: [] }, { size: [] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ color: [] }, { background: [] }],
+    [{ list: "ordered" }, { list: "bullet" }, { align: [] }],
+    [{ indent: "-1" }, { indent: "+1" }],
+    ["blockquote", "code-block", "link", "image"],
+    ["clean"],
+  ],
+};
+
+// Quill renders an empty document as "<p><br></p>".
+const htmlIsEmpty = (html: string) => {
+  const text = (html || "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+  return text.length === 0 && !/<img/i.test(html || "");
+};
+
+const stripHtml = (html: string) =>
+  (html || "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 type Audience = "PATIENTS" | "DOCTORS" | "ALL";
 interface Counts {
@@ -53,7 +89,7 @@ export default function SendEmailPage() {
   }, [loadHistory]);
 
   const send = async () => {
-    if (!subject.trim() || !body.trim())
+    if (!subject.trim() || htmlIsEmpty(body))
       return toast.error("Subject and message are required");
     if (mode === "RECIPIENTS" && selected.length === 0)
       return toast.error("Select at least one recipient");
@@ -181,13 +217,18 @@ export default function SendEmailPage() {
             </div>
             <div>
               <label className="label">Message</label>
-              <textarea
-                className="input"
-                rows={7}
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="Write your email… (line breaks are preserved)"
-              />
+              <div className="rounded-xl border border-border overflow-hidden bg-white">
+                <ReactQuill
+                  theme="snow"
+                  value={body}
+                  onChange={setBody}
+                  modules={QUILL_MODULES}
+                  placeholder="Compose your email — format text, add links, images…"
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Formatting is sent as a styled HTML email.
+              </p>
             </div>
 
             <div className="flex justify-end pt-1 border-t border-hairline">
@@ -219,7 +260,7 @@ export default function SendEmailPage() {
                       {b.title}
                     </p>
                     <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                      {b.body}
+                      {stripHtml(b.body)}
                     </p>
                     <p className="text-[11px] text-gray-400 mt-2">
                       {b.userCount + b.doctorCount} recipients · {b.sentCount}{" "}
