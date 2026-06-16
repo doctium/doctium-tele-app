@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   View,
@@ -23,6 +21,8 @@ import {
   useThemedStyles,
 } from "../../../src/theme";
 import { Input } from "../../../src/components/common/Input";
+import { DateField } from "../../../src/components/common/DateField";
+import { SelectField } from "../../../src/components/common/SelectField";
 import { Button } from "../../../src/components/common/Button";
 import { Avatar } from "../../../src/components/common/Avatar";
 import { AnimatedPressable, AppHeader, Txt } from "../../../src/components/ui";
@@ -53,7 +53,7 @@ export default function EditProfileScreen() {
         name: profile.name,
         email: profile.email,
         dob: profile.dob ?? "",
-        gender: profile.gender ?? "",
+        gender: (profile.gender ?? "").toLowerCase(),
         bio: (profile as { bio?: string }).bio ?? "",
       });
   }, [profile]);
@@ -116,120 +116,122 @@ export default function EditProfileScreen() {
   return (
     <View style={styles.root}>
       <AppHeader title="Edit profile" />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      <ScrollView
         style={{ flex: 1 }}
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        automaticallyAdjustKeyboardInsets
+        showsVerticalScrollIndicator={false}
       >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+        <AnimatedPressable
+          haptic="light"
+          onPress={pickImage}
+          style={styles.avatarWrap}
         >
-          <AnimatedPressable
-            haptic="light"
-            onPress={pickImage}
-            style={styles.avatarWrap}
+          <Avatar uri={profile?.image} name={profile?.name} size={92} ring />
+          <LinearGradient
+            colors={Gradients.teal}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.camBadge}
           >
-            <Avatar uri={profile?.image} name={profile?.name} size={92} ring />
-            <LinearGradient
-              colors={Gradients.teal}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.camBadge}
-            >
-              <Ionicons name="camera" size={15} color="#fff" />
-            </LinearGradient>
-            {uploadingAvatar ? (
-              <View style={styles.avatarLoading}>
-                <ActivityIndicator color="#fff" />
-              </View>
-            ) : null}
-          </AnimatedPressable>
-
-          {success ? (
-            <Animated.View entering={FadeIn} style={styles.success}>
-              <Ionicons
-                name="checkmark-circle"
-                size={18}
-                color={colors.tealDeep}
-              />
-              <Txt variant="label" color={colors.tealDeep}>
-                Profile updated
-              </Txt>
-            </Animated.View>
+            <Ionicons name="camera" size={15} color="#fff" />
+          </LinearGradient>
+          {uploadingAvatar ? (
+            <View style={styles.avatarLoading}>
+              <ActivityIndicator color="#fff" />
+            </View>
           ) : null}
+        </AnimatedPressable>
 
-          <Input
-            label="Full name"
-            value={form.name}
-            onChangeText={set("name")}
-            placeholder="Your full name"
-            leftIcon={
-              <Ionicons
-                name="person-outline"
-                size={19}
-                color={colors.text.tertiary}
-              />
-            }
-          />
-          <Input
-            label="Email"
-            value={form.email}
-            onChangeText={set("email")}
-            placeholder="email@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            leftIcon={
-              <Ionicons
-                name="mail-outline"
-                size={19}
-                color={colors.text.tertiary}
-              />
-            }
-          />
-          <Input
-            label="Date of birth"
-            value={form.dob}
-            onChangeText={set("dob")}
-            placeholder="YYYY-MM-DD"
-            leftIcon={
-              <Ionicons
-                name="calendar-outline"
-                size={19}
-                color={colors.text.tertiary}
-              />
-            }
-          />
-          <Input
-            label="Gender"
-            value={form.gender}
-            onChangeText={set("gender")}
-            placeholder="Male / Female / Other"
-            leftIcon={
-              <Ionicons
-                name="male-female-outline"
-                size={19}
-                color={colors.text.tertiary}
-              />
-            }
-          />
-          <Input
-            label="Bio"
-            value={form.bio}
-            onChangeText={set("bio")}
-            placeholder="A short bio about yourself…"
-            multiline
-          />
+        {success ? (
+          <Animated.View entering={FadeIn} style={styles.success}>
+            <Ionicons
+              name="checkmark-circle"
+              size={18}
+              color={colors.tealDeep}
+            />
+            <Txt variant="label" color={colors.tealDeep}>
+              Profile updated
+            </Txt>
+          </Animated.View>
+        ) : null}
 
-          <Button
-            label="Save changes"
-            onPress={save}
-            loading={loading}
-            size="lg"
-            style={{ marginTop: 8 }}
-          />
-        </ScrollView>
-      </KeyboardAvoidingView>
+        <Input
+          label="Full name"
+          value={form.name}
+          onChangeText={set("name")}
+          placeholder="Your full name"
+          leftIcon={
+            <Ionicons
+              name="person-outline"
+              size={19}
+              color={colors.text.tertiary}
+            />
+          }
+        />
+        <Input
+          label="Email"
+          value={form.email}
+          onChangeText={set("email")}
+          placeholder="email@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          leftIcon={
+            <Ionicons
+              name="mail-outline"
+              size={19}
+              color={colors.text.tertiary}
+            />
+          }
+        />
+        <DateField
+          label="Date of birth"
+          value={form.dob}
+          onChange={set("dob")}
+          placeholder="Select your date of birth"
+          leftIcon={
+            <Ionicons
+              name="calendar-outline"
+              size={19}
+              color={colors.text.tertiary}
+            />
+          }
+        />
+        <SelectField
+          label="Gender"
+          value={form.gender}
+          onChange={set("gender")}
+          placeholder="Select gender"
+          options={[
+            { label: "Male", value: "male" },
+            { label: "Female", value: "female" },
+          ]}
+          leftIcon={
+            <Ionicons
+              name="male-female-outline"
+              size={19}
+              color={colors.text.tertiary}
+            />
+          }
+        />
+        <Input
+          label="Bio"
+          value={form.bio}
+          onChangeText={set("bio")}
+          placeholder="A short bio about yourself…"
+          multiline
+        />
+
+        <Button
+          label="Save changes"
+          onPress={save}
+          loading={loading}
+          size="lg"
+          style={{ marginTop: 8 }}
+        />
+      </ScrollView>
     </View>
   );
 }
