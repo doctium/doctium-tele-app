@@ -1,7 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { prisma } from "@doctium/database";
 import { FirebaseProvider } from "./channels/firebase.provider";
-import { MailerProvider } from "./channels/mailer.provider";
+import {
+  MailerProvider,
+  type EmailAttachment,
+} from "./channels/mailer.provider";
 import { SmsProvider } from "./channels/sms.provider";
 import { translateNotification } from "./notification-i18n";
 
@@ -298,6 +301,7 @@ export class NotificationsService {
     recipients: { email?: string | null }[],
     subject: string,
     body: string,
+    attachments?: EmailAttachment[],
   ): Promise<{ recipientCount: number; sent: number }> {
     const valid = recipients.filter((r) => r.email);
     const recipientCount = valid.length;
@@ -310,7 +314,7 @@ export class NotificationsService {
       await Promise.all(
         batch.map((r) =>
           this.mailer
-            .sendEmail(r.email as string, subject, html)
+            .sendEmail(r.email as string, subject, html, attachments)
             .then(() => {
               sent += 1;
             })

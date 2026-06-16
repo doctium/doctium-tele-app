@@ -9,6 +9,12 @@ import * as nodemailer from "nodemailer";
  * to SMTP (with fail-fast timeouts) when no Resend key is present. No-ops
  * gracefully until either is configured.
  */
+export type EmailAttachment = {
+  filename: string;
+  content: string; // base64, no data-url prefix
+  contentType?: string;
+};
+
 @Injectable()
 export class MailerProvider {
   private readonly logger = new Logger(MailerProvider.name);
@@ -55,11 +61,16 @@ export class MailerProvider {
     return !!this.resendKey() || !!this.get();
   }
 
-  async sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+  async sendEmail(
+    to: string,
+    subject: string,
+    html: string,
+    attachments?: EmailAttachment[],
+  ): Promise<boolean> {
     if (!to) return false;
     const key = this.resendKey();
-    if (key) return this.sendViaResend(key, to, subject, html);
-    return this.sendViaSmtp(to, subject, html);
+    if (key) return this.sendViaResend(key, to, subject, html, attachments);
+    return this.sendViaSmtp(to, subject, html, attachments);
   }
 
   private async sendViaResend(
@@ -67,6 +78,7 @@ export class MailerProvider {
     to: string,
     subject: string,
     html: string,
+    attachments?: EmailAttachment[],
   ): Promise<boolean> {
     try {
       const res = await fetch("https://api.resend.com/emails", {
@@ -75,7 +87,21 @@ export class MailerProvider {
           Authorization: `Bearer ${key}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ from: this.from(), to: [to], subject, html }),
+        body: JSON.stringify({
+          from: this.from(),
+          to: [to],
+          subject,
+          html,
+          ...(attachments?.length
+            ? {
+                attachments: attachments.map((a) => ({
+                  filename: a.filename,
+                  content: a.content,
+                  content_type: a.contentType,
+                })),
+              }
+            : {}),
+        }),
       });
       const body = (await res.json().catch(() => null)) as {
         id?: string;
@@ -107,6 +133,7 @@ export class MailerProvider {
     to: string,
     subject: string,
     html: string,
+    attachments?: EmailAttachment[],
   ): Promise<boolean> {
     const t = this.get();
     if (!t) {
@@ -116,7 +143,22 @@ export class MailerProvider {
       return false;
     }
     try {
-      const info = await t.sendMail({ from: this.from(), to, subject, html });
+      const info = await t.sendMail({
+        from: this.from(),
+        to,
+        subject,
+        html,
+        ...(attachments?.length
+          ? {
+              attachments: attachments.map((a) => ({
+                filename: a.filename,
+                content: a.content,
+                encoding: "base64" as const,
+                contentType: a.contentType,
+              })),
+            }
+          : {}),
+      });
       this.logger.log(
         `Email sent to ${to} via SMTP (id=${info?.messageId ?? "n/a"})`,
       );

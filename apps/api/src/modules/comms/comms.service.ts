@@ -191,6 +191,7 @@ export class CommsService {
       targets,
       dto.subject,
       dto.body,
+      dto.attachments,
     );
     const row = await prisma.broadcast.create({
       data: {

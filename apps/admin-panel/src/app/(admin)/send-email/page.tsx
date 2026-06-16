@@ -1,6 +1,6 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
-import { Mail, Users, Stethoscope, Globe } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Mail, Users, Stethoscope, Globe, Paperclip, X } from "lucide-react";
 import { RequirePermission } from "@/components/RequirePermission";
 import { RecipientPicker, type Person } from "@/components/RecipientPicker";
 import { apiClient } from "@/lib/api";
@@ -43,6 +43,21 @@ const stripHtml = (html: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+type Attachment = {
+  filename: string;
+  content: string; // base64, no data-url prefix
+  contentType: string;
+  size: number;
+};
+const MAX_ATTACH_BYTES = 5 * 1024 * 1024; // 5MB total raw (~6.7MB base64, under the API's 10mb body cap)
+const fileToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+
 type Audience = "PATIENTS" | "DOCTORS" | "ALL";
 interface Counts {
   users: number;
@@ -68,6 +83,8 @@ export default function SendEmailPage() {
   const [selected, setSelected] = useState<Person[]>([]);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [sending, setSending] = useState(false);
   const [history, setHistory] = useState<Broadcast[]>([]);
 
@@ -88,6 +105,26 @@ export default function SendEmailPage() {
     loadHistory();
   }, [loadHistory]);
 
+  const addFiles = async (files: FileList | null) => {
+    if (!files?.length) return;
+    let total = attachments.reduce((s, a) => s + a.size, 0);
+    const next: Attachment[] = [];
+    for (const file of Array.from(files)) {
+      if (total + file.size > MAX_ATTACH_BYTES) {
+        toast.error("Attachments exceed the 5MB total limit");
+        break;
+      }
+      next.push({
+        filename: file.name,
+        content: await fileToBase64(file),
+        contentType: file.type || "application/octet-stream",
+        size: file.size,
+      });
+      total += file.size;
+    }
+    if (next.length) setAttachments((a) => [...a, ...next]);
+  };
+
   const send = async () => {
     if (!subject.trim() || htmlIsEmpty(body))
       return toast.error("Subject and message are required");
@@ -95,15 +132,27 @@ export default function SendEmailPage() {
       return toast.error("Select at least one recipient");
     setSending(true);
     try {
+      const atts = attachments.map(({ filename, content, contentType }) => ({
+        filename,
+        content,
+        contentType,
+      }));
       const payload =
         mode === "AUDIENCE"
-          ? { mode, audience, subject: subject.trim(), body: body.trim() }
+          ? {
+              mode,
+              audience,
+              subject: subject.trim(),
+              body: body.trim(),
+              attachments: atts,
+            }
           : {
               mode,
               recipientType,
               recipientIds: selected.map((s) => s.id),
               subject: subject.trim(),
               body: body.trim(),
+              attachments: atts,
             };
       const r = (await apiClient.post("/admin/comms/email", payload)) as {
         data: { recipientCount: number; sent: number };
@@ -118,6 +167,7 @@ export default function SendEmailPage() {
       setSubject("");
       setBody("");
       setSelected([]);
+      setAttachments([]);
       loadHistory();
     } catch {
       /* interceptor toasts */
@@ -214,6 +264,52 @@ export default function SendEmailPage() {
                 maxLength={150}
                 placeholder="Email subject line"
               />
+            </div>
+            <div>
+              <label className="label">Attachment</label>
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  addFiles(e.dataTransfer.files);
+                }}
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center gap-2 border-2 border-dashed border-border rounded-xl px-4 py-3 text-sm text-gray-500 cursor-pointer hover:border-navy/40 transition-colors"
+              >
+                <Paperclip size={16} /> Drag and drop a file here, or click to
+                choose
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  addFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              {attachments.length > 0 ? (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {attachments.map((a, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1.5 bg-gray-100 rounded-lg px-2.5 py-1 text-xs text-gray-700"
+                    >
+                      {a.filename} · {(a.size / 1024).toFixed(0)}KB
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAttachments((arr) => arr.filter((_, j) => j !== i))
+                        }
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <div>
               <label className="label">Message</label>

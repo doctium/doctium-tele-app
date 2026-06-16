@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
+import { type EmailAttachment } from "../../notifications/channels/mailer.provider";
 
 export class SendPushDto {
   @ApiProperty({ enum: ["PATIENTS", "DOCTORS", "ALL"] })
@@ -59,6 +60,12 @@ export class SendEmailDto {
   @ApiProperty() @IsString() @IsNotEmpty() subject!: string;
 
   @ApiProperty() @IsString() @IsNotEmpty() body!: string;
+
+  // Optional file attachments (base64 content). Trusted admin endpoint.
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsArray()
+  attachments?: EmailAttachment[];
 }
 
 export class SendSmsDto {
