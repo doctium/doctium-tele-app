@@ -37,8 +37,9 @@ interface NavItem {
 
 // Module → sub-module navigation. Each top-level entry is a domain module
 // that expands; a module is hidden entirely when the admin can see none of
-// its sub-modules (see visibleNav).
-const nav: { group: string; items: NavItem[] }[] = [
+// its sub-modules (see visibleNav). Exported so the landing redirect can pick
+// the first route a given admin is permitted to open (see lib/landing.ts).
+export const nav: { group: string; items: NavItem[] }[] = [
   {
     group: "OVERVIEW",
     items: [

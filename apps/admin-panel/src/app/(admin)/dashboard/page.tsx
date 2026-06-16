@@ -1,5 +1,6 @@
 ﻿"use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Users,
   UserCheck,
@@ -7,6 +8,7 @@ import {
   Wallet,
   TrendingUp,
   Activity,
+  ShieldAlert,
 } from "lucide-react";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { DataTable, Column } from "@/components/ui/DataTable";
@@ -15,6 +17,8 @@ import { PatientLink } from "@/components/ui/PatientLink";
 import { RevenueChart } from "@/components/charts/RevenueChart";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { apiClient } from "@/lib/api";
+import { useAdminAuth } from "@/lib/auth-context";
+import { firstAllowedPath } from "@/lib/landing";
 import { formatMoney } from "@/lib/money";
 import { format, subDays } from "date-fns";
 import type { AdminStats, TopDoctor, Appointment } from "@/types";
@@ -31,6 +35,9 @@ export default function DashboardPage() {
   );
   const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { can, loading: authLoading } = useAdminAuth();
+  const canViewDashboard = can("dashboard.view");
 
   const load = async () => {
     setLoading(true);
@@ -58,10 +65,20 @@ export default function DashboardPage() {
     }
   };
 
+  // Roles without dashboard access (e.g. a custom role that omits dashboard.view)
+  // land here via the post-login redirect — send them to their first permitted
+  // page instead of a dashboard that would only 403 on every data call.
   useEffect(() => {
+    if (authLoading || canViewDashboard) return;
+    const dest = firstAllowedPath(can);
+    if (dest && dest !== "/dashboard") router.replace(dest);
+  }, [authLoading, canViewDashboard, can, router]);
+
+  useEffect(() => {
+    if (!canViewDashboard) return; // don't fire dashboard.view-gated calls we'd 403 on
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startDate, endDate]);
+  }, [startDate, endDate, canViewDashboard]);
 
   const topDoctorCols: Column<TopDoctor>[] = [
     {
@@ -206,6 +223,30 @@ export default function DashboardPage() {
   ];
 
   const today = format(new Date(), "EEEE, MMMM d");
+
+  // No dashboard access: show a placeholder while the redirect effect runs, or a
+  // friendly empty state if the account can't reach any page at all.
+  if (!authLoading && !canViewDashboard) {
+    if (firstAllowedPath(can)) {
+      return (
+        <div className="flex items-center justify-center h-64 text-gray-400">
+          Redirecting…
+        </div>
+      );
+    }
+    return (
+      <div className="card flex flex-col items-center justify-center text-center py-16 gap-3">
+        <div className="grid place-items-center w-14 h-14 rounded-2xl bg-alert-50 text-alert-600">
+          <ShieldAlert size={26} />
+        </div>
+        <h2 className="section-title">No sections available</h2>
+        <p className="text-sm text-gray-500 max-w-sm">
+          Your account hasn’t been granted access to any sections yet. Contact
+          an administrator to assign permissions to your role.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-7">
