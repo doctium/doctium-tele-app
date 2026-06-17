@@ -34,6 +34,8 @@ import {
   UpdateApplicationStatusDto,
   CreateLandingPageDto,
   UpdateLandingPageDto,
+  CreateTeamMemberDto,
+  UpdateTeamMemberDto,
 } from "./dto/media.dto";
 
 @ApiTags("Admin · Media")
@@ -269,5 +271,27 @@ export class AdminMediaController {
   @Delete("landing/:id")
   deleteLanding(@Param("id") id: string) {
     return this.media.adminDeleteLanding(id);
+  }
+
+  // ── Team members ──
+  @Permissions("media.team.view")
+  @Get("team-members")
+  teamMembers() {
+    return this.media.adminListTeam();
+  }
+  @Permissions("media.team.manage")
+  @Post("team-members")
+  createTeamMember(@Body() dto: CreateTeamMemberDto) {
+    return this.media.adminCreateTeamMember(dto);
+  }
+  @Permissions("media.team.manage")
+  @Patch("team-members/:id")
+  updateTeamMember(@Param("id") id: string, @Body() dto: UpdateTeamMemberDto) {
+    return this.media.adminUpdateTeamMember(id, dto);
+  }
+  @Permissions("media.team.manage")
+  @Delete("team-members/:id")
+  deleteTeamMember(@Param("id") id: string) {
+    return this.media.adminDeleteTeamMember(id);
   }
 }

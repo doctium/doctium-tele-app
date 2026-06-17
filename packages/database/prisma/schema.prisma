@@ -2877,6 +2877,24 @@ model LandingPage {
   @@map("landing_pages")
 }
 
+model TeamMember {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  role        String        @default("")
+  bioMd       String        @default("") // Markdown
+  avatarUrl   String        @default("")
+  linkedinUrl String        @default("")
+  xUrl        String        @default("")
+  group       String        @default("") // optional grouping, e.g. "Leadership", "Engineering"
+  sortOrder   Int           @default(0)
+  status      ContentStatus @default(DRAFT) // publish/unpublish on the website
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  @@index([status])
+  @@map("team_members")
+}
+
 model Payslip {
   id          String        @id @default(cuid())
   employeeId  String

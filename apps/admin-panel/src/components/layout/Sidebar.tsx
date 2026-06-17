@@ -248,6 +248,11 @@ export const nav: { group: string; items: NavItem[] }[] = [
             perm: "media.blog.view",
           },
           {
+            label: "Team Members",
+            href: "/content/team-members",
+            perm: "media.team.view",
+          },
+          {
             label: "Landing Pages",
             href: "/content/landing",
             perm: "media.landing.manage",

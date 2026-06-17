@@ -64,6 +64,12 @@ export class MediaController {
     return this.media.publicLandingBySlug(slug);
   }
 
+  // Team
+  @Get("team")
+  team() {
+    return this.media.publicListTeam();
+  }
+
   // For the website's dynamic sitemap + RSS
   @Get("sitemap-entries")
   sitemap() {

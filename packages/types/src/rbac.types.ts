@@ -151,6 +151,11 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
         label: "Manage applications (status, notes)",
       },
       { key: "media.landing.manage", label: "Manage SEO landing pages" },
+      { key: "media.team.view", label: "View team members" },
+      {
+        key: "media.team.manage",
+        label: "Create / edit / publish team members",
+      },
     ],
   },
 ];

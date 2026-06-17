@@ -221,3 +221,24 @@ export class CreateLandingPageDto {
 export class UpdateLandingPageDto extends CreateLandingPageDto {
   @ApiPropertyOptional() @IsString() @IsOptional() declare h1: string;
 }
+
+/* ── Team member ────────────────────────────────────── */
+export class CreateTeamMemberDto {
+  @ApiProperty() @IsString() name: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() slug?: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() role?: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() bioMd?: string;
+  /** Avatar: data-URL or hosted URL. */
+  @ApiPropertyOptional() @IsString() @IsOptional() avatar?: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() linkedinUrl?: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() xUrl?: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() group?: string;
+  @ApiPropertyOptional() @IsInt() @IsOptional() sortOrder?: number;
+  @ApiPropertyOptional({ enum: CONTENT_STATUS })
+  @IsIn(CONTENT_STATUS)
+  @IsOptional()
+  status?: string;
+}
+export class UpdateTeamMemberDto extends CreateTeamMemberDto {
+  @ApiPropertyOptional() @IsString() @IsOptional() declare name: string;
+}

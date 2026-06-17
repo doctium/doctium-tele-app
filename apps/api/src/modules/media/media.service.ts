@@ -19,6 +19,8 @@ import type {
   UpdateApplicationStatusDto,
   CreateLandingPageDto,
   UpdateLandingPageDto,
+  CreateTeamMemberDto,
+  UpdateTeamMemberDto,
 } from "./dto/media.dto";
 
 const PAGE_SIZE = 12;
@@ -40,7 +42,9 @@ export class MediaService {
   /** Fire-and-forget: ask the website to revalidate a content tag on publish.
    *  No-op unless WEBSITE_REVALIDATE_URL + WEBSITE_REVALIDATE_SECRET are set.
    *  Never blocks or throws — the website also has time-based ISR as a fallback. */
-  private revalidateWebsite(tag: "blog" | "news" | "jobs" | "landing") {
+  private revalidateWebsite(
+    tag: "blog" | "news" | "jobs" | "landing" | "team",
+  ) {
     const url = process.env.WEBSITE_REVALIDATE_URL;
     const secret = process.env.WEBSITE_REVALIDATE_SECRET;
     if (!url || !secret) return;
@@ -876,6 +880,90 @@ export class MediaService {
 
   async adminDeleteLanding(id: string) {
     await prisma.landingPage.delete({ where: { id } });
+    return { deleted: true };
+  }
+
+  // ─────────────────────────────────────────────
+  // Team members
+  // ─────────────────────────────────────────────
+
+  /** Public: published team members in display order. */
+  publicListTeam() {
+    return prisma.teamMember.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: {
+        name: true,
+        slug: true,
+        role: true,
+        bioMd: true,
+        avatarUrl: true,
+        linkedinUrl: true,
+        xUrl: true,
+        group: true,
+      },
+    });
+  }
+
+  adminListTeam() {
+    return prisma.teamMember.findMany({
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    });
+  }
+
+  async adminCreateTeamMember(dto: CreateTeamMemberDto) {
+    const slug = await this.uniqueSlug(dto.slug || dto.name, (s) =>
+      prisma.teamMember.findUnique({ where: { slug: s } }).then(Boolean),
+    );
+    const avatarUrl = dto.avatar
+      ? ((await resolveImageUrl(this.cloudinary, dto.avatar, `team/${slug}`)) ??
+        "")
+      : "";
+    const member = await prisma.teamMember.create({
+      data: {
+        name: dto.name,
+        slug,
+        role: dto.role ?? "",
+        bioMd: dto.bioMd ?? "",
+        avatarUrl,
+        linkedinUrl: dto.linkedinUrl ?? "",
+        xUrl: dto.xUrl ?? "",
+        group: dto.group ?? "",
+        sortOrder: dto.sortOrder ?? 0,
+        status: (dto.status ??
+          "DRAFT") as Prisma.TeamMemberCreateInput["status"],
+      },
+    });
+    this.revalidateWebsite("team");
+    return member;
+  }
+
+  async adminUpdateTeamMember(id: string, dto: UpdateTeamMemberDto) {
+    const existing = await prisma.teamMember.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException("Team member not found");
+    const data: Prisma.TeamMemberUpdateInput = {};
+    if (dto.name !== undefined) data.name = dto.name;
+    if (dto.slug !== undefined) data.slug = slugify(dto.slug);
+    if (dto.role !== undefined) data.role = dto.role;
+    if (dto.bioMd !== undefined) data.bioMd = dto.bioMd;
+    if (dto.linkedinUrl !== undefined) data.linkedinUrl = dto.linkedinUrl;
+    if (dto.xUrl !== undefined) data.xUrl = dto.xUrl;
+    if (dto.group !== undefined) data.group = dto.group;
+    if (dto.sortOrder !== undefined) data.sortOrder = dto.sortOrder;
+    if (dto.status !== undefined)
+      data.status = dto.status as Prisma.TeamMemberUpdateInput["status"];
+    if (dto.avatar)
+      data.avatarUrl =
+        (await resolveImageUrl(this.cloudinary, dto.avatar, `team/${id}`)) ??
+        "";
+    const updated = await prisma.teamMember.update({ where: { id }, data });
+    this.revalidateWebsite("team");
+    return updated;
+  }
+
+  async adminDeleteTeamMember(id: string) {
+    await prisma.teamMember.delete({ where: { id } });
+    this.revalidateWebsite("team");
     return { deleted: true };
   }
 }

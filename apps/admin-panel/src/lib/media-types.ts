@@ -150,6 +150,22 @@ export interface LandingPage {
   updatedAt: string;
 }
 
+export interface TeamMember {
+  id: string;
+  name: string;
+  slug: string;
+  role: string;
+  bioMd: string;
+  avatarUrl: string;
+  linkedinUrl: string;
+  xUrl: string;
+  group: string;
+  sortOrder: number;
+  status: ContentStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const CONTENT_STATUSES: ContentStatus[] = [
   "DRAFT",
   "SCHEDULED",
