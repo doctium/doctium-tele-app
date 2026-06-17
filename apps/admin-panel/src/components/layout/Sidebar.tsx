@@ -15,6 +15,7 @@ import {
   Send,
   TrendingUp,
   LayoutGrid,
+  Newspaper,
   PanelLeftClose,
   PanelLeftOpen,
   X,
@@ -200,6 +201,57 @@ export const nav: { group: string; items: NavItem[] }[] = [
           { label: "Reviews", href: "/reviews", perm: "content.view" },
           { label: "Complaints", href: "/complaints", perm: "content.view" },
           { label: "Suggestions", href: "/suggestions", perm: "content.view" },
+        ],
+      },
+      {
+        label: "Website",
+        icon: <Newspaper size={18} />,
+        children: [
+          {
+            label: "Blog Posts",
+            href: "/content/blog",
+            perm: "media.blog.view",
+          },
+          {
+            label: "Blog Categories",
+            href: "/content/blog-categories",
+            perm: "media.blog.view",
+          },
+          {
+            label: "News & Press",
+            href: "/content/news",
+            perm: "media.news.view",
+          },
+          {
+            label: "News Categories",
+            href: "/content/news-categories",
+            perm: "media.news.view",
+          },
+          {
+            label: "Job Postings",
+            href: "/content/jobs",
+            perm: "media.careers.view",
+          },
+          {
+            label: "Teams",
+            href: "/content/teams",
+            perm: "media.careers.view",
+          },
+          {
+            label: "Applications",
+            href: "/content/applications",
+            perm: "media.applications.view",
+          },
+          {
+            label: "Authors",
+            href: "/content/authors",
+            perm: "media.blog.view",
+          },
+          {
+            label: "Landing Pages",
+            href: "/content/landing",
+            perm: "media.landing.manage",
+          },
         ],
       },
       {
