@@ -37,6 +37,20 @@ function slugify(input: string): string {
 export class MediaService {
   constructor(private readonly cloudinary: CloudinaryService) {}
 
+  /** Fire-and-forget: ask the website to revalidate a content tag on publish.
+   *  No-op unless WEBSITE_REVALIDATE_URL + WEBSITE_REVALIDATE_SECRET are set.
+   *  Never blocks or throws — the website also has time-based ISR as a fallback. */
+  private revalidateWebsite(tag: "blog" | "news" | "jobs" | "landing") {
+    const url = process.env.WEBSITE_REVALIDATE_URL;
+    const secret = process.env.WEBSITE_REVALIDATE_SECRET;
+    if (!url || !secret) return;
+    fetch(`${url}?secret=${encodeURIComponent(secret)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tag }),
+    }).catch(() => undefined);
+  }
+
   /** Slugify `base`, then suffix -2, -3… until `exists()` returns false. */
   private async uniqueSlug(
     base: string,
@@ -458,7 +472,9 @@ export class MediaService {
         : { disconnect: true };
     if (dto.categoryIds !== undefined)
       data.categories = { set: dto.categoryIds.map((cid) => ({ id: cid })) };
-    return prisma.blogPost.update({ where: { id }, data });
+    const updated = await prisma.blogPost.update({ where: { id }, data });
+    this.revalidateWebsite("blog");
+    return updated;
   }
 
   async adminDeleteBlog(id: string) {
@@ -466,14 +482,16 @@ export class MediaService {
     return { deleted: true };
   }
 
-  setBlogStatus(id: string, status: "PUBLISHED" | "DRAFT" | "ARCHIVED") {
-    return prisma.blogPost.update({
+  async setBlogStatus(id: string, status: "PUBLISHED" | "DRAFT" | "ARCHIVED") {
+    const updated = await prisma.blogPost.update({
       where: { id },
       data: {
         status,
         publishedAt: status === "PUBLISHED" ? new Date() : undefined,
       },
     });
+    this.revalidateWebsite("blog");
+    return updated;
   }
 
   // ─────────────────────────────────────────────
@@ -611,7 +629,9 @@ export class MediaService {
       data.category = dto.categoryId
         ? { connect: { id: dto.categoryId } }
         : { disconnect: true };
-    return prisma.newsPost.update({ where: { id }, data });
+    const updated = await prisma.newsPost.update({ where: { id }, data });
+    this.revalidateWebsite("news");
+    return updated;
   }
 
   async adminDeleteNews(id: string) {
@@ -740,7 +760,9 @@ export class MediaService {
       data.team = dto.teamId
         ? { connect: { id: dto.teamId } }
         : { disconnect: true };
-    return prisma.jobPosting.update({ where: { id }, data });
+    const updated = await prisma.jobPosting.update({ where: { id }, data });
+    this.revalidateWebsite("jobs");
+    return updated;
   }
 
   async adminDeleteJob(id: string) {
@@ -847,7 +869,9 @@ export class MediaService {
     }
     if (dto.publishedAt !== undefined)
       data.publishedAt = dto.publishedAt ? new Date(dto.publishedAt) : null;
-    return prisma.landingPage.update({ where: { id }, data });
+    const updated = await prisma.landingPage.update({ where: { id }, data });
+    this.revalidateWebsite("landing");
+    return updated;
   }
 
   async adminDeleteLanding(id: string) {
