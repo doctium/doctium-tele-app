@@ -79,7 +79,10 @@ Keep these in your password manager. They go into Railway's variables (step 2), 
 | `PAYSTACK_AUTO_PAYOUT`                                   | `true` when ready to auto-disburse payouts |
 | `CLOUDINARY_CLOUD_NAME` / `_API_KEY` / `_API_SECRET`     | already have                               |
 | `FIREBASE_PROJECT_ID` / `_CLIENT_EMAIL` / `_PRIVATE_KEY` | already have (\n-escaped)                  |
-| `TERMII_API_KEY` / `TERMII_SENDER_ID`                    | already have (`N-Alert`)                   |
+| `SMS_PROVIDER`                                           | `africastalking` (preferred) or `termii`   |
+| `AT_API_KEY` / `AT_USERNAME` / `AT_SENDER_ID`            | Africa's Talking (preferred SMS provider)  |
+| `AT_SANDBOX`                                             | `true` to test via AT sandbox (no sender)  |
+| `TERMII_API_KEY` / `TERMII_SENDER_ID`                    | legacy SMS fallback (`N-Alert`)            |
 | `SMTP_HOST/PORT/USER/PASS/FROM`                          | Resend (already have)                      |
 | `OPENAI_API_KEY` (+ model vars if customized)            | already have                               |
 | `ZEGO_APP_ID` / `ZEGO_SERVER_SECRET`                     | already have                               |
