@@ -14,6 +14,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import {
   Fonts,
   Gradients,
@@ -39,6 +40,7 @@ const RESEND_COOLDOWN = 45; // seconds
 export default function VerifyEmailScreen() {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [code, setCode] = useState("");
@@ -70,7 +72,7 @@ export default function VerifyEmailScreen() {
     } catch (e: unknown) {
       setError(
         (e as { message?: string })?.message ??
-          "That code didn't work — try again.",
+          t("auth.verifyEmail.codeFailed"),
       );
       setCode("");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(
@@ -94,7 +96,7 @@ export default function VerifyEmailScreen() {
       await authApi.sendEmailVerification(email ?? "");
       setCooldown(RESEND_COOLDOWN);
     } catch {
-      setError("Couldn't resend right now — try again shortly.");
+      setError(t("auth.verifyEmail.resendFailed"));
     }
   };
 
@@ -140,8 +142,10 @@ export default function VerifyEmailScreen() {
             entering={FadeInDown.delay(180).springify().damping(18)}
             style={{ alignItems: "center" }}
           >
-            <Text style={styles.title}>Email verified successfully</Text>
-            <Text style={styles.sub}>Taking you to your dashboard…</Text>
+            <Text style={styles.title}>
+              {t("auth.verifyEmail.verifiedTitle")}
+            </Text>
+            <Text style={styles.sub}>{t("auth.verifyEmail.verifiedSub")}</Text>
           </Animated.View>
         </View>
       ) : (
@@ -153,11 +157,13 @@ export default function VerifyEmailScreen() {
             <View style={styles.mailIcon}>
               <Ionicons name="mail-unread" size={30} color={colors.teal} />
             </View>
-            <Text style={styles.title}>Verify your email</Text>
+            <Text style={styles.title}>{t("auth.verifyEmail.title")}</Text>
             <Text style={styles.sub}>
-              We sent a 6-digit code to{"\n"}
+              {t("auth.verifyEmail.sentTo")}
+              {"\n"}
               <Text style={styles.email}>{email}</Text>
-              {"\n"}Enter it below — or simply tap the link in the email.
+              {"\n"}
+              {t("auth.verifyEmail.enterBelow")}
             </Text>
           </Animated.View>
 
@@ -220,14 +226,18 @@ export default function VerifyEmailScreen() {
             >
               <Ionicons name="refresh" size={15} color={colors.teal} />
               <Text style={styles.resendText}>
-                {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
+                {cooldown > 0
+                  ? t("auth.verifyEmail.resendIn", { seconds: cooldown })
+                  : t("auth.verifyEmail.resend")}
               </Text>
             </AnimatedPressable>
             <AnimatedPressable
               haptic={false}
               onPress={() => router.replace("/(app)/(home)")}
             >
-              <Text style={styles.skip}>Verify later</Text>
+              <Text style={styles.skip}>
+                {t("auth.verifyEmail.verifyLater")}
+              </Text>
             </AnimatedPressable>
           </Animated.View>
         </>

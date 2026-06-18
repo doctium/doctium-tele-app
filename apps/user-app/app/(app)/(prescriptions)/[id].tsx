@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import {
   Palette,
   Fonts,
@@ -48,11 +49,20 @@ interface Rx {
 
 const STATUS: Record<
   Rx["status"],
-  { variant: "confirmed" | "completed" | "cancelled"; label: string }
+  { variant: "confirmed" | "completed" | "cancelled"; labelKey: string }
 > = {
-  ISSUED: { variant: "confirmed", label: "Active" },
-  DISPENSED: { variant: "completed", label: "Dispensed" },
-  CANCELLED: { variant: "cancelled", label: "Cancelled" },
+  ISSUED: {
+    variant: "confirmed",
+    labelKey: "prescriptions.detail.statusActive",
+  },
+  DISPENSED: {
+    variant: "completed",
+    labelKey: "prescriptions.detail.statusDispensed",
+  },
+  CANCELLED: {
+    variant: "cancelled",
+    labelKey: "prescriptions.detail.statusCancelled",
+  },
 };
 
 type RefillStatus = "PENDING" | "APPROVED" | "DECLINED";
@@ -64,14 +74,24 @@ interface RefillReq {
 }
 const REFILL: Record<
   RefillStatus,
-  { variant: "pending" | "completed" | "cancelled"; label: string }
+  { variant: "pending" | "completed" | "cancelled"; labelKey: string }
 > = {
-  PENDING: { variant: "pending", label: "Refill requested" },
-  APPROVED: { variant: "completed", label: "Refill approved" },
-  DECLINED: { variant: "cancelled", label: "Refill declined" },
+  PENDING: {
+    variant: "pending",
+    labelKey: "prescriptions.detail.refillRequested",
+  },
+  APPROVED: {
+    variant: "completed",
+    labelKey: "prescriptions.detail.refillApproved",
+  },
+  DECLINED: {
+    variant: "cancelled",
+    labelKey: "prescriptions.detail.refillDeclined",
+  },
 };
 
 export default function PrescriptionDetailScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [rx, setRx] = useState<Rx | null>(null);
   const [requests, setRequests] = useState<RefillReq[]>([]);
@@ -122,11 +142,14 @@ export default function PrescriptionDetailScreen() {
 
   const confirmRequest = () =>
     Alert.alert(
-      "Request refill",
-      "Send a refill request to your doctor for this prescription?",
+      t("prescriptions.detail.requestRefillTitle"),
+      t("prescriptions.detail.requestRefillMessage"),
       [
-        { text: "Cancel", style: "cancel" },
-        { text: "Request", onPress: requestRefill },
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("prescriptions.detail.requestRefillConfirm"),
+          onPress: requestRefill,
+        },
       ],
     );
 
@@ -152,8 +175,8 @@ export default function PrescriptionDetailScreen() {
   return (
     <View style={styles.root}>
       <AppHeader
-        title="Prescription"
-        right={<Badge variant={s.variant} label={s.label} />}
+        title={t("prescriptions.detail.title")}
+        right={<Badge variant={s.variant} label={t(s.labelKey)} />}
       />
       <ScrollView
         contentContainerStyle={styles.scroll}
@@ -169,22 +192,34 @@ export default function PrescriptionDetailScreen() {
             />
             <View style={{ flex: 1 }}>
               <Text style={styles.docName}>
-                Dr. {rx.doctor?.name ?? "Doctor"}
+                {t("prescriptions.detail.doctorName", {
+                  name:
+                    rx.doctor?.name ?? t("prescriptions.detail.doctorFallback"),
+                })}
               </Text>
               <Text style={styles.docSpec}>
-                {rx.doctor?.designation || "General practitioner"}
+                {rx.doctor?.designation ||
+                  t("prescriptions.detail.generalPractitioner")}
               </Text>
-              <Text style={styles.issued}>Issued {issued}</Text>
+              <Text style={styles.issued}>
+                {t("prescriptions.detail.issued", { date: issued })}
+              </Text>
             </View>
           </View>
           {rx.subPatient ? (
-            <Text style={styles.forPatient}>For {rx.subPatient.name}</Text>
+            <Text style={styles.forPatient}>
+              {t("prescriptions.detail.forPatient", {
+                name: rx.subPatient.name,
+              })}
+            </Text>
           ) : null}
         </Card>
 
         {rx.diagnosis ? (
           <Card style={styles.card}>
-            <Text style={styles.label}>DIAGNOSIS</Text>
+            <Text style={styles.label}>
+              {t("prescriptions.detail.diagnosisLabel")}
+            </Text>
             <Text style={styles.body}>{rx.diagnosis}</Text>
           </Card>
         ) : null}
@@ -192,7 +227,7 @@ export default function PrescriptionDetailScreen() {
         <Card style={styles.card}>
           <View style={styles.rxHead}>
             <Text style={styles.rxSymbol}>℞</Text>
-            <Txt variant="h3">Medications</Txt>
+            <Txt variant="h3">{t("prescriptions.detail.medications")}</Txt>
           </View>
           {rx.items.map((it, i) => (
             <View
@@ -203,7 +238,13 @@ export default function PrescriptionDetailScreen() {
                 <Text style={styles.drug}>{it.drugName}</Text>
                 {it.refills > 0 ? (
                   <Text style={styles.refills}>
-                    {it.refills} refill{it.refills === 1 ? "" : "s"}
+                    {it.refills === 1
+                      ? t("prescriptions.detail.refillCountOne", {
+                          count: it.refills,
+                        })
+                      : t("prescriptions.detail.refillCountMany", {
+                          count: it.refills,
+                        })}
                   </Text>
                 ) : null}
               </View>
@@ -227,37 +268,45 @@ export default function PrescriptionDetailScreen() {
 
         {rx.notes ? (
           <Card style={styles.card}>
-            <Text style={styles.label}>NOTES</Text>
+            <Text style={styles.label}>
+              {t("prescriptions.detail.notesLabel")}
+            </Text>
             <Text style={styles.body}>{rx.notes}</Text>
           </Card>
         ) : null}
 
         <Card style={styles.card}>
           <View style={styles.refillHead}>
-            <Txt variant="h3">Refills</Txt>
+            <Txt variant="h3">{t("prescriptions.detail.refills")}</Txt>
             {latest ? (
               <Badge
                 variant={REFILL[latest.status].variant}
-                label={REFILL[latest.status].label}
+                label={t(REFILL[latest.status].labelKey)}
               />
             ) : null}
           </View>
           {latest?.status === "DECLINED" && latest.doctorNote ? (
             <Text style={styles.declineNote}>
-              Doctor’s note: {latest.doctorNote}
+              {t("prescriptions.detail.doctorNote", {
+                note: latest.doctorNote,
+              })}
             </Text>
           ) : null}
           {!hasRefillsLeft ? (
             <Text style={styles.refillHint}>
-              No authorised refills remaining on this prescription.
+              {t("prescriptions.detail.noRefillsLeft")}
             </Text>
           ) : pending ? (
             <Text style={styles.refillHint}>
-              Your request is awaiting your doctor’s approval.
+              {t("prescriptions.detail.awaitingApproval")}
             </Text>
           ) : null}
           <Button
-            label={pending ? "Refill requested" : "Request refill"}
+            label={
+              pending
+                ? t("prescriptions.detail.refillRequested")
+                : t("prescriptions.detail.requestRefill")
+            }
             variant="secondary"
             onPress={confirmRequest}
             loading={requesting}
@@ -274,19 +323,20 @@ export default function PrescriptionDetailScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.verifyTitle}>
-                Digitally signed & verifiable
+                {t("prescriptions.detail.verifyTitle")}
               </Text>
               <Text style={styles.verifySub}>
-                Carries an Ed25519 signature. The PDF includes a QR code anyone
-                can scan to confirm authenticity.
+                {t("prescriptions.detail.verifySub")}
               </Text>
             </View>
           </View>
-          <Text style={styles.code}>Ref: {rx.code}</Text>
+          <Text style={styles.code}>
+            {t("prescriptions.detail.ref", { code: rx.code })}
+          </Text>
         </View>
 
         <Button
-          label="Download / view PDF"
+          label={t("prescriptions.detail.downloadPdf")}
           onPress={download}
           loading={downloading}
           icon={<Ionicons name="download-outline" size={18} color="#fff" />}

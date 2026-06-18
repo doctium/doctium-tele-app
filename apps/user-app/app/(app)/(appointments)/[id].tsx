@@ -12,6 +12,7 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
+import { useTranslation } from "react-i18next";
 import {
   Fonts,
   Palette,
@@ -50,6 +51,7 @@ const statusMap: Record<
 export default function AppointmentDetailScreen() {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const dispatch = useAppDispatch();
   const { selected } = useAppSelector((s) => s.appointments);
@@ -61,7 +63,9 @@ export default function AppointmentDetailScreen() {
   const [recordingsLoading, setRecordingsLoading] = useState(false);
   const [recordingPlayback, setRecordingPlayback] = useState(false);
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
-  const [playbackTitle, setPlaybackTitle] = useState("Consultation replay");
+  const [playbackTitle, setPlaybackTitle] = useState(
+    t("booking.detail.consultationReplay"),
+  );
 
   useEffect(() => {
     if (id) dispatch(fetchAppointment(id));
@@ -115,12 +119,12 @@ export default function AppointmentDetailScreen() {
 
   const handleCancel = () => {
     Alert.alert(
-      "Cancel appointment",
-      "Are you sure you want to cancel this appointment?",
+      t("booking.detail.cancelTitle"),
+      t("booking.detail.cancelMessage"),
       [
-        { text: "Keep it", style: "cancel" },
+        { text: t("booking.detail.keepIt"), style: "cancel" },
         {
-          text: "Yes, cancel",
+          text: t("booking.detail.yesCancel"),
           style: "destructive",
           onPress: async () => {
             setCancelling(true);
@@ -138,12 +142,12 @@ export default function AppointmentDetailScreen() {
   const openRecording = async (asset: RecordingAsset) => {
     if (!recordingPlayback) {
       Alert.alert(
-        "Upgrade required",
-        "Consultation playback is available on DoctiumPlus plans that include secure recording replay.",
+        t("booking.detail.upgradeRequired"),
+        t("booking.detail.upgradeMessage"),
         [
-          { text: "Not now", style: "cancel" },
+          { text: t("booking.detail.notNow"), style: "cancel" },
           {
-            text: "View plans",
+            text: t("booking.detail.viewPlans"),
             onPress: () => router.push("/(app)/(subscription)"),
           },
         ],
@@ -151,13 +155,15 @@ export default function AppointmentDetailScreen() {
       return;
     }
     try {
-      setPlaybackTitle(asset.fileName || "Consultation replay");
+      setPlaybackTitle(
+        asset.fileName || t("booking.detail.consultationReplay"),
+      );
       const access = await callApi.getRecordingAssetAccess(id, asset.id);
       setPlaybackUrl(access.accessUrl);
     } catch {
       Alert.alert(
-        "Playback unavailable",
-        "The secure playback link could not be created. Please try again later.",
+        t("booking.detail.playbackUnavailable"),
+        t("booking.detail.playbackUnavailableMsg"),
       );
     }
   };
@@ -177,15 +183,17 @@ export default function AppointmentDetailScreen() {
       });
       setRecordingRequests((prev) => [request, ...prev]);
       Alert.alert(
-        type === "EXPORT" ? "Export requested" : "Deletion requested",
         type === "EXPORT"
-          ? "Your export request has been sent for review."
-          : "Your deletion request has been sent for review. Deletion may be paused if a dispute hold applies.",
+          ? t("booking.detail.exportRequested")
+          : t("booking.detail.deletionRequested"),
+        type === "EXPORT"
+          ? t("booking.detail.exportRequestedMsg")
+          : t("booking.detail.deletionRequestedMsg"),
       );
     } catch {
       Alert.alert(
-        "Request unavailable",
-        "Could not create this recording request. Please try again later.",
+        t("booking.detail.requestUnavailable"),
+        t("booking.detail.requestUnavailableMsg"),
       );
     }
   };
@@ -200,7 +208,7 @@ export default function AppointmentDetailScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Appointment" />
+      <AppHeader title={t("booking.detail.title")} />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -225,19 +233,31 @@ export default function AppointmentDetailScreen() {
 
         <Card style={styles.card}>
           <Txt variant="h3" style={styles.cardTitle}>
-            Details
+            {t("booking.detail.details")}
           </Txt>
           <InfoRow
             icon="pricetag-outline"
-            label="Reference"
+            label={t("booking.detail.reference")}
             value={`#${a.appointmentId.slice(-8).toUpperCase()}`}
           />
-          <InfoRow icon="calendar-outline" label="Date" value={a.date} />
-          <InfoRow icon="time-outline" label="Time" value={a.time} />
+          <InfoRow
+            icon="calendar-outline"
+            label={t("booking.detail.date")}
+            value={a.date}
+          />
+          <InfoRow
+            icon="time-outline"
+            label={t("booking.detail.time")}
+            value={a.time}
+          />
           <InfoRow
             icon={a.type === "ONLINE" ? "videocam-outline" : "business-outline"}
-            label="Type"
-            value={a.type === "ONLINE" ? "Video call" : "Clinic visit"}
+            label={t("booking.detail.type")}
+            value={
+              a.type === "ONLINE"
+                ? t("booking.detail.typeVideo")
+                : t("booking.detail.typeClinic")
+            }
             last
           />
         </Card>
@@ -245,24 +265,24 @@ export default function AppointmentDetailScreen() {
         {a.subPatient ? (
           <Card style={styles.card}>
             <Txt variant="h3" style={styles.cardTitle}>
-              Patient
+              {t("booking.detail.patient")}
             </Txt>
             <InfoRow
               icon="person-outline"
-              label="Name"
+              label={t("booking.detail.name")}
               value={a.subPatient.name}
             />
             <InfoRow
               icon="people-outline"
-              label="Relation"
+              label={t("booking.detail.relation")}
               value={a.subPatient.relation}
               last={!a.subPatient.age}
             />
             {a.subPatient.age ? (
               <InfoRow
                 icon="hourglass-outline"
-                label="Age"
-                value={`${a.subPatient.age} years`}
+                label={t("booking.detail.age")}
+                value={t("booking.detail.ageYears", { age: a.subPatient.age })}
                 last
               />
             ) : null}
@@ -271,18 +291,18 @@ export default function AppointmentDetailScreen() {
 
         <Card style={styles.card}>
           <Txt variant="h3" style={styles.cardTitle}>
-            Payment
+            {t("booking.detail.payment")}
           </Txt>
           <InfoRow
             icon="card-outline"
-            label="Consultation fee"
+            label={t("booking.detail.consultationFee")}
             value={formatMoney(a.amount)}
             last={!(a.discount ?? 0) && !a.couponCode}
           />
           {(a.discount ?? 0) > 0 ? (
             <InfoRow
               icon="pricetags-outline"
-              label="Discount"
+              label={t("booking.detail.discount")}
               value={`âˆ’${formatMoney(a.discount ?? 0)}`}
               last={!a.couponCode}
             />
@@ -290,7 +310,7 @@ export default function AppointmentDetailScreen() {
           {a.couponCode ? (
             <InfoRow
               icon="ticket-outline"
-              label="Coupon"
+              label={t("booking.detail.coupon")}
               value={a.couponCode}
               last
             />
@@ -311,7 +331,7 @@ export default function AppointmentDetailScreen() {
           <View style={{ gap: 12, marginTop: 4 }}>
             {a.type === "ONLINE" ? (
               <Button
-                label="Join video call"
+                label={t("booking.detail.joinVideoCall")}
                 onPress={() =>
                   router.push({
                     pathname: "/(app)/(chat)/call",
@@ -322,7 +342,7 @@ export default function AppointmentDetailScreen() {
               />
             ) : null}
             <Button
-              label="Cancel appointment"
+              label={t("booking.detail.cancelAppointment")}
               onPress={handleCancel}
               loading={cancelling}
               variant="outline"
@@ -331,7 +351,7 @@ export default function AppointmentDetailScreen() {
         ) : null}
         {a.status === "COMPLETED" && !a.isReviewed ? (
           <Button
-            label="Leave a review"
+            label={t("booking.detail.leaveReview")}
             variant="secondary"
             onPress={() =>
               router.push({
@@ -372,12 +392,13 @@ function RecordingCard({
 }) {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
+  const { t } = useTranslation();
   if (loading) {
     return (
       <Card style={styles.card}>
         <View style={styles.replayHeader}>
           <Txt variant="h3" style={styles.cardTitle}>
-            Consultation replay
+            {t("booking.detail.consultationReplay")}
           </Txt>
           <ActivityIndicator color={colors.teal} />
         </View>
@@ -390,7 +411,7 @@ function RecordingCard({
     <Card style={styles.card}>
       <View style={styles.replayHeader}>
         <Txt variant="h3" style={styles.cardTitle}>
-          Consultation replay
+          {t("booking.detail.consultationReplay")}
         </Txt>
         <View style={styles.securePill}>
           <Ionicons
@@ -399,7 +420,9 @@ function RecordingCard({
             color={colors.tealDeep}
           />
           <Text style={styles.secureText}>
-            {playbackEnabled ? "Secure" : "Premium"}
+            {playbackEnabled
+              ? t("booking.detail.secure")
+              : t("booking.detail.premium")}
           </Text>
         </View>
       </View>
@@ -407,7 +430,7 @@ function RecordingCard({
         <Pressable onPress={onUpgrade} style={styles.lockedReplay}>
           <Ionicons name="lock-closed" size={16} color={colors.tealDeep} />
           <Text style={styles.lockedText}>
-            Upgrade to replay this consultation securely.
+            {t("booking.detail.upgradeReplay")}
           </Text>
           <Ionicons
             name="chevron-forward"
@@ -418,8 +441,10 @@ function RecordingCard({
       ) : null}
       {latestRequest ? (
         <Text style={styles.requestSummary}>
-          Latest request: {latestRequest.type.toLowerCase()} is{" "}
-          {latestRequest.status.toLowerCase()}
+          {t("booking.detail.latestRequest", {
+            type: latestRequest.type.toLowerCase(),
+            status: latestRequest.status.toLowerCase(),
+          })}
         </Text>
       ) : null}
       {assets.map((asset, index) => (
@@ -440,14 +465,16 @@ function RecordingCard({
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.replayTitle}>
-              {asset.fileName || "Consultation recording"}
+              {asset.fileName || t("booking.detail.consultationRecording")}
             </Text>
             <Text style={styles.replayMeta}>
               {[
                 asset.durationSeconds
-                  ? `${Math.round(asset.durationSeconds / 60)} min`
+                  ? t("booking.detail.minutes", {
+                      n: Math.round(asset.durationSeconds / 60),
+                    })
                   : null,
-                asset.encrypted ? "Encrypted" : null,
+                asset.encrypted ? t("booking.detail.encrypted") : null,
               ]
                 .filter(Boolean)
                 .join(" | ")}
@@ -466,14 +493,18 @@ function RecordingCard({
           style={styles.requestBtn}
         >
           <Ionicons name="download-outline" size={15} color={colors.tealDeep} />
-          <Text style={styles.requestBtnText}>Request export</Text>
+          <Text style={styles.requestBtnText}>
+            {t("booking.detail.requestExport")}
+          </Text>
         </Pressable>
         <Pressable
           onPress={() => onRequest("DELETE", assets[0])}
           style={styles.requestBtnDanger}
         >
           <Ionicons name="trash-outline" size={15} color="#B42318" />
-          <Text style={styles.requestBtnDangerText}>Request deletion</Text>
+          <Text style={styles.requestBtnDangerText}>
+            {t("booking.detail.requestDeletion")}
+          </Text>
         </Pressable>
       </View>
     </Card>
@@ -491,6 +522,7 @@ function RecordingPlayer({
 }) {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
+  const { t } = useTranslation();
   const player = useVideoPlayer(url, (p) => {
     p.loop = false;
   });
@@ -512,7 +544,7 @@ function RecordingPlayer({
             allowsPictureInPicture
           />
           <Text style={styles.playerHint}>
-            This secure playback link expires automatically.
+            {t("booking.detail.playbackHint")}
           </Text>
         </View>
       </View>

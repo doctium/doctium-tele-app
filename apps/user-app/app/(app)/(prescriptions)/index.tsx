@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import {
   Palette,
   Fonts,
@@ -31,14 +32,21 @@ interface Rx {
 
 const STATUS: Record<
   Rx["status"],
-  { variant: "confirmed" | "completed" | "cancelled"; label: string }
+  { variant: "confirmed" | "completed" | "cancelled"; labelKey: string }
 > = {
-  ISSUED: { variant: "confirmed", label: "Active" },
-  DISPENSED: { variant: "completed", label: "Dispensed" },
-  CANCELLED: { variant: "cancelled", label: "Cancelled" },
+  ISSUED: { variant: "confirmed", labelKey: "prescriptions.list.statusActive" },
+  DISPENSED: {
+    variant: "completed",
+    labelKey: "prescriptions.list.statusDispensed",
+  },
+  CANCELLED: {
+    variant: "cancelled",
+    labelKey: "prescriptions.list.statusCancelled",
+  },
 };
 
 export default function PrescriptionsScreen() {
+  const { t } = useTranslation();
   const [list, setList] = useState<Rx[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -75,12 +83,12 @@ export default function PrescriptionsScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Prescriptions" />
+      <AppHeader title={t("prescriptions.list.title")} />
       {!loading && list.length === 0 ? (
         <EmptyState
           icon="document-text-outline"
-          title="No prescriptions yet"
-          description="Prescriptions issued by your doctor after a consultation will appear here."
+          title={t("prescriptions.list.emptyTitle")}
+          description={t("prescriptions.list.emptyDescription")}
         />
       ) : (
         <FlatList
@@ -117,13 +125,18 @@ export default function PrescriptionsScreen() {
                   />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.docName} numberOfLines={1}>
-                      Dr. {item.doctor?.name ?? "Doctor"}
+                      {t("prescriptions.list.doctorName", {
+                        name:
+                          item.doctor?.name ??
+                          t("prescriptions.list.doctorFallback"),
+                      })}
                     </Text>
                     <Text style={styles.docSpec} numberOfLines={1}>
-                      {item.doctor?.designation || "General practitioner"}
+                      {item.doctor?.designation ||
+                        t("prescriptions.list.generalPractitioner")}
                     </Text>
                   </View>
-                  <Badge variant={s.variant} label={s.label} />
+                  <Badge variant={s.variant} label={t(s.labelKey)} />
                 </View>
                 <View style={styles.divider} />
                 <View style={styles.cardBottom}>
@@ -134,8 +147,13 @@ export default function PrescriptionsScreen() {
                       color={colors.tealDeep}
                     />
                     <Text style={styles.metaText}>
-                      {item.items.length} medication
-                      {item.items.length === 1 ? "" : "s"}
+                      {item.items.length === 1
+                        ? t("prescriptions.list.medicationCountOne", {
+                            count: item.items.length,
+                          })
+                        : t("prescriptions.list.medicationCountMany", {
+                            count: item.items.length,
+                          })}
                     </Text>
                   </View>
                   <View style={styles.metaItem}>

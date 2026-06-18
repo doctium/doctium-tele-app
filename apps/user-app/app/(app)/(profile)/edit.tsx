@@ -11,6 +11,7 @@ import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import {
   Palette,
   Gradients,
@@ -44,6 +45,7 @@ export default function EditProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
 
@@ -78,8 +80,8 @@ export default function EditProfileScreen() {
     const sizeBytes = Math.floor((a.base64.length * 3) / 4);
     if (sizeBytes > MAX_AVATAR_BYTES) {
       Alert.alert(
-        "Image too large",
-        "Please choose a picture under 1MB, or crop it smaller and try again.",
+        t("profileEdit.imageTooLargeTitle"),
+        t("profileEdit.imageTooLargeMessage"),
       );
       return;
     }
@@ -115,7 +117,7 @@ export default function EditProfileScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Edit profile" />
+      <AppHeader title={t("profileEdit.title")} />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.scroll}
@@ -153,16 +155,16 @@ export default function EditProfileScreen() {
               color={colors.tealDeep}
             />
             <Txt variant="label" color={colors.tealDeep}>
-              Profile updated
+              {t("profileEdit.profileUpdated")}
             </Txt>
           </Animated.View>
         ) : null}
 
         <Input
-          label="Full name"
+          label={t("profileEdit.fullName")}
           value={form.name}
           onChangeText={set("name")}
-          placeholder="Your full name"
+          placeholder={t("profileEdit.fullNamePlaceholder")}
           leftIcon={
             <Ionicons
               name="person-outline"
@@ -172,7 +174,7 @@ export default function EditProfileScreen() {
           }
         />
         <Input
-          label="Email"
+          label={t("profileEdit.email")}
           value={form.email}
           onChangeText={set("email")}
           placeholder="email@example.com"
@@ -187,10 +189,10 @@ export default function EditProfileScreen() {
           }
         />
         <DateField
-          label="Date of birth"
+          label={t("profileEdit.dateOfBirth")}
           value={form.dob}
           onChange={set("dob")}
-          placeholder="Select your date of birth"
+          placeholder={t("profileEdit.dateOfBirthPlaceholder")}
           leftIcon={
             <Ionicons
               name="calendar-outline"
@@ -200,13 +202,13 @@ export default function EditProfileScreen() {
           }
         />
         <SelectField
-          label="Gender"
+          label={t("profileEdit.gender")}
           value={form.gender}
           onChange={set("gender")}
-          placeholder="Select gender"
+          placeholder={t("profileEdit.genderPlaceholder")}
           options={[
-            { label: "Male", value: "male" },
-            { label: "Female", value: "female" },
+            { label: t("profileEdit.male"), value: "male" },
+            { label: t("profileEdit.female"), value: "female" },
           ]}
           leftIcon={
             <Ionicons
@@ -217,15 +219,15 @@ export default function EditProfileScreen() {
           }
         />
         <Input
-          label="Bio"
+          label={t("profileEdit.bio")}
           value={form.bio}
           onChangeText={set("bio")}
-          placeholder="A short bio about yourself…"
+          placeholder={t("profileEdit.bioPlaceholder")}
           multiline
         />
 
         <Button
-          label="Save changes"
+          label={t("profileEdit.saveChanges")}
           onPress={save}
           loading={loading}
           size="lg"

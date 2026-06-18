@@ -9,6 +9,7 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { Input } from "../../src/components/common/Input";
 import { Button } from "../../src/components/common/Button";
 import { AppHeader, Txt } from "../../src/components/ui";
@@ -24,6 +25,7 @@ import {
 export default function ForgotPasswordScreen() {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const [mobile, setMobile] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,13 +54,13 @@ export default function ForgotPasswordScreen() {
             />
           </View>
 
-          <Txt variant="hero">Forgot password?</Txt>
+          <Txt variant="hero">{t("auth.forgot.title")}</Txt>
           <Txt
             variant="body"
             color={colors.text.secondary}
             style={{ marginTop: 8, marginBottom: 28 }}
           >
-            Enter your registered mobile number and we'll text you a reset link.
+            {t("auth.forgot.subtitle")}
           </Txt>
 
           {sent ? (
@@ -74,20 +76,20 @@ export default function ForgotPasswordScreen() {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Txt variant="title">Reset link sent</Txt>
+                <Txt variant="title">{t("auth.forgot.sentTitle")}</Txt>
                 <Txt
                   variant="bodySm"
                   color={colors.text.secondary}
                   style={{ marginTop: 2 }}
                 >
-                  Check your SMS for the link to reset your password.
+                  {t("auth.forgot.sentBody")}
                 </Txt>
               </View>
             </Animated.View>
           ) : (
             <>
               <Input
-                label="Mobile number"
+                label={t("auth.forgot.mobileLabel")}
                 placeholder="0800 000 0000"
                 value={mobile}
                 onChangeText={setMobile}
@@ -101,7 +103,7 @@ export default function ForgotPasswordScreen() {
                 }
               />
               <Button
-                label="Send reset link"
+                label={t("auth.forgot.sendResetLink")}
                 onPress={handleSend}
                 loading={loading}
                 size="lg"
@@ -112,7 +114,7 @@ export default function ForgotPasswordScreen() {
 
           {sent ? (
             <Button
-              label="Back to sign in"
+              label={t("auth.forgot.backToSignIn")}
               variant="outline"
               onPress={() => router.replace("/(auth)/login")}
               size="lg"

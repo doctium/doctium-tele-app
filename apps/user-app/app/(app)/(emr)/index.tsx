@@ -18,6 +18,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import {
   Fonts,
   Gradients,
@@ -47,13 +48,13 @@ const makeSevColor = (c: Palette): Record<string, string> => ({
   UNKNOWN: c.text.tertiary,
 });
 const FILE_CATS = [
-  { key: "LAB_REPORT", label: "Lab report" },
-  { key: "IMAGING", label: "Imaging" },
-  { key: "PRESCRIPTION", label: "Prescription" },
-  { key: "DISCHARGE_SUMMARY", label: "Discharge" },
-  { key: "VACCINATION_CARD", label: "Vaccine card" },
-  { key: "INSURANCE", label: "Insurance" },
-  { key: "OTHER", label: "Other" },
+  { key: "LAB_REPORT", labelKey: "emr.catLabReport" },
+  { key: "IMAGING", labelKey: "emr.catImaging" },
+  { key: "PRESCRIPTION", labelKey: "emr.catPrescription" },
+  { key: "DISCHARGE_SUMMARY", labelKey: "emr.catDischarge" },
+  { key: "VACCINATION_CARD", labelKey: "emr.catVaccineCard" },
+  { key: "INSURANCE", labelKey: "emr.catInsurance" },
+  { key: "OTHER", labelKey: "emr.catOther" },
 ];
 
 interface Rec {
@@ -112,6 +113,7 @@ interface Member {
 }
 
 export default function MedicalRecordsScreen() {
+  const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const SEV_COLOR = makeSevColor(colors);
@@ -163,7 +165,7 @@ export default function MedicalRecordsScreen() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, {
           mimeType: "application/json",
-          dialogTitle: "My medical records (FHIR)",
+          dialogTitle: t("emr.shareDialogTitle"),
         });
       }
     } catch {
@@ -184,7 +186,7 @@ export default function MedicalRecordsScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Medical records" />
+      <AppHeader title={t("emr.title")} />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -197,7 +199,7 @@ export default function MedicalRecordsScreen() {
             contentContainerStyle={styles.switcher}
           >
             {[
-              { id: undefined as string | undefined, name: "You" },
+              { id: undefined as string | undefined, name: t("emr.you") },
               ...members,
             ].map((m) => {
               const active = activeSub === m.id;
@@ -233,36 +235,39 @@ export default function MedicalRecordsScreen() {
           style={styles.hero}
         >
           <View style={styles.heroTop}>
-            <Text style={styles.heroLabel}>Health profile</Text>
+            <Text style={styles.heroLabel}>{t("emr.healthProfile")}</Text>
             <AnimatedPressable
               haptic="light"
               onPress={() => setEditProfile(true)}
               style={styles.heroEdit}
             >
               <Ionicons name="create-outline" size={16} color="#fff" />
-              <Text style={styles.heroEditText}>Edit</Text>
+              <Text style={styles.heroEditText}>{t("emr.edit")}</Text>
             </AnimatedPressable>
           </View>
           <View style={styles.heroGrid}>
-            <HeroStat label="Blood type" value={prof?.bloodType || "—"} />
-            <HeroStat label="Genotype" value={prof?.genotype || "—"} />
             <HeroStat
-              label="Height"
+              label={t("emr.bloodType")}
+              value={prof?.bloodType || "—"}
+            />
+            <HeroStat label={t("emr.genotype")} value={prof?.genotype || "—"} />
+            <HeroStat
+              label={t("emr.height")}
               value={prof?.heightCm ? `${prof.heightCm}cm` : "—"}
             />
             <HeroStat
-              label="Weight"
+              label={t("emr.weight")}
               value={prof?.weightKg ? `${prof.weightKg}kg` : "—"}
             />
           </View>
         </LinearGradient>
 
         <Section
-          title="Allergies"
+          title={t("emr.allergies")}
           icon="warning-outline"
           onAdd={() => setAddKind("allergy")}
           empty={!p.allergies?.length}
-          emptyText="No allergies recorded."
+          emptyText={t("emr.noAllergies")}
         >
           {p.allergies?.map((a) => (
             <Row key={a.id} onDelete={() => del("allergy", a.id)}>
@@ -282,11 +287,11 @@ export default function MedicalRecordsScreen() {
         </Section>
 
         <Section
-          title="Chronic conditions"
+          title={t("emr.chronicConditions")}
           icon="pulse-outline"
           onAdd={() => setAddKind("condition")}
           empty={!p.medicalConditions?.length}
-          emptyText="No conditions recorded."
+          emptyText={t("emr.noConditions")}
         >
           {p.medicalConditions?.map((c) => (
             <Row key={c.id} onDelete={() => del("condition", c.id)}>
@@ -310,11 +315,11 @@ export default function MedicalRecordsScreen() {
         </Section>
 
         <Section
-          title="Past surgeries"
+          title={t("emr.pastSurgeries")}
           icon="cut-outline"
           onAdd={() => setAddKind("surgery")}
           empty={!p.surgeries?.length}
-          emptyText="No surgeries recorded."
+          emptyText={t("emr.noSurgeries")}
         >
           {p.surgeries?.map((s) => (
             <Row key={s.id} onDelete={() => del("surgery", s.id)}>
@@ -335,11 +340,11 @@ export default function MedicalRecordsScreen() {
         </Section>
 
         <Section
-          title="Vaccinations"
+          title={t("emr.vaccinations")}
           icon="shield-checkmark-outline"
           onAdd={() => setAddKind("immunization")}
           empty={!p.immunizations?.length}
-          emptyText="No vaccinations recorded."
+          emptyText={t("emr.noVaccinations")}
         >
           {p.immunizations?.map((im) => (
             <Row key={im.id} onDelete={() => del("immunization", im.id)}>
@@ -360,12 +365,12 @@ export default function MedicalRecordsScreen() {
         </Section>
 
         <Section
-          title="Documents"
+          title={t("emr.documents")}
           icon="document-attach-outline"
           onAdd={() => setUploadOpen(true)}
           addIcon="cloud-upload-outline"
           empty={!p.medicalFiles?.length}
-          emptyText="No documents uploaded."
+          emptyText={t("emr.noDocuments")}
         >
           {p.medicalFiles?.map((f) => (
             <Row key={f.id} onDelete={() => delFile(f.id)}>
@@ -393,14 +398,14 @@ export default function MedicalRecordsScreen() {
           <Card style={styles.card}>
             <View style={styles.secHead}>
               <Ionicons name="reader-outline" size={17} color={colors.teal} />
-              <Txt variant="h3">Consultation notes</Txt>
+              <Txt variant="h3">{t("emr.consultationNotes")}</Txt>
             </View>
             <View style={{ gap: 10, marginTop: 8 }}>
               {rec.clinicalNotes.map((n) => (
                 <View key={n.id} style={styles.noteCard}>
                   <View style={styles.noteHead}>
                     <Text style={styles.noteDr}>
-                      Dr. {n.doctor?.name ?? "—"}
+                      {t("emr.doctorName", { name: n.doctor?.name ?? "—" })}
                     </Text>
                     <Text style={styles.noteDate}>
                       {new Date(n.createdAt).toLocaleDateString()}
@@ -410,7 +415,9 @@ export default function MedicalRecordsScreen() {
                     <Text style={styles.noteLine}>{n.assessment}</Text>
                   ) : null}
                   {n.plan ? (
-                    <Text style={styles.notePlan}>Plan: {n.plan}</Text>
+                    <Text style={styles.notePlan}>
+                      {t("emr.plan", { plan: n.plan })}
+                    </Text>
                   ) : null}
                 </View>
               ))}
@@ -430,10 +437,8 @@ export default function MedicalRecordsScreen() {
             <Ionicons name="download-outline" size={18} color={colors.teal} />
           )}
           <View style={{ flex: 1 }}>
-            <Text style={styles.exportTitle}>Download my records</Text>
-            <Text style={styles.exportSub}>
-              Portable FHIR file you can share with any hospital
-            </Text>
+            <Text style={styles.exportTitle}>{t("emr.downloadRecords")}</Text>
+            <Text style={styles.exportSub}>{t("emr.downloadRecordsSub")}</Text>
           </View>
           <Ionicons
             name="chevron-forward"
@@ -444,9 +449,7 @@ export default function MedicalRecordsScreen() {
 
         <View style={styles.disclaimer}>
           <Ionicons name="lock-closed" size={12} color={colors.text.tertiary} />
-          <Text style={styles.disclaimerText}>
-            Only doctors you book a consultation with can view your record.
-          </Text>
+          <Text style={styles.disclaimerText}>{t("emr.disclaimer")}</Text>
         </View>
       </ScrollView>
 
@@ -631,6 +634,7 @@ function EditProfileSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation();
   const [f, setF] = useState({
     bloodType: "",
     genotype: "",
@@ -665,11 +669,15 @@ function EditProfileSheet({
     }
   };
   return (
-    <SheetShell visible={visible} onClose={onClose} title="Health profile">
+    <SheetShell
+      visible={visible}
+      onClose={onClose}
+      title={t("emr.healthProfile")}
+    >
       <View style={{ flexDirection: "row", gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Field
-            label="Blood type"
+            label={t("emr.bloodType")}
             value={f.bloodType}
             onChange={(v) => setF((s) => ({ ...s, bloodType: v }))}
             placeholder="O+"
@@ -677,7 +685,7 @@ function EditProfileSheet({
         </View>
         <View style={{ flex: 1 }}>
           <Field
-            label="Genotype"
+            label={t("emr.genotype")}
             value={f.genotype}
             onChange={(v) => setF((s) => ({ ...s, genotype: v }))}
             placeholder="AA"
@@ -687,7 +695,7 @@ function EditProfileSheet({
       <View style={{ flexDirection: "row", gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Field
-            label="Height (cm)"
+            label={t("emr.heightCm")}
             value={f.heightCm}
             onChange={(v) => setF((s) => ({ ...s, heightCm: v }))}
             placeholder="178"
@@ -696,7 +704,7 @@ function EditProfileSheet({
         </View>
         <View style={{ flex: 1 }}>
           <Field
-            label="Weight (kg)"
+            label={t("emr.weightKg")}
             value={f.weightKg}
             onChange={(v) => setF((s) => ({ ...s, weightKg: v }))}
             placeholder="74"
@@ -705,7 +713,7 @@ function EditProfileSheet({
         </View>
       </View>
       <Button
-        label="Save profile"
+        label={t("emr.saveProfile")}
         onPress={save}
         loading={saving}
         style={{ marginTop: 4 }}
@@ -715,10 +723,10 @@ function EditProfileSheet({
 }
 
 const TITLES: Record<Kind, string> = {
-  condition: "Add condition",
-  allergy: "Add allergy",
-  surgery: "Add surgery",
-  immunization: "Add vaccination",
+  condition: "emr.addCondition",
+  allergy: "emr.addAllergy",
+  surgery: "emr.addSurgery",
+  immunization: "emr.addVaccination",
 };
 
 function AddEntrySheet({
@@ -732,6 +740,7 @@ function AddEntrySheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const SEV_COLOR = makeSevColor(colors);
@@ -792,18 +801,18 @@ function AddEntrySheet({
     <SheetShell
       visible={!!kind}
       onClose={onClose}
-      title={kind ? TITLES[kind] : ""}
+      title={kind ? t(TITLES[kind]) : ""}
     >
       {kind === "condition" && (
         <>
           <Field
-            label="Condition"
+            label={t("emr.conditionLabel")}
             value={f.name ?? ""}
             onChange={set("name")}
-            placeholder="e.g. Hypertension"
+            placeholder={t("emr.conditionPlaceholder")}
           />
           <Field
-            label="Since (optional)"
+            label={t("emr.sinceLabel")}
             value={f.onsetDate ?? ""}
             onChange={set("onsetDate")}
             placeholder="2021"
@@ -813,18 +822,18 @@ function AddEntrySheet({
       {kind === "allergy" && (
         <>
           <Field
-            label="Substance"
+            label={t("emr.substanceLabel")}
             value={f.substance ?? ""}
             onChange={set("substance")}
-            placeholder="e.g. Penicillin"
+            placeholder={t("emr.substancePlaceholder")}
           />
           <Field
-            label="Reaction (optional)"
+            label={t("emr.reactionLabel")}
             value={f.reaction ?? ""}
             onChange={set("reaction")}
-            placeholder="e.g. Rash"
+            placeholder={t("emr.reactionPlaceholder")}
           />
-          <Text style={styles.fLabel}>Severity</Text>
+          <Text style={styles.fLabel}>{t("emr.severityLabel")}</Text>
           <View style={styles.chipRow}>
             {SEV.map((s) => (
               <AnimatedPressable
@@ -850,41 +859,41 @@ function AddEntrySheet({
       {kind === "surgery" && (
         <>
           <Field
-            label="Procedure"
+            label={t("emr.procedureLabel")}
             value={f.name ?? ""}
             onChange={set("name")}
-            placeholder="e.g. Appendectomy"
+            placeholder={t("emr.procedurePlaceholder")}
           />
           <Field
-            label="When (optional)"
+            label={t("emr.whenLabel")}
             value={f.performedDate ?? ""}
             onChange={set("performedDate")}
             placeholder="2019"
           />
           <Field
-            label="Hospital (optional)"
+            label={t("emr.hospitalLabel")}
             value={f.hospital ?? ""}
             onChange={set("hospital")}
-            placeholder="Hospital name"
+            placeholder={t("emr.hospitalPlaceholder")}
           />
         </>
       )}
       {kind === "immunization" && (
         <>
           <Field
-            label="Vaccine"
+            label={t("emr.vaccineLabel")}
             value={f.vaccine ?? ""}
             onChange={set("vaccine")}
-            placeholder="e.g. Hepatitis B"
+            placeholder={t("emr.vaccinePlaceholder")}
           />
           <Field
-            label="Dose (optional)"
+            label={t("emr.doseLabel")}
             value={f.doseLabel ?? ""}
             onChange={set("doseLabel")}
-            placeholder="e.g. Booster"
+            placeholder={t("emr.dosePlaceholder")}
           />
           <Field
-            label="Date (optional)"
+            label={t("emr.dateLabel")}
             value={f.dateGiven ?? ""}
             onChange={set("dateGiven")}
             placeholder="2024-01-15"
@@ -892,7 +901,7 @@ function AddEntrySheet({
         </>
       )}
       <Button
-        label="Add"
+        label={t("emr.add")}
         onPress={save}
         loading={saving}
         disabled={!ready}
@@ -915,6 +924,7 @@ function UploadSheet({
   onSaved: () => void;
   insetBottom: number;
 }) {
+  const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
   const [cat, setCat] = useState("LAB_REPORT");
   const [busy, setBusy] = useState(false);
@@ -970,12 +980,10 @@ function UploadSheet({
         <View style={[styles.sheet, { paddingBottom: insetBottom + 24 }]}>
           <View style={styles.handle} />
           <Txt variant="h2" style={{ marginBottom: 6 }}>
-            Upload a document
+            {t("emr.uploadDocument")}
           </Txt>
-          <Text style={styles.uploadHint}>
-            Lab reports, scans, prescriptions — PDF or photo.
-          </Text>
-          <Text style={styles.fLabel}>Category</Text>
+          <Text style={styles.uploadHint}>{t("emr.uploadHint")}</Text>
+          <Text style={styles.fLabel}>{t("emr.category")}</Text>
           <View style={styles.chipWrap}>
             {FILE_CATS.map((c) => (
               <AnimatedPressable
@@ -987,13 +995,13 @@ function UploadSheet({
                 <Text
                   style={[styles.chipText, cat === c.key && { color: "#fff" }]}
                 >
-                  {c.label}
+                  {t(c.labelKey)}
                 </Text>
               </AnimatedPressable>
             ))}
           </View>
           <Button
-            label={busy ? "Uploading…" : "Choose file"}
+            label={busy ? t("emr.uploading") : t("emr.chooseFile")}
             onPress={pick}
             loading={busy}
             icon={

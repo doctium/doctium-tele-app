@@ -13,6 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
 import * as Clipboard from "expo-clipboard";
+import { useTranslation } from "react-i18next";
 import {
   Gradients,
   Fonts,
@@ -50,6 +51,7 @@ interface Dva {
 const TOP_UP_AMOUNTS = [500, 1000, 2000, 5000, 10000, 20000];
 
 export default function WalletScreen() {
+  const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -90,7 +92,7 @@ export default function WalletScreen() {
   const startCardTopup = async () => {
     const val = parseInt(amount, 10);
     if (!val || val < 100) {
-      setError("Enter an amount of at least ₦100");
+      setError(t("wallet.minAmountError"));
       return;
     }
     setLoading(true);
@@ -103,7 +105,7 @@ export default function WalletScreen() {
       setCheckoutUrl(r.data.authorizationUrl);
     } catch (e) {
       setError(
-        (e as { message?: string })?.message ?? "Could not start payment",
+        (e as { message?: string })?.message ?? t("wallet.startPaymentError"),
       );
     } finally {
       setLoading(false);
@@ -119,8 +121,7 @@ export default function WalletScreen() {
       setDva(r.data);
     } catch (e) {
       setError(
-        (e as { message?: string })?.message ??
-          "Could not load your account number",
+        (e as { message?: string })?.message ?? t("wallet.loadAccountError"),
       );
     } finally {
       setDvaLoading(false);
@@ -145,7 +146,7 @@ export default function WalletScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Wallet" />
+      <AppHeader title={t("wallet.title")} />
 
       <FlatList
         data={wallet?.history ?? []}
@@ -170,7 +171,7 @@ export default function WalletScreen() {
             >
               <View style={styles.cardBlob} />
               <View style={styles.cardTop}>
-                <Text style={styles.cardLabel}>Doctium Wallet</Text>
+                <Text style={styles.cardLabel}>{t("wallet.cardLabel")}</Text>
                 <Ionicons
                   name="wallet"
                   size={22}
@@ -186,18 +187,18 @@ export default function WalletScreen() {
                 style={styles.topUpBtn}
               >
                 <Ionicons name="add" size={18} color={colors.navy} />
-                <Text style={styles.topUpText}>Add money</Text>
+                <Text style={styles.topUpText}>{t("wallet.addMoney")}</Text>
               </AnimatedPressable>
             </LinearGradient>
-            <Text style={styles.sectionTitle}>Transactions</Text>
+            <Text style={styles.sectionTitle}>{t("wallet.transactions")}</Text>
           </>
         }
         ListEmptyComponent={
           <View style={{ marginTop: 30 }}>
             <EmptyState
               icon="receipt-outline"
-              title="No transactions yet"
-              description="Your top-ups and payments will show up here."
+              title={t("wallet.emptyTitle")}
+              description={t("wallet.emptyDescription")}
             />
           </View>
         }
@@ -258,7 +259,7 @@ export default function WalletScreen() {
           <View style={styles.sheet}>
             <View style={styles.handle} />
             <Txt variant="h2" style={{ marginBottom: 16 }}>
-              Add money
+              {t("wallet.addMoney")}
             </Txt>
 
             <View style={styles.tabs}>
@@ -278,7 +279,7 @@ export default function WalletScreen() {
                 <Text
                   style={[styles.tabTxt, tab === "card" && styles.tabTxtActive]}
                 >
-                  Card
+                  {t("wallet.card")}
                 </Text>
               </AnimatedPressable>
               <AnimatedPressable
@@ -298,7 +299,7 @@ export default function WalletScreen() {
                 <Text
                   style={[styles.tabTxt, tab === "bank" && styles.tabTxtActive]}
                 >
-                  Bank transfer
+                  {t("wallet.bankTransfer")}
                 </Text>
               </AnimatedPressable>
             </View>
@@ -329,22 +330,20 @@ export default function WalletScreen() {
                 </View>
                 <TextInput
                   style={styles.amountInput}
-                  placeholder="Or enter a custom amount"
+                  placeholder={t("wallet.customAmountPlaceholder")}
                   placeholderTextColor={colors.text.tertiary}
                   value={amount}
-                  onChangeText={(t) => setAmount(t.replace(/[^0-9]/g, ""))}
+                  onChangeText={(v) => setAmount(v.replace(/[^0-9]/g, ""))}
                   keyboardType="number-pad"
                 />
                 {error ? <Text style={styles.err}>{error}</Text> : null}
                 <Button
-                  label="Continue to payment"
+                  label={t("wallet.continueToPayment")}
                   onPress={startCardTopup}
                   loading={loading}
                   icon={<Ionicons name="lock-closed" size={16} color="#fff" />}
                 />
-                <Text style={styles.secureNote}>
-                  Secured by Paystack · cards, transfer & USSD
-                </Text>
+                <Text style={styles.secureNote}>{t("wallet.secureNote")}</Text>
               </>
             ) : (
               <View style={{ minHeight: 160 }}>
@@ -352,24 +351,24 @@ export default function WalletScreen() {
                   <View style={styles.dvaLoading}>
                     <ActivityIndicator color={colors.teal} />
                     <Text style={styles.dvaLoadingTxt}>
-                      Setting up your account…
+                      {t("wallet.settingUpAccount")}
                     </Text>
                   </View>
                 ) : dva ? (
                   <>
-                    <Text style={styles.dvaIntro}>
-                      Transfer any amount to this account and your wallet is
-                      funded automatically.
-                    </Text>
+                    <Text style={styles.dvaIntro}>{t("wallet.dvaIntro")}</Text>
                     <View style={styles.dvaCard}>
-                      <DvaRow label="Bank" value={dva.bankName} />
+                      <DvaRow label={t("wallet.bank")} value={dva.bankName} />
                       <DvaRow
-                        label="Account number"
+                        label={t("wallet.accountNumber")}
                         value={dva.accountNumber}
                         big
                         copyable
                       />
-                      <DvaRow label="Account name" value={dva.accountName} />
+                      <DvaRow
+                        label={t("wallet.accountName")}
+                        value={dva.accountName}
+                      />
                     </View>
                   </>
                 ) : (
@@ -380,7 +379,7 @@ export default function WalletScreen() {
                       color={colors.text.tertiary}
                     />
                     <Text style={styles.dvaLoadingTxt}>
-                      {error || "Account number unavailable right now."}
+                      {error || t("wallet.accountUnavailable")}
                     </Text>
                   </View>
                 )}
@@ -398,7 +397,7 @@ export default function WalletScreen() {
       >
         <View style={styles.webRoot}>
           <View style={styles.webHeader}>
-            <Text style={styles.webTitle}>Secure payment</Text>
+            <Text style={styles.webTitle}>{t("wallet.securePayment")}</Text>
             <AnimatedPressable
               haptic="light"
               onPress={() => {
@@ -439,6 +438,7 @@ function DvaRow({
   big?: boolean;
   copyable?: boolean;
 }) {
+  const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const [copied, setCopied] = useState(false);
@@ -474,7 +474,7 @@ function DvaRow({
                 { color: copied ? colors.tealDeep : colors.navyMid },
               ]}
             >
-              {copied ? "Copied" : "Copy"}
+              {copied ? t("wallet.copied") : t("wallet.copy")}
             </Text>
           </AnimatedPressable>
         ) : null}

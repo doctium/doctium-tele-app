@@ -12,6 +12,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
+import { useTranslation } from "react-i18next";
 import {
   Fonts,
   Palette,
@@ -40,6 +41,7 @@ export default function ConfirmBookingScreen() {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { doctorId, date, time, type, problem, mode, referralId } =
     useLocalSearchParams<{
       doctorId: string;
@@ -117,10 +119,12 @@ export default function ConfirmBookingScreen() {
       };
       setDiscount(res.data.discount);
       setCouponMsg(
-        `Coupon applied — you saved ${formatMoney(res.data.discount)}`,
+        t("booking.confirm.couponApplied", {
+          amount: formatMoney(res.data.discount),
+        }),
       );
     } catch {
-      setCouponMsg("Invalid or expired coupon");
+      setCouponMsg(t("booking.confirm.couponInvalid"));
       setDiscount(0);
     }
   };
@@ -166,7 +170,10 @@ export default function ConfirmBookingScreen() {
       }
       setCheckoutUrl(pay.data.authorizationUrl);
     } catch (e: unknown) {
-      setError((e as { message?: string })?.message ?? "Booking failed");
+      setError(
+        (e as { message?: string })?.message ??
+          t("booking.confirm.bookingFailed"),
+      );
     } finally {
       setLoading(false);
     }
@@ -184,48 +191,68 @@ export default function ConfirmBookingScreen() {
 
   const payLabel =
     total === 0
-      ? "Confirm booking"
+      ? t("booking.confirm.payConfirm")
       : method === "WALLET"
-        ? `Pay ${formatMoney(total)} & confirm`
-        : `Pay ${formatMoney(total)} by card`;
+        ? t("booking.confirm.payWallet", { price: formatMoney(total) })
+        : t("booking.confirm.payCard", { price: formatMoney(total) });
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Confirm booking" />
+      <AppHeader title={t("booking.confirm.title")} />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
         <Card style={styles.card}>
           <Txt variant="h3" style={styles.cardTitle}>
-            Summary
+            {t("booking.confirm.summary")}
           </Txt>
-          <Row label="Doctor" value={d?.name ?? "Doctor"} />
-          <Row label="Mode" value={isInstant ? "Instant (now)" : "Scheduled"} />
-          {!isInstant ? <Row label="Date" value={date} /> : null}
-          {!isInstant ? <Row label="Time" value={time} /> : null}
           <Row
-            label="Type"
-            value={type === "ONLINE" ? "Video call" : "Clinic visit"}
+            label={t("booking.confirm.doctor")}
+            value={d?.name ?? t("booking.confirm.doctorFallback")}
           />
-          {problem ? <Row label="Reason" value={problem} /> : null}
+          <Row
+            label={t("booking.confirm.mode")}
+            value={
+              isInstant
+                ? t("booking.confirm.modeInstant")
+                : t("booking.confirm.modeScheduled")
+            }
+          />
+          {!isInstant ? (
+            <Row label={t("booking.confirm.date")} value={date} />
+          ) : null}
+          {!isInstant ? (
+            <Row label={t("booking.confirm.time")} value={time} />
+          ) : null}
+          <Row
+            label={t("booking.confirm.type")}
+            value={
+              type === "ONLINE"
+                ? t("booking.confirm.typeVideo")
+                : t("booking.confirm.typeClinic")
+            }
+          />
+          {problem ? (
+            <Row label={t("booking.confirm.reason")} value={problem} />
+          ) : null}
         </Card>
 
         <Card style={styles.card}>
           <Txt variant="h3" style={styles.cardTitle}>
-            Coupon
+            {t("booking.confirm.coupon")}
           </Txt>
           <View style={styles.couponRow}>
             <TextInput
               style={styles.couponInput}
-              placeholder="Enter code"
+              placeholder={t("booking.confirm.couponPlaceholder")}
               placeholderTextColor={colors.text.tertiary}
               value={couponCode}
               onChangeText={setCouponCode}
               autoCapitalize="characters"
             />
             <Button
-              label="Apply"
+              label={t("booking.confirm.apply")}
               onPress={applyCoupon}
               variant="outline"
               size="sm"
@@ -246,19 +273,23 @@ export default function ConfirmBookingScreen() {
 
         <Card style={styles.card}>
           <Txt variant="h3" style={styles.cardTitle}>
-            Payment method
+            {t("booking.confirm.paymentMethod")}
           </Txt>
           <PayOption
             active={method === "WALLET"}
             disabled={insufficient}
             icon="wallet"
-            label="Doctium Wallet"
+            label={t("booking.confirm.wallet")}
             sub={
               balance === null
-                ? "Checking balance…"
+                ? t("booking.confirm.checkingBalance")
                 : insufficient
-                  ? `Balance ${formatMoney(balance)} — too low`
-                  : `Balance: ${formatMoney(balance)}`
+                  ? t("booking.confirm.balanceTooLow", {
+                      balance: formatMoney(balance),
+                    })
+                  : t("booking.confirm.balance", {
+                      balance: formatMoney(balance),
+                    })
             }
             subColor={insufficient ? colors.error : undefined}
             onPress={() => !insufficient && setMethod("WALLET")}
@@ -266,33 +297,39 @@ export default function ConfirmBookingScreen() {
           <PayOption
             active={method === "PAYSTACK"}
             icon="card"
-            label="Pay by card"
-            sub="Debit/credit card, transfer or USSD · Paystack"
+            label={t("booking.confirm.payByCard")}
+            sub={t("booking.confirm.payByCardSub")}
             onPress={() => setMethod("PAYSTACK")}
           />
         </Card>
 
         <Card style={styles.card}>
           <Txt variant="h3" style={styles.cardTitle}>
-            Payment summary
+            {t("booking.confirm.paymentSummary")}
           </Txt>
           <Row
             label={
               isInstant
-                ? `Instant fee${isNight ? " (night)" : ""}`
-                : "Consultation fee"
+                ? isNight
+                  ? t("booking.confirm.instantFeeNight")
+                  : t("booking.confirm.instantFee")
+                : t("booking.confirm.consultationFee")
             }
             value={formatMoney(fee)}
           />
           {discount > 0 ? (
             <Row
-              label="Coupon discount"
+              label={t("booking.confirm.couponDiscount")}
               value={`−${formatMoney(discount)}`}
               valueColor={colors.tealDeep}
             />
           ) : null}
           <View style={styles.divider} />
-          <Row label="Total" value={formatMoney(total)} bold />
+          <Row
+            label={t("booking.confirm.total")}
+            value={formatMoney(total)}
+            bold
+          />
         </Card>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -327,7 +364,9 @@ export default function ConfirmBookingScreen() {
       >
         <View style={styles.webRoot}>
           <View style={styles.webHeader}>
-            <Text style={styles.webTitle}>Secure payment</Text>
+            <Text style={styles.webTitle}>
+              {t("booking.confirm.securePayment")}
+            </Text>
             <AnimatedPressable
               haptic="light"
               onPress={() => setCheckoutUrl(null)}

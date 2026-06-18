@@ -17,6 +17,7 @@ import {
   RecordingPresets,
   setAudioModeAsync,
   useAudioPlayer,
+  useAudioPlayerStatus,
   useAudioRecorder,
 } from "expo-audio";
 import * as FileSystem from "expo-file-system/legacy";
@@ -112,6 +113,14 @@ const urgencyUi = (c: Palette) => ({
   },
 });
 
+// Hands-free voice-activity detection tuning (energy-based; thresholds may need
+// on-device calibration). Read the mic level, learn the ambient floor, treat
+// anything a margin above it as speech, and end the turn after a short silence.
+const VAD_INTERVAL_MS = 120; // how often we sample the mic level
+const VAD_CALIB_TICKS = 5; // ~600ms to learn the room's noise floor
+const VAD_VOICE_MARGIN_DB = 9; // dB above ambient that counts as the patient talking
+const VAD_SILENCE_TICKS = 13; // ~1.5s of quiet ends the turn
+
 export default function SymptomCheckerScreen() {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -178,14 +187,115 @@ export default function SymptomCheckerScreen() {
   };
 
   // Voice input: record → Whisper transcript → review in the input → send.
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  // Metering on so hands-free VAD can read the mic level and auto-stop.
+  const recorder = useAudioRecorder({
+    ...RecordingPresets.HIGH_QUALITY,
+    isMeteringEnabled: true,
+  });
   const [recording, setRecording] = useState(false);
   const [recSeconds, setRecSeconds] = useState(0);
   const [transcribing, setTranscribing] = useState(false);
   const recTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Voice UX: a transient error banner + the hands-free auto-send countdown.
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const voiceErrTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [autoSendIn, setAutoSendIn] = useState<number | null>(null);
+  const autoSendTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const inputRef = useRef("");
+  // Hands-free voice-activity detection: poll the mic level while recording and
+  // auto-stop when the patient goes quiet. Degrades to the manual ✓ button if a
+  // device doesn't deliver metering.
+  const vadTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const vadState = useRef({
+    calib: [] as number[],
+    floor: null as number | null,
+    speech: false,
+    silent: 0,
+    ticks: 0,
+  });
+  useEffect(() => {
+    inputRef.current = input;
+  }, [input]);
+  useEffect(
+    () => () => {
+      if (voiceErrTimer.current) clearTimeout(voiceErrTimer.current);
+      if (autoSendTimer.current) clearInterval(autoSendTimer.current);
+      if (vadTimer.current) clearInterval(vadTimer.current);
+    },
+    [],
+  );
+
+  const cancelAutoSend = () => {
+    if (autoSendTimer.current) clearInterval(autoSendTimer.current);
+    autoSendTimer.current = null;
+    setAutoSendIn(null);
+  };
+
+  const showVoiceError = (msg: string) => {
+    cancelAutoSend();
+    if (voiceErrTimer.current) clearTimeout(voiceErrTimer.current);
+    setVoiceError(msg);
+    voiceErrTimer.current = setTimeout(() => setVoiceError(null), 4500);
+  };
+
+  // Hands-free: after a transcript, send it automatically unless the patient
+  // taps to edit first — a short countdown so a bad transcript can be caught.
+  const scheduleAutoSend = (text: string) => {
+    cancelAutoSend();
+    let n = 3;
+    setAutoSendIn(n);
+    autoSendTimer.current = setInterval(() => {
+      n -= 1;
+      if (n <= 0) {
+        cancelAutoSend();
+        send(text);
+      } else {
+        setAutoSendIn(n);
+      }
+    }, 1000);
+  };
+
+  const stopVad = () => {
+    if (vadTimer.current) clearInterval(vadTimer.current);
+    vadTimer.current = null;
+  };
+
+  const startVad = () => {
+    stopVad();
+    vadState.current = {
+      calib: [],
+      floor: null,
+      speech: false,
+      silent: 0,
+      ticks: 0,
+    };
+    vadTimer.current = setInterval(() => {
+      const lvl = recorder.getStatus().metering;
+      if (lvl == null || !Number.isFinite(lvl)) return; // no metering → manual ✓
+      const s = vadState.current;
+      s.ticks += 1;
+      if (s.ticks <= VAD_CALIB_TICKS) {
+        // Learn the room's ambient floor from the first reads.
+        s.calib.push(lvl);
+        if (s.ticks === VAD_CALIB_TICKS)
+          s.floor = s.calib.reduce((a, b) => a + b, 0) / s.calib.length;
+        return;
+      }
+      const threshold = (s.floor ?? -50) + VAD_VOICE_MARGIN_DB;
+      if (lvl > threshold) {
+        s.speech = true;
+        s.silent = 0;
+      } else if (s.speech && (s.silent += 1) >= VAD_SILENCE_TICKS) {
+        stopRecording(true); // pause detected → transcribe → (voice) auto-send
+      }
+    }, VAD_INTERVAL_MS);
+  };
+
   const startRecording = async () => {
     if (thinking || transcribing) return;
+    cancelAutoSend();
+    setVoiceError(null);
     try {
       const perm = await AudioModule.requestRecordingPermissionsAsync();
       if (!perm.granted) return;
@@ -198,12 +308,14 @@ export default function SymptomCheckerScreen() {
       setRecording(true);
       setRecSeconds(0);
       recTimer.current = setInterval(() => setRecSeconds((s) => s + 1), 1000);
+      if (voiceMode) startVad(); // hands-free: auto-stop when the patient pauses
     } catch {
       setRecording(false);
     }
   };
 
   const stopRecording = async (use: boolean) => {
+    stopVad();
     if (recTimer.current) clearInterval(recTimer.current);
     const seconds = recSeconds;
     setRecording(false);
@@ -223,11 +335,19 @@ export default function SymptomCheckerScreen() {
       );
       const transcript = (r as { data: { transcript: string } }).data
         ?.transcript;
-      if (transcript)
-        setInput((cur) =>
-          cur.trim() ? `${cur.trim()} ${transcript}` : transcript,
-        );
+      if (transcript) {
+        const next = inputRef.current.trim()
+          ? `${inputRef.current.trim()} ${transcript}`
+          : transcript;
+        setInput(next);
+        if (voiceMode) scheduleAutoSend(next); // hands-free: send unless edited
+      } else {
+        showVoiceError("I didn't catch that — tap the mic and try again.");
+      }
     } catch {
+      showVoiceError(
+        "Couldn't reach Leenah. Check your connection and try again.",
+      );
     } finally {
       setTranscribing(false);
     }
@@ -241,6 +361,7 @@ export default function SymptomCheckerScreen() {
 
   // Voice replies: tap the speaker on any Leenah bubble → TTS → play.
   const player = useAudioPlayer();
+  const playerStatus = useAudioPlayerStatus(player);
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
   const ttsCache = useRef<Map<number, string>>(new Map());
 
@@ -294,6 +415,7 @@ export default function SymptomCheckerScreen() {
   // open the mic shortly after so the user can just talk.
   const voiceBeganRef = useRef(false);
   const voiceRecRef = useRef(false);
+  const greetingPlayedRef = useRef(false);
   useEffect(() => {
     if (voiceMode && !voiceBeganRef.current && !session && !starting) {
       voiceBeganRef.current = true;
@@ -301,22 +423,43 @@ export default function SymptomCheckerScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voiceMode, session, starting]);
+
+  // Hands-free: open the mic only once Leenah's spoken greeting has finished,
+  // so she doesn't record her own voice through the speaker. Watch playback
+  // start (playing → true), then stop (playing → false), then hand the mic over.
   useEffect(() => {
-    if (voiceMode && session && !voiceRecRef.current && !recording) {
+    if (!voiceMode || !session || voiceRecRef.current) return;
+    if (playerStatus.playing) {
+      greetingPlayedRef.current = true;
+    } else if (greetingPlayedRef.current) {
       voiceRecRef.current = true;
-      const t = setTimeout(() => startRecording(), 1300);
-      return () => clearTimeout(t);
+      startRecording();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [voiceMode, session, recording]);
+  }, [voiceMode, session, playerStatus.playing]);
+
+  // Safety net: if the greeting never plays (e.g. TTS unavailable or offline),
+  // still open the mic so the screen doesn't sit there waiting forever.
+  useEffect(() => {
+    if (!voiceMode || !session) return;
+    const t = setTimeout(() => {
+      if (!voiceRecRef.current) {
+        voiceRecRef.current = true;
+        startRecording();
+      }
+    }, 6000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceMode, session]);
 
   useEffect(() => {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
   }, [session?.messages?.length, thinking]);
 
-  const send = async () => {
-    const text = input.trim();
+  const send = async (override?: string) => {
+    const text = (override ?? input).trim();
     if (!text || !session || thinking) return;
+    cancelAutoSend();
     setInput("");
     setQaSuggestion(null);
     setSession((s) =>
@@ -765,6 +908,24 @@ export default function SymptomCheckerScreen() {
             ) : null}
           </ScrollView>
 
+          {voiceError ? (
+            <View style={styles.voiceErrBar}>
+              <Ionicons name="alert-circle" size={14} color={colors.error} />
+              <Text style={styles.voiceErrText}>{voiceError}</Text>
+            </View>
+          ) : autoSendIn != null ? (
+            <AnimatedPressable
+              haptic="light"
+              onPress={cancelAutoSend}
+              style={styles.autoSendBar}
+            >
+              <Ionicons name="send" size={13} color={colors.teal} />
+              <Text style={styles.autoSendText}>
+                Sending in {autoSendIn}s · tap to edit
+              </Text>
+            </AnimatedPressable>
+          ) : null}
+
           {chatActive ? (
             recording ? (
               /* ── Recording bar ── */
@@ -774,7 +935,9 @@ export default function SymptomCheckerScreen() {
                   <Text style={styles.recText}>
                     Recording… 0:{String(recSeconds).padStart(2, "0")}
                   </Text>
-                  <Text style={styles.recHint}>up to 1 min</Text>
+                  <Text style={styles.recHint}>
+                    {voiceMode ? "auto-sends when you pause" : "up to 1 min"}
+                  </Text>
                 </View>
                 <AnimatedPressable
                   haptic="light"
@@ -808,8 +971,12 @@ export default function SymptomCheckerScreen() {
                   }
                   placeholderTextColor={colors.text.tertiary}
                   value={input}
-                  onChangeText={setInput}
-                  onSubmitEditing={send}
+                  onChangeText={(t) => {
+                    setInput(t);
+                    cancelAutoSend();
+                  }}
+                  onFocus={cancelAutoSend}
+                  onSubmitEditing={() => send()}
                   returnKeyType="send"
                   editable={!thinking && !transcribing}
                   multiline
@@ -831,7 +998,7 @@ export default function SymptomCheckerScreen() {
                 </AnimatedPressable>
                 <AnimatedPressable
                   haptic="light"
-                  onPress={send}
+                  onPress={() => send()}
                   style={[
                     styles.sendBtn,
                     (!input.trim() || thinking || transcribing) && {
@@ -1157,6 +1324,42 @@ const makeStyles = (c: Palette) =>
       flex: 1,
     },
     recHint: { ...Type.caption, fontSize: 10.5, color: c.text.tertiary },
+    autoSendBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 7,
+      alignSelf: "center",
+      backgroundColor: "rgba(44,183,167,0.10)",
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(44,183,167,0.35)",
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: Radius.round,
+      marginHorizontal: Space.xl,
+      marginBottom: 2,
+    },
+    autoSendText: { fontFamily: Fonts.bold, fontSize: 12.5, color: c.tealDeep },
+    voiceErrBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 7,
+      alignSelf: "center",
+      backgroundColor: "rgba(240,103,92,0.10)",
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(240,103,92,0.40)",
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: Radius.round,
+      marginHorizontal: Space.xl,
+      marginBottom: 2,
+    },
+    voiceErrText: {
+      fontFamily: Fonts.bold,
+      fontSize: 12,
+      color: c.error,
+      flexShrink: 1,
+      textAlign: "center",
+    },
     disclaimer: {
       ...Type.caption,
       fontSize: 10.5,

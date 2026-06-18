@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import {
   Gradients,
   Fonts,
@@ -29,14 +30,10 @@ import { formatMoney } from "../../../src/utils/money";
 const TYPES = [
   {
     key: "ONLINE",
-    label: "Video",
-    desc: "Connect via video call",
     icon: "videocam" as const,
   },
   {
     key: "CLINIC",
-    label: "Clinic",
-    desc: "Visit in person",
     icon: "business" as const,
   },
 ];
@@ -58,6 +55,7 @@ export default function BookAppointmentScreen() {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { doctorId, referralId } = useLocalSearchParams<{
     doctorId: string;
     referralId?: string;
@@ -106,7 +104,7 @@ export default function BookAppointmentScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Book appointment" />
+      <AppHeader title={t("booking.book.title")} />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -121,10 +119,10 @@ export default function BookAppointmentScreen() {
           <Avatar uri={d?.image} name={d?.name} size={52} ring />
           <View style={{ flex: 1 }}>
             <Text style={styles.docName} numberOfLines={1}>
-              {d?.name ?? "Doctor"}
+              {d?.name ?? t("booking.book.doctorFallback")}
             </Text>
             <Text style={styles.docSpec} numberOfLines={1}>
-              {d?.designation ?? "Consultation"}
+              {d?.designation ?? t("booking.book.consultationFallback")}
             </Text>
           </View>
           <View style={styles.feeChip}>
@@ -135,16 +133,16 @@ export default function BookAppointmentScreen() {
         </LinearGradient>
 
         <Txt variant="h3" style={styles.label}>
-          Consultation type
+          {t("booking.book.consultationType")}
         </Txt>
         <View style={styles.typeRow}>
-          {TYPES.map((t) => {
-            const active = apptType === t.key;
+          {TYPES.map((item) => {
+            const active = apptType === item.key;
             return (
               <AnimatedPressable
-                key={t.key}
+                key={item.key}
                 haptic="light"
-                onPress={() => setApptType(t.key)}
+                onPress={() => setApptType(item.key)}
                 style={[styles.typeCard, active && styles.typeActive]}
               >
                 <View
@@ -154,13 +152,17 @@ export default function BookAppointmentScreen() {
                   ]}
                 >
                   <Ionicons
-                    name={t.icon}
+                    name={item.icon}
                     size={20}
                     color={active ? "#fff" : colors.navyMid}
                   />
                 </View>
-                <Text style={styles.typeLabel}>{t.label}</Text>
-                <Text style={styles.typeDesc}>{t.desc}</Text>
+                <Text style={styles.typeLabel}>
+                  {t(`booking.book.type${item.key}Label`)}
+                </Text>
+                <Text style={styles.typeDesc}>
+                  {t(`booking.book.type${item.key}Desc`)}
+                </Text>
                 {active ? (
                   <Ionicons
                     name="checkmark-circle"
@@ -175,7 +177,7 @@ export default function BookAppointmentScreen() {
         </View>
 
         <Txt variant="h3" style={styles.label}>
-          Select date
+          {t("booking.book.selectDate")}
         </Txt>
         <ScrollView
           horizontal
@@ -206,7 +208,7 @@ export default function BookAppointmentScreen() {
         </ScrollView>
 
         <Txt variant="h3" style={styles.label}>
-          Available times
+          {t("booking.book.availableTimes")}
         </Txt>
         {slots.length === 0 ? (
           <View style={styles.noSlots}>
@@ -215,9 +217,7 @@ export default function BookAppointmentScreen() {
               size={18}
               color={colors.text.tertiary}
             />
-            <Text style={styles.noSlotsText}>
-              No slots available for this date
-            </Text>
+            <Text style={styles.noSlotsText}>{t("booking.book.noSlots")}</Text>
           </View>
         ) : (
           <View style={styles.slotsGrid}>
@@ -242,11 +242,11 @@ export default function BookAppointmentScreen() {
         )}
 
         <Txt variant="h3" style={styles.label}>
-          Reason for visit
+          {t("booking.book.reasonForVisit")}
         </Txt>
         <TextInput
           style={styles.problemInput}
-          placeholder="Briefly describe your symptoms or reason…"
+          placeholder={t("booking.book.reasonPlaceholder")}
           placeholderTextColor={colors.text.tertiary}
           value={problem}
           onChangeText={setProblem}
@@ -261,7 +261,7 @@ export default function BookAppointmentScreen() {
         ]}
       >
         <Button
-          label="Continue"
+          label={t("booking.book.continue")}
           onPress={goToConfirm}
           disabled={!selectedSlot}
           size="lg"

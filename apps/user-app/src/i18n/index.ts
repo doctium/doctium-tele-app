@@ -14,16 +14,46 @@ import pcm from "./locales/pcm.json";
 import ha from "./locales/ha.json";
 import yo from "./locales/yo.json";
 import ig from "./locales/ig.json";
+// Phase-3 additions (booking/chat/wallet/prescriptions/emr/profileEdit + auth.otp/forgot/verifyEmail)
+// live in separate *.extra.json files and are deep-merged onto the base catalogs.
+import enExtra from "./locales/en.extra.json";
+import pcmExtra from "./locales/pcm.extra.json";
+import haExtra from "./locales/ha.extra.json";
+import yoExtra from "./locales/yo.extra.json";
+import igExtra from "./locales/ig.extra.json";
 
 const STORAGE_KEY = "doctium.language";
 
+type Dict = Record<string, unknown>;
+/** Recursively merge `extra` into `base` (nested objects merged, leaves from extra win). */
+function deepMerge(base: Dict, extra: Dict): Dict {
+  const out: Dict = { ...base };
+  for (const key of Object.keys(extra)) {
+    const b = out[key];
+    const e = extra[key];
+    if (
+      b &&
+      e &&
+      typeof b === "object" &&
+      typeof e === "object" &&
+      !Array.isArray(b) &&
+      !Array.isArray(e)
+    ) {
+      out[key] = deepMerge(b as Dict, e as Dict);
+    } else {
+      out[key] = e;
+    }
+  }
+  return out;
+}
+
 export const resources = {
-  en: { translation: en },
-  pcm: { translation: pcm },
-  ha: { translation: ha },
-  yo: { translation: yo },
-  ig: { translation: ig },
-} as const;
+  en: { translation: deepMerge(en, enExtra) },
+  pcm: { translation: deepMerge(pcm, pcmExtra) },
+  ha: { translation: deepMerge(ha, haExtra) },
+  yo: { translation: deepMerge(yo, yoExtra) },
+  ig: { translation: deepMerge(ig, igExtra) },
+};
 
 // Initialise synchronously with English so `useTranslation` works on first
 // render; bootstrapI18n() then swaps to the saved/device language during the

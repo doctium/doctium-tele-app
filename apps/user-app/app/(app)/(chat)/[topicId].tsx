@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -42,6 +43,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3001";
 export default function PersonalChatScreen() {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
+  const { t } = useTranslation();
   const { topicId, doctorId, doctorName } = useLocalSearchParams<{
     topicId: string;
     doctorId?: string;
@@ -96,11 +98,11 @@ export default function PersonalChatScreen() {
         <Avatar name={doctorName} size={42} ring />
         <View style={styles.headerInfo}>
           <Text style={styles.headerName} numberOfLines={1}>
-            {doctorName ?? "Doctor"}
+            {doctorName ?? t("chat.thread.doctorFallback")}
           </Text>
           <View style={styles.statusRow}>
             <View style={styles.statusDot} />
-            <Text style={styles.headerStatus}>Online</Text>
+            <Text style={styles.headerStatus}>{t("chat.thread.online")}</Text>
           </View>
         </View>
         <AnimatedPressable
@@ -164,7 +166,7 @@ export default function PersonalChatScreen() {
         <View style={styles.inputBar}>
           <TextInput
             style={styles.textInput}
-            placeholder="Type a message…"
+            placeholder={t("chat.thread.inputPlaceholder")}
             placeholderTextColor={colors.text.tertiary}
             value={input}
             onChangeText={setInput}

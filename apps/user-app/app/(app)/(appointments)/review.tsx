@@ -11,6 +11,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import {
   Gradients,
   Palette,
@@ -31,6 +32,7 @@ const LABELS = ["", "Poor", "Fair", "Good", "Great", "Excellent"];
 export default function ReviewScreen() {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
+  const { t } = useTranslation();
   const { appointmentId, doctorId } = useLocalSearchParams<{
     appointmentId: string;
     doctorId: string;
@@ -43,7 +45,7 @@ export default function ReviewScreen() {
 
   const submit = async () => {
     if (rating === 0) {
-      setError("Please select a rating first");
+      setError(t("booking.review.selectRating"));
       return;
     }
     setLoading(true);
@@ -59,7 +61,8 @@ export default function ReviewScreen() {
       setTimeout(() => router.back(), 1500);
     } catch (e: unknown) {
       setError(
-        (e as { message?: string })?.message ?? "Could not submit your review",
+        (e as { message?: string })?.message ??
+          t("booking.review.submitFailed"),
       );
     } finally {
       setLoading(false);
@@ -79,7 +82,7 @@ export default function ReviewScreen() {
             <Ionicons name="checkmark" size={40} color="#fff" />
           </LinearGradient>
           <Txt variant="hero" center style={{ marginTop: 22 }}>
-            Thank you!
+            {t("booking.review.thankYou")}
           </Txt>
           <Txt
             variant="body"
@@ -87,7 +90,7 @@ export default function ReviewScreen() {
             color={colors.text.secondary}
             style={{ marginTop: 8 }}
           >
-            Your feedback helps others find great care.
+            {t("booking.review.thankYouSub")}
           </Txt>
         </Animated.View>
       </View>
@@ -96,7 +99,7 @@ export default function ReviewScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Leave a review" />
+      <AppHeader title={t("booking.review.title")} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
@@ -107,7 +110,7 @@ export default function ReviewScreen() {
             style={styles.prompt}
           >
             <Txt variant="h1" center>
-              How was your consultation?
+              {t("booking.review.prompt")}
             </Txt>
             <Txt
               variant="body"
@@ -115,18 +118,20 @@ export default function ReviewScreen() {
               color={colors.text.secondary}
               style={{ marginTop: 8 }}
             >
-              Tap a star to rate your experience.
+              {t("booking.review.promptSub")}
             </Txt>
           </Animated.View>
 
           <View style={styles.starsRow}>
             <StarRating rating={rating} onRate={setRating} size={26} />
           </View>
-          <Text style={styles.ratingLabel}>{LABELS[rating] || " "}</Text>
+          <Text style={styles.ratingLabel}>
+            {LABELS[rating] ? t(`booking.review.rating${LABELS[rating]}`) : " "}
+          </Text>
 
           <TextInput
             style={styles.input}
-            placeholder="Share more about your experience (optional)…"
+            placeholder={t("booking.review.commentPlaceholder")}
             placeholderTextColor={colors.text.tertiary}
             value={text}
             onChangeText={setText}
@@ -136,7 +141,7 @@ export default function ReviewScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <Button
-            label="Submit review"
+            label={t("booking.review.submit")}
             onPress={submit}
             loading={loading}
             size="lg"

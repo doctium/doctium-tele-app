@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as SecureStore from "expo-secure-store";
+import { useTranslation } from "react-i18next";
 import { Input } from "../../src/components/common/Input";
 import { Button } from "../../src/components/common/Button";
 import { AnimatedPressable, AppHeader, Txt } from "../../src/components/ui";
@@ -33,6 +34,7 @@ export default function OtpLoginScreen() {
   const dispatch = useAppDispatch();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [step, setStep] = useState<"phone" | "otp">("phone");
@@ -43,14 +45,14 @@ export default function OtpLoginScreen() {
 
   useEffect(() => {
     if (countdown > 0) {
-      const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+      return () => clearTimeout(timer);
     }
   }, [countdown]);
 
   const sendOtp = async () => {
     if (!mobile.trim()) {
-      setError("Enter your mobile number");
+      setError(t("auth.otp.enterMobile"));
       return;
     }
     setLoading(true);
@@ -60,7 +62,9 @@ export default function OtpLoginScreen() {
       setStep("otp");
       setCountdown(60);
     } catch (e: unknown) {
-      setError((e as { message?: string })?.message ?? "Failed to send OTP");
+      setError(
+        (e as { message?: string })?.message ?? t("auth.otp.sendFailed"),
+      );
     } finally {
       setLoading(false);
     }
@@ -77,7 +81,7 @@ export default function OtpLoginScreen() {
   const verifyOtp = async () => {
     const code = otp.join("");
     if (code.length < 6) {
-      setError("Enter the 6-digit code");
+      setError(t("auth.otp.enterCode"));
       return;
     }
     setLoading(true);
@@ -88,7 +92,9 @@ export default function OtpLoginScreen() {
       dispatch(setTokens({ ...tokens, userId: "" }));
       router.replace("/(app)/(home)");
     } catch (e: unknown) {
-      setError((e as { message?: string })?.message ?? "Invalid code");
+      setError(
+        (e as { message?: string })?.message ?? t("auth.otp.invalidCode"),
+      );
     } finally {
       setLoading(false);
     }
@@ -112,7 +118,9 @@ export default function OtpLoginScreen() {
           </View>
 
           <Txt variant="hero">
-            {step === "phone" ? "Enter your number" : "Verify code"}
+            {step === "phone"
+              ? t("auth.otp.titlePhone")
+              : t("auth.otp.titleVerify")}
           </Txt>
           <Txt
             variant="body"
@@ -120,8 +128,8 @@ export default function OtpLoginScreen() {
             style={{ marginTop: 8, marginBottom: 28 }}
           >
             {step === "phone"
-              ? "We'll text you a 6-digit code to sign in."
-              : `Enter the code sent to ${mobile}.`}
+              ? t("auth.otp.subtitlePhone")
+              : t("auth.otp.subtitleVerify", { mobile })}
           </Txt>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -129,7 +137,7 @@ export default function OtpLoginScreen() {
           {step === "phone" ? (
             <>
               <Input
-                label="Mobile number"
+                label={t("auth.otp.mobileLabel")}
                 placeholder="0800 000 0000"
                 value={mobile}
                 onChangeText={setMobile}
@@ -143,7 +151,7 @@ export default function OtpLoginScreen() {
                 }
               />
               <Button
-                label="Send code"
+                label={t("auth.otp.sendCode")}
                 onPress={sendOtp}
                 loading={loading}
                 size="lg"
@@ -170,7 +178,7 @@ export default function OtpLoginScreen() {
                 ))}
               </View>
               <Button
-                label="Verify & sign in"
+                label={t("auth.otp.verifySignIn")}
                 onPress={verifyOtp}
                 loading={loading}
                 size="lg"
@@ -187,8 +195,8 @@ export default function OtpLoginScreen() {
                   ]}
                 >
                   {countdown > 0
-                    ? `Resend code in ${countdown}s`
-                    : "Resend code"}
+                    ? t("auth.otp.resendIn", { seconds: countdown })
+                    : t("auth.otp.resend")}
                 </Text>
               </AnimatedPressable>
             </Animated.View>

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useTranslation } from "react-i18next";
 import Animated, {
   Easing,
   FadeInDown,
@@ -47,6 +48,7 @@ export default function BookingSuccessScreen() {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [appt, setAppt] = useState<ApptSummary | null>(null);
   const reduced = useReducedMotion();
@@ -138,11 +140,13 @@ export default function BookingSuccessScreen() {
           entering={FadeInDown.delay(260).springify().damping(18)}
           style={{ alignItems: "center" }}
         >
-          <Text style={styles.title}>Booking confirmed</Text>
+          <Text style={styles.title}>{t("booking.success.title")}</Text>
           <Text style={styles.sub}>
-            Your appointment is locked in
-            {appt?.doctor?.name ? ` with ${appt.doctor.name}` : ""}. We've let
-            the doctor know.
+            {appt?.doctor?.name
+              ? t("booking.success.subtitleWithDoctor", {
+                  doctor: appt.doctor.name,
+                })
+              : t("booking.success.subtitle")}
           </Text>
         </Animated.View>
 
@@ -153,7 +157,9 @@ export default function BookingSuccessScreen() {
           >
             {appt?.bookingNumber ? (
               <View style={styles.refRow}>
-                <Text style={styles.refLabel}>Booking ID</Text>
+                <Text style={styles.refLabel}>
+                  {t("booking.success.bookingId")}
+                </Text>
                 <Text style={styles.refValue}>#{appt.bookingNumber}</Text>
               </View>
             ) : null}
@@ -164,7 +170,7 @@ export default function BookingSuccessScreen() {
                   appt?.bookingNumber ? styles.refRowBorder : null,
                 ]}
               >
-                <Text style={styles.refLabel}>When</Text>
+                <Text style={styles.refLabel}>{t("booking.success.when")}</Text>
                 <Text style={styles.refValue}>{dateLine}</Text>
               </View>
             ) : null}
@@ -186,7 +192,7 @@ export default function BookingSuccessScreen() {
           style={[styles.btn, styles.btnGhost]}
         >
           <Ionicons name="home-outline" size={17} color={colors.text.primary} />
-          <Text style={styles.btnGhostText}>Home</Text>
+          <Text style={styles.btnGhostText}>{t("booking.success.home")}</Text>
         </AnimatedPressable>
         <AnimatedPressable
           haptic="medium"
@@ -194,7 +200,9 @@ export default function BookingSuccessScreen() {
           style={[styles.btn, styles.btnPrimary]}
         >
           <Ionicons name="calendar" size={17} color="#fff" />
-          <Text style={styles.btnPrimaryText}>Appointments</Text>
+          <Text style={styles.btnPrimaryText}>
+            {t("booking.success.appointments")}
+          </Text>
         </AnimatedPressable>
       </Animated.View>
     </View>

@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
@@ -96,6 +97,7 @@ function ControlButton({
 export default function VideoCallScreen() {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
+  const { t } = useTranslation();
   const { appointmentId, topicId, doctorName } = useLocalSearchParams<{
     appointmentId?: string;
     topicId?: string;
@@ -141,12 +143,12 @@ export default function VideoCallScreen() {
         applyConsent(consent);
         if (consent.status === "NOT_REQUESTED") {
           Alert.alert(
-            "Record this consultation?",
-            "Recording is optional. It will only be enabled if both you and your doctor consent.",
+            t("chat.call.recordPromptTitle"),
+            t("chat.call.recordPromptMessage"),
             [
-              { text: "No recording", style: "cancel" },
+              { text: t("chat.call.noRecording"), style: "cancel" },
               {
-                text: "Request recording",
+                text: t("chat.call.requestRecording"),
                 onPress: async () => {
                   try {
                     applyConsent(
@@ -159,11 +161,11 @@ export default function VideoCallScreen() {
           );
         } else if (consent.status === "PENDING" && !consent.patientConsented) {
           Alert.alert(
-            "Doctor requested recording",
-            "You can decline and still continue the consultation. Recording needs consent from both parties.",
+            t("chat.call.doctorRequestedTitle"),
+            t("chat.call.doctorRequestedMessage"),
             [
               {
-                text: "Decline",
+                text: t("chat.call.decline"),
                 style: "destructive",
                 onPress: async () => {
                   try {
@@ -177,7 +179,7 @@ export default function VideoCallScreen() {
                 },
               },
               {
-                text: "I consent",
+                text: t("chat.call.iConsent"),
                 onPress: async () => {
                   try {
                     applyConsent(
@@ -324,30 +326,32 @@ export default function VideoCallScreen() {
   const mmss = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
   const statusText =
     status === "preview"
-      ? "Preview · full build needed"
+      ? t("chat.call.statusPreview")
       : status === "error"
-        ? "Video unavailable"
+        ? t("chat.call.statusError")
         : status === "connecting"
-          ? "Connecting…"
+          ? t("chat.call.statusConnecting")
           : remoteJoined
             ? mmss
-            : `Waiting for ${doctorName ?? "doctor"}…`;
+            : t("chat.call.statusWaiting", {
+                name: doctorName ?? t("chat.call.doctorFallback"),
+              });
 
   const recordingText = !appointmentId
     ? null
     : recordingSession?.status === "ACTIVE"
-      ? "Recording active"
+      ? t("chat.call.recordingActive")
       : recordingSession?.status === "STARTING"
-        ? "Recording starting"
+        ? t("chat.call.recordingStarting")
         : recordingSession?.status === "FAILED"
-          ? "Recording unavailable"
+          ? t("chat.call.recordingUnavailable")
           : recordingConsent?.status === "CONSENTED"
-            ? "Recording consented"
+            ? t("chat.call.recordingConsented")
             : recordingConsent?.status === "PENDING"
-              ? "Recording consent pending"
+              ? t("chat.call.recordingConsentPending")
               : recordingConsent?.status === "DECLINED"
-                ? "Recording declined"
-                : "Recording off";
+                ? t("chat.call.recordingDeclined")
+                : t("chat.call.recordingOff");
 
   const toggleMute = async () => {
     const n = !muted;
@@ -412,8 +416,14 @@ export default function VideoCallScreen() {
           <View style={styles.blobA} />
           <View style={styles.blobB} />
           <View style={[styles.remote, { paddingTop: insets.top + 60 }]}>
-            <Avatar size={132} name={doctorName ?? "Doctor"} ring />
-            <Text style={styles.name}>{doctorName ?? "Your doctor"}</Text>
+            <Avatar
+              size={132}
+              name={doctorName ?? t("chat.call.doctorFallback")}
+              ring
+            />
+            <Text style={styles.name}>
+              {doctorName ?? t("chat.call.yourDoctor")}
+            </Text>
           </View>
         </View>
       ) : (
@@ -493,23 +503,27 @@ export default function VideoCallScreen() {
         <View style={styles.ctrlRow}>
           <ControlButton
             icon={muted ? "mic-off" : "mic"}
-            label="Mute"
+            label={t("chat.call.mute")}
             active={muted}
             onPress={toggleMute}
           />
           <ControlButton
             icon={videoOff ? "videocam-off" : "videocam"}
-            label="Video"
+            label={t("chat.call.video")}
             active={videoOff}
             onPress={toggleVideo}
           />
           <ControlButton
             icon={speaker ? "volume-high" : "volume-mute"}
-            label="Speaker"
+            label={t("chat.call.speaker")}
             active={!speaker}
             onPress={toggleSpeaker}
           />
-          <ControlButton icon="camera-reverse" label="Flip" onPress={flip} />
+          <ControlButton
+            icon="camera-reverse"
+            label={t("chat.call.flip")}
+            onPress={flip}
+          />
         </View>
         <AnimatedPressable
           haptic="heavy"
@@ -524,7 +538,7 @@ export default function VideoCallScreen() {
               style={{ transform: [{ rotate: "135deg" }] }}
             />
           </View>
-          <Text style={styles.endLabel}>End call</Text>
+          <Text style={styles.endLabel}>{t("chat.call.endCall")}</Text>
         </AnimatedPressable>
       </View>
     </View>

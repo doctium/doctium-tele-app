@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Palette,
@@ -26,6 +27,7 @@ interface ChatTopic {
 export default function ChatListScreen() {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [topics, setTopics] = useState<ChatTopic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,20 +57,20 @@ export default function ChatListScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top + 12 }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Messages</Text>
-        <Text style={styles.subtitle}>Chat with your care team</Text>
+        <Text style={styles.title}>{t("chat.list.title")}</Text>
+        <Text style={styles.subtitle}>{t("chat.list.subtitle")}</Text>
       </View>
 
       {!loading && topics.length === 0 ? (
         <EmptyState
           icon="chatbubbles-outline"
-          title="No conversations yet"
-          description="Your chats with doctors will appear here once you start a consultation."
+          title={t("chat.list.emptyTitle")}
+          description={t("chat.list.emptyDescription")}
         />
       ) : (
         <FlatList
           data={topics}
-          keyExtractor={(t) => t.id}
+          keyExtractor={(topic) => topic.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -102,10 +104,10 @@ export default function ChatListScreen() {
                 />
                 <View style={styles.threadInfo}>
                   <Text style={styles.threadName} numberOfLines={1}>
-                    {doctor?.name ?? "Doctor"}
+                    {doctor?.name ?? t("chat.list.doctorFallback")}
                   </Text>
                   <Text style={styles.threadPreview} numberOfLines={1}>
-                    {last?.message ?? "Start a conversation"}
+                    {last?.message ?? t("chat.list.startConversation")}
                   </Text>
                 </View>
                 <Text style={styles.time}>
