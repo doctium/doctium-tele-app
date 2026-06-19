@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn } from "react-native-reanimated";
 import {
@@ -13,31 +14,17 @@ import {
 } from "../../../src/theme";
 import { AnimatedPressable, AppHeader, Txt } from "../../../src/components/ui";
 
-const FAQS = [
-  {
-    q: "How do I book an appointment?",
-    a: "Open a doctor’s profile, tap “Book appointment”, choose a consultation type, pick a date and time slot, then confirm and pay.",
-  },
-  {
-    q: "Are my consultations private?",
-    a: "Yes. All consultations and messages are encrypted and confidential, accessible only to you and your doctor.",
-  },
-  {
-    q: "How do video consultations work?",
-    a: "At your appointment time, open the appointment and tap “Join video call”. Make sure you have a stable internet connection.",
-  },
-  {
-    q: "How do I get a prescription?",
-    a: "After your consultation, your doctor can issue a digital prescription which appears in your appointment details.",
-  },
-  {
-    q: "How do I cancel or reschedule?",
-    a: "Open the appointment from the Appointments tab and tap “Cancel appointment”. Refunds follow our cancellation policy.",
-  },
+const makeFaqs = (t: (k: string) => string) => [
+  { q: t("help.faqBookQ"), a: t("help.faqBookA") },
+  { q: t("help.faqPrivateQ"), a: t("help.faqPrivateA") },
+  { q: t("help.faqVideoQ"), a: t("help.faqVideoA") },
+  { q: t("help.faqRxQ"), a: t("help.faqRxA") },
+  { q: t("help.faqCancelQ"), a: t("help.faqCancelA") },
 ];
 
 const makeContacts = (
   c: Palette,
+  t: (k: string) => string,
 ): {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
@@ -48,7 +35,7 @@ const makeContacts = (
 }[] => [
   {
     icon: "mail",
-    label: "Email us",
+    label: t("help.emailUs"),
     sub: "support@doctium.com",
     url: "mailto:support@doctium.com",
     color: c.skyDeep,
@@ -56,7 +43,7 @@ const makeContacts = (
   },
   {
     icon: "call",
-    label: "Call us",
+    label: t("help.callUs"),
     sub: "+234 800 000 0000",
     url: "tel:+2348000000000",
     color: c.tealDeep,
@@ -64,8 +51,8 @@ const makeContacts = (
   },
   {
     icon: "logo-whatsapp",
-    label: "WhatsApp",
-    sub: "Chat with support",
+    label: t("help.whatsapp"),
+    sub: t("help.chatWithSupport"),
     url: "https://wa.me/2348000000000",
     color: "#1FA855",
     bg: "#E7F8EE",
@@ -73,27 +60,29 @@ const makeContacts = (
 ];
 
 export default function HelpScreen() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState<number | null>(0);
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
-  const CONTACTS = makeContacts(colors);
+  const CONTACTS = makeContacts(colors, t);
+  const FAQS = makeFaqs(t);
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Help & support" />
+      <AppHeader title={t("help.title")} />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
         <Txt variant="h1" style={{ marginBottom: 6 }}>
-          How can we help?
+          {t("help.heading")}
         </Txt>
         <Txt
           variant="body"
           color={colors.text.secondary}
           style={{ marginBottom: 20 }}
         >
-          Browse common questions or reach our care support team.
+          {t("help.subheading")}
         </Txt>
 
         <View style={styles.contactRow}>
@@ -115,7 +104,7 @@ export default function HelpScreen() {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Frequently asked</Text>
+        <Text style={styles.sectionTitle}>{t("help.faqTitle")}</Text>
         {FAQS.map((f, i) => {
           const expanded = open === i;
           return (

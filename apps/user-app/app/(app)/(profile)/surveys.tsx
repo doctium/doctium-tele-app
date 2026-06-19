@@ -7,6 +7,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Fonts,
@@ -42,12 +43,8 @@ interface Category {
   label: string;
 }
 
-const NPS_LABELS: Record<number, string> = {
-  0: "Not at all likely",
-  10: "Extremely likely",
-};
-
 export default function SurveysScreen() {
+  const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const [open, setOpen] = useState<Survey[]>([]);
@@ -123,7 +120,7 @@ export default function SurveysScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Rate your visits" />
+      <AppHeader title={t("surveys.title")} />
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.navyMid} />
@@ -138,14 +135,16 @@ export default function SurveysScreen() {
             <View style={{ marginTop: 30 }}>
               <EmptyState
                 icon="happy-outline"
-                title="No surveys yet"
-                description="After each consultation we'll ask how it went. Your answers help doctors improve."
+                title={t("surveys.emptyTitle")}
+                description={t("surveys.emptyDesc")}
               />
             </View>
           ) : null}
 
           {open.length > 0 ? (
-            <Text style={styles.sectionTitle}>Waiting for your feedback</Text>
+            <Text style={styles.sectionTitle}>
+              {t("surveys.waitingSection")}
+            </Text>
           ) : null}
           {open.map((s) => {
             const isActive = s.id === activeId;
@@ -158,14 +157,17 @@ export default function SurveysScreen() {
                 >
                   <Avatar uri={s.doctor.image} name={s.doctor.name} size={44} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.docName}>Dr. {s.doctor.name}</Text>
+                    <Text style={styles.docName}>
+                      {t("surveys.doctorName", { name: s.doctor.name })}
+                    </Text>
                     <Text style={styles.docMeta}>
-                      {s.doctor.designation || "Consultation"} · {visitDate(s)}
+                      {s.doctor.designation || t("surveys.consultation")} ·{" "}
+                      {visitDate(s)}
                     </Text>
                   </View>
                   <View style={styles.rateChip}>
                     <Text style={styles.rateChipText}>
-                      {isActive ? "Close" : "Rate now"}
+                      {isActive ? t("surveys.close") : t("surveys.rateNow")}
                     </Text>
                   </View>
                 </AnimatedPressable>
@@ -173,9 +175,7 @@ export default function SurveysScreen() {
                 {isActive ? (
                   <View style={styles.form}>
                     {/* NPS 0–10 */}
-                    <Text style={styles.q}>
-                      How likely are you to recommend Doctium after this visit?
-                    </Text>
+                    <Text style={styles.q}>{t("surveys.npsQuestion")}</Text>
                     <View style={styles.npsRow}>
                       {Array.from({ length: 11 }, (_, n) => (
                         <AnimatedPressable
@@ -204,8 +204,12 @@ export default function SurveysScreen() {
                       ))}
                     </View>
                     <View style={styles.npsLegend}>
-                      <Text style={styles.npsLegendText}>{NPS_LABELS[0]}</Text>
-                      <Text style={styles.npsLegendText}>{NPS_LABELS[10]}</Text>
+                      <Text style={styles.npsLegendText}>
+                        {t("surveys.npsLow")}
+                      </Text>
+                      <Text style={styles.npsLegendText}>
+                        {t("surveys.npsHigh")}
+                      </Text>
                     </View>
 
                     {/* Category stars */}
@@ -242,12 +246,20 @@ export default function SurveysScreen() {
 
                     {/* Would book again */}
                     <Text style={styles.q}>
-                      Would you book this doctor again?
+                      {t("surveys.bookAgainQuestion")}
                     </Text>
                     <View style={styles.bookRow}>
                       {[
-                        { v: true, label: "Yes", icon: "thumbs-up" as const },
-                        { v: false, label: "No", icon: "thumbs-down" as const },
+                        {
+                          v: true,
+                          label: t("surveys.yes"),
+                          icon: "thumbs-up" as const,
+                        },
+                        {
+                          v: false,
+                          label: t("surveys.no"),
+                          icon: "thumbs-down" as const,
+                        },
                       ].map((o) => (
                         <AnimatedPressable
                           key={o.label}
@@ -277,7 +289,7 @@ export default function SurveysScreen() {
 
                     <TextInput
                       style={styles.commentInput}
-                      placeholder="Anything you'd like to add? (optional)"
+                      placeholder={t("surveys.commentPlaceholder")}
                       placeholderTextColor={colors.text.tertiary}
                       value={comment}
                       onChangeText={setComment}
@@ -285,7 +297,7 @@ export default function SurveysScreen() {
                       maxLength={1000}
                     />
                     <Button
-                      label="Send feedback"
+                      label={t("surveys.sendFeedback")}
                       onPress={submit}
                       loading={submitting}
                       disabled={nps == null}
@@ -298,14 +310,18 @@ export default function SurveysScreen() {
           })}
 
           {completed.length > 0 ? (
-            <Text style={styles.sectionTitle}>Answered</Text>
+            <Text style={styles.sectionTitle}>
+              {t("surveys.answeredSection")}
+            </Text>
           ) : null}
           {completed.map((s) => (
             <View key={s.id} style={[styles.card, styles.cardDone]}>
               <View style={styles.cardHead}>
                 <Avatar uri={s.doctor.image} name={s.doctor.name} size={44} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.docName}>Dr. {s.doctor.name}</Text>
+                  <Text style={styles.docName}>
+                    {t("surveys.doctorName", { name: s.doctor.name })}
+                  </Text>
                   <Text style={styles.docMeta}>
                     {visitDate(s)}
                     {s.comment

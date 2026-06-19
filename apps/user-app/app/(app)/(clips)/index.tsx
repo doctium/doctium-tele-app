@@ -31,6 +31,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { useTranslation } from "react-i18next";
 import { Avatar } from "../../../src/components/common/Avatar";
 import { AnimatedPressable } from "../../../src/components/ui";
 import {
@@ -66,34 +67,38 @@ interface VideoItem {
 
 const REPORT_REASONS: {
   key: string;
-  label: string;
+  labelKey: string;
   icon: keyof typeof Ionicons.glyphMap;
 }[] = [
   {
     key: "MISINFORMATION",
-    label: "Medical misinformation",
+    labelKey: "clips.report.misinformation",
     icon: "alert-circle-outline",
   },
   {
     key: "HARMFUL_ADVICE",
-    label: "Harmful or dangerous advice",
+    labelKey: "clips.report.harmfulAdvice",
     icon: "warning-outline",
   },
-  { key: "SPAM", label: "Spam or misleading", icon: "ban-outline" },
+  { key: "SPAM", labelKey: "clips.report.spam", icon: "ban-outline" },
   {
     key: "SEXUAL_CONTENT",
-    label: "Sexual or inappropriate",
+    labelKey: "clips.report.sexualContent",
     icon: "eye-off-outline",
   },
-  { key: "HARASSMENT", label: "Harassment or hate", icon: "hand-left-outline" },
+  {
+    key: "HARASSMENT",
+    labelKey: "clips.report.harassment",
+    icon: "hand-left-outline",
+  },
   {
     key: "COPYRIGHT",
-    label: "Copyright (not their content)",
+    labelKey: "clips.report.copyright",
     icon: "document-lock-outline",
   },
   {
     key: "OTHER",
-    label: "Something else",
+    labelKey: "clips.report.other",
     icon: "ellipsis-horizontal-circle-outline",
   },
 ];
@@ -113,6 +118,7 @@ function youtubeId(url: string): string | null {
 
 /** YouTube clips play through an embedded iframe; only mounted while active so swiping away stops playback. */
 function YouTubeLayer({ url, isActive }: { url: string; isActive: boolean }) {
+  const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
   const [failed, setFailed] = useState(false);
   const id = youtubeId(url);
@@ -148,7 +154,7 @@ function YouTubeLayer({ url, isActive }: { url: string; isActive: boolean }) {
         <View style={styles.ytFallback}>
           <Ionicons name="logo-youtube" size={42} color="#fff" />
           <Text style={styles.ytFallbackText}>
-            This video can&apos;t play here
+            {t("clips.youtubeCantPlay")}
           </Text>
           <Pressable
             onPress={() =>
@@ -157,7 +163,9 @@ function YouTubeLayer({ url, isActive }: { url: string; isActive: boolean }) {
             style={styles.ytFallbackBtn}
           >
             <Ionicons name="logo-youtube" size={16} color="#fff" />
-            <Text style={styles.ytFallbackBtnText}>Watch on YouTube</Text>
+            <Text style={styles.ytFallbackBtnText}>
+              {t("clips.watchOnYoutube")}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -238,6 +246,7 @@ function ClipPlayer({
   onOpenComments: (v: VideoItem, setCount: (n: number) => void) => void;
   onCommentCount?: number;
 }) {
+  const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -362,7 +371,10 @@ function ClipPlayer({
     Haptics.selectionAsync().catch(() => {});
     try {
       await Share.share({
-        message: `${item.title || "A health tip"} — by Dr. ${item.doctor.name} on Doctium MediGram`,
+        message: t("clips.shareMessage", {
+          title: item.title || t("clips.aHealthTip"),
+          name: item.doctor.name,
+        }),
       });
       setShareCount((c) => c + 1);
       videosApi.share(item.id).catch(() => {});
@@ -434,7 +446,7 @@ function ClipPlayer({
             <View style={{ flex: 1 }}>
               <View style={styles.nameRow}>
                 <Text style={styles.docName} numberOfLines={1}>
-                  Dr. {item.doctor.name}
+                  {t("clips.doctorName", { name: item.doctor.name })}
                 </Text>
                 <Ionicons
                   name="checkmark-circle"
@@ -467,7 +479,7 @@ function ClipPlayer({
               color="rgba(255,255,255,0.7)"
             />
             <Text style={styles.disclaimerText} numberOfLines={1}>
-              Educational only — not a diagnosis. See a doctor for advice.
+              {t("clips.disclaimer")}
             </Text>
           </View>
         </View>
@@ -528,6 +540,7 @@ function ReportSheet({
   onClose: () => void;
   onSubmit: (reason: string) => void;
 }) {
+  const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -548,15 +561,13 @@ function ReportSheet({
             <View style={styles.reportDone}>
               <Ionicons name="checkmark-circle" size={40} color={colors.teal} />
               <Text style={styles.reportDoneText}>
-                Thanks — our team will review this clip.
+                {t("clips.report.thanks")}
               </Text>
             </View>
           ) : (
             <>
-              <Text style={styles.sheetTitle}>Report this clip</Text>
-              <Text style={styles.reportHint}>
-                Why are you reporting it? Doctium’s team will review it.
-              </Text>
+              <Text style={styles.sheetTitle}>{t("clips.report.title")}</Text>
+              <Text style={styles.reportHint}>{t("clips.report.hint")}</Text>
               {REPORT_REASONS.map((r) => (
                 <AnimatedPressable
                   key={r.key}
@@ -569,7 +580,7 @@ function ReportSheet({
                     size={19}
                     color="rgba(255,255,255,0.85)"
                   />
-                  <Text style={styles.reportLabel}>{r.label}</Text>
+                  <Text style={styles.reportLabel}>{t(r.labelKey)}</Text>
                   <Ionicons
                     name="chevron-forward"
                     size={16}
@@ -595,6 +606,7 @@ function CommentsSheet({
   onClose: () => void;
   onAdded: (n: number) => void;
 }) {
+  const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -655,9 +667,13 @@ function CommentsSheet({
         <BlurView intensity={60} tint="dark" style={styles.sheet}>
           <View style={styles.sheetHandle} />
           <Text style={styles.sheetTitle}>
-            {comments.length > 0
-              ? `${fmt(comments.length)} comments`
-              : "Comments"}
+            {comments.length === 0
+              ? t("clips.comments.title")
+              : comments.length === 1
+                ? t("clips.comments.countOne", { count: fmt(comments.length) })
+                : t("clips.comments.countMany", {
+                    count: fmt(comments.length),
+                  })}
           </Text>
 
           {loading ? (
@@ -671,7 +687,9 @@ function CommentsSheet({
                 size={34}
                 color="rgba(255,255,255,0.4)"
               />
-              <Text style={styles.sheetEmptyText}>Be the first to comment</Text>
+              <Text style={styles.sheetEmptyText}>
+                {t("clips.comments.beFirst")}
+              </Text>
             </View>
           ) : (
             <FlatList
@@ -689,7 +707,7 @@ function CommentsSheet({
                   />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.commentName}>
-                      {c.user?.name ?? "Patient"}
+                      {c.user?.name ?? t("clips.comments.patient")}
                     </Text>
                     <Text style={styles.commentBody}>{c.comment}</Text>
                   </View>
@@ -711,7 +729,7 @@ function CommentsSheet({
                 color="rgba(255,255,255,0.5)"
               />
               <Text style={styles.commentDisabledText}>
-                Comments are turned off for this clip
+                {t("clips.comments.disabled")}
               </Text>
             </View>
           ) : (
@@ -720,7 +738,7 @@ function CommentsSheet({
             >
               <TextInput
                 style={styles.composerInput}
-                placeholder="Add a comment…"
+                placeholder={t("clips.comments.addPlaceholder")}
                 placeholderTextColor="rgba(255,255,255,0.5)"
                 value={text}
                 onChangeText={setText}
@@ -747,6 +765,7 @@ function CommentsSheet({
 }
 
 export default function MediGramScreen() {
+  const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -800,9 +819,7 @@ export default function MediGramScreen() {
           <Ionicons name="medical" size={20} color={colors.teal} />
           <Text style={styles.brand}>MediGram</Text>
         </View>
-        <Text style={styles.subtitle}>
-          Health education from verified doctors
-        </Text>
+        <Text style={styles.subtitle}>{t("clips.subtitle")}</Text>
       </View>
 
       {loading ? (
@@ -816,7 +833,7 @@ export default function MediGramScreen() {
             size={48}
             color="rgba(255,255,255,0.5)"
           />
-          <Text style={styles.emptyText}>No clips yet. Check back soon.</Text>
+          <Text style={styles.emptyText}>{t("clips.empty")}</Text>
         </View>
       ) : (
         <FlatList

@@ -174,5 +174,22 @@
     "signOut": "Pụọ",
     "signOutConfirm": "Ị ji n'aka na ị chọrọ ịpụ?",
     "version": "Doctium · v1.0.0"
+  },
+  "onboarding": {
+    "slide1": {
+      "title": "Chọta ndọkịta akwadoro",
+      "subtitle": "Lelee ndị ọkachamara nwere ikike wee debe ndụmọdụ n'ime nkeji."
+    },
+    "slide2": {
+      "title": "Gbaa ndụmọdụ otú ọ masịrị gị",
+      "subtitle": "Soro ma ọ bụ kpọọ ndọkịta a tụkwasịrị obi na vidiyo site n'ụlọ gị."
+    },
+    "slide3": {
+      "title": "Nlekọta na-eso gị",
+      "subtitle": "Akwụkwọ ọgwụ, ndekọ ahụike na ncheta, ha niile n'otu ebe."
+    },
+    "skip": "Mafee",
+    "next": "Ọzọ",
+    "getStarted": "Malite"
   }
 }

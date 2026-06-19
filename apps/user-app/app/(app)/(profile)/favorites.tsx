@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import {
   Palette,
   Space,
@@ -28,6 +29,7 @@ export default function FavoritesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
 
   const load = useCallback(async () => {
     await dispatch(fetchFavorites());
@@ -43,7 +45,7 @@ export default function FavoritesScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Favorite doctors" />
+      <AppHeader title={t("favorites.title")} />
       {loading && !refreshing ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.navy} size="large" />
@@ -79,10 +81,8 @@ export default function FavoritesScreen() {
                 size={44}
                 color={colors.text.tertiary}
               />
-              <Text style={styles.emptyTitle}>No favorites yet</Text>
-              <Text style={styles.emptyText}>
-                Tap the heart on any doctor to save them here for quick access.
-              </Text>
+              <Text style={styles.emptyTitle}>{t("favorites.emptyTitle")}</Text>
+              <Text style={styles.emptyText}>{t("favorites.emptyText")}</Text>
             </View>
           }
         />

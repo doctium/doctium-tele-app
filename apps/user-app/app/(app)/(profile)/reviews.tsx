@@ -1,21 +1,23 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Palette, useThemedStyles } from "../../../src/theme";
 import { AppHeader } from "../../../src/components/ui";
 import { EmptyState } from "../../../src/components/common/EmptyState";
 
 export default function MyReviewsScreen() {
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   return (
     <View style={styles.root}>
-      <AppHeader title="My reviews" />
+      <AppHeader title={t("reviews.title")} />
       <View style={{ flex: 1 }}>
         <EmptyState
           icon="star-outline"
-          title="No reviews yet"
-          description="After a completed consultation, you can rate your doctor and your reviews will appear here."
-          actionLabel="Find a doctor"
+          title={t("reviews.emptyTitle")}
+          description={t("reviews.emptyDescription")}
+          actionLabel={t("reviews.findDoctor")}
           onAction={() => router.push("/(app)/(doctors)/search")}
         />
       </View>

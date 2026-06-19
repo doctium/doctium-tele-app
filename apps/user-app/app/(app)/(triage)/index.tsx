@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import {
   AudioModule,
@@ -80,36 +81,36 @@ interface Session {
   qa?: QaSuggestion;
 }
 
-const urgencyUi = (c: Palette) => ({
+const urgencyUi = (c: Palette, t: (key: string) => string) => ({
   EMERGENCY: {
     color: c.error,
     bg: "rgba(240,103,92,0.10)",
     icon: "warning" as const,
-    label: "Emergency",
+    label: t("triage.urgency.emergency"),
   },
   URGENT_CONSULT: {
     color: c.warning,
     bg: "rgba(247,144,9,0.10)",
     icon: "flash" as const,
-    label: "See a doctor now",
+    label: t("triage.urgency.seeDoctorNow"),
   },
   CONSULT_24H: {
     color: c.navyMid,
     bg: "rgba(28,74,116,0.08)",
     icon: "time" as const,
-    label: "See a doctor within 24 hours",
+    label: t("triage.urgency.seeDoctor24h"),
   },
   ROUTINE: {
     color: c.teal,
     bg: "rgba(44,183,167,0.10)",
     icon: "calendar" as const,
-    label: "Book an appointment",
+    label: t("triage.urgency.bookAppointment"),
   },
   SELF_CARE: {
     color: c.success,
     bg: "rgba(44,183,167,0.10)",
     icon: "home" as const,
-    label: "Manageable at home",
+    label: t("triage.urgency.manageableAtHome"),
   },
 });
 
@@ -122,9 +123,10 @@ const VAD_VOICE_MARGIN_DB = 9; // dB above ambient that counts as the patient ta
 const VAD_SILENCE_TICKS = 13; // ~1.5s of quiet ends the turn
 
 export default function SymptomCheckerScreen() {
+  const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
-  const URGENCY_UI = urgencyUi(colors);
+  const URGENCY_UI = urgencyUi(colors, t);
   const [session, setSession] = useState<Session | null>(null);
   const [unavailable, setUnavailable] = useState<string | null>(null);
   const [mode, setMode] = useState<"TRIAGE" | "QA">("TRIAGE");
@@ -342,12 +344,10 @@ export default function SymptomCheckerScreen() {
         setInput(next);
         if (voiceMode) scheduleAutoSend(next); // hands-free: send unless edited
       } else {
-        showVoiceError("I didn't catch that — tap the mic and try again.");
+        showVoiceError(t("triage.voice.notCaught"));
       }
     } catch {
-      showVoiceError(
-        "Couldn't reach Leenah. Check your connection and try again.",
-      );
+      showVoiceError(t("triage.voice.unreachable"));
     } finally {
       setTranscribing(false);
     }
@@ -404,7 +404,7 @@ export default function SymptomCheckerScreen() {
     } catch (e: unknown) {
       setUnavailable(
         (e as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "The assistant is unavailable right now.",
+          ?.message ?? t("triage.unavailableNow"),
       );
     } finally {
       setStarting(false);
@@ -518,7 +518,7 @@ export default function SymptomCheckerScreen() {
   return (
     <View style={styles.root}>
       <AppHeader
-        title={`Ask ${ASSISTANT_NAME}`}
+        title={t("triage.chat.title", { name: ASSISTANT_NAME })}
         right={
           <AnimatedPressable
             haptic="light"
@@ -541,7 +541,9 @@ export default function SymptomCheckerScreen() {
             size={36}
             color={colors.text.tertiary}
           />
-          <Text style={styles.unavailableTitle}>Not available right now</Text>
+          <Text style={styles.unavailableTitle}>
+            {t("triage.notAvailableTitle")}
+          </Text>
           <Text style={styles.unavailableText}>{unavailable}</Text>
         </View>
       ) : !session ? (
@@ -551,24 +553,23 @@ export default function SymptomCheckerScreen() {
           contentContainerStyle={styles.setup}
         >
           <Text style={styles.setupTitle}>
-            How can {ASSISTANT_NAME} help today?
+            {t("triage.setup.title", { name: ASSISTANT_NAME })}
           </Text>
           <Text style={styles.setupSub}>
-            {ASSISTANT_NAME} is Doctium's AI health assistant — she guides, your
-            doctors decide.
+            {t("triage.setup.subtitle", { name: ASSISTANT_NAME })}
           </Text>
           {[
             {
               m: "TRIAGE" as const,
               icon: "pulse" as const,
-              title: "Check my symptoms",
-              sub: "A few questions, then we point you to the right care.",
+              title: t("triage.setup.triageTitle"),
+              sub: t("triage.setup.triageSub"),
             },
             {
               m: "QA" as const,
               icon: "chatbubbles" as const,
-              title: "Ask a health question",
-              sub: "General health info — conditions, prevention, nutrition.",
+              title: t("triage.setup.qaTitle"),
+              sub: t("triage.setup.qaSub"),
             },
           ].map((o) => (
             <AnimatedPressable
@@ -601,7 +602,7 @@ export default function SymptomCheckerScreen() {
             </AnimatedPressable>
           ))}
 
-          <Text style={styles.langLabel}>Language</Text>
+          <Text style={styles.langLabel}>{t("triage.setup.language")}</Text>
           <View style={styles.langRow}>
             {LEENAH_LANGUAGES.map((l) => (
               <AnimatedPressable
@@ -644,10 +645,11 @@ export default function SymptomCheckerScreen() {
               />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.modeTitle}>Read replies aloud</Text>
+              <Text style={styles.modeTitle}>
+                {t("triage.setup.readAloud")}
+              </Text>
               <Text style={styles.modeSub}>
-                {ASSISTANT_NAME} speaks every reply — helpful if reading is
-                hard.
+                {t("triage.setup.readAloudSub", { name: ASSISTANT_NAME })}
               </Text>
             </View>
             <View
@@ -656,7 +658,7 @@ export default function SymptomCheckerScreen() {
               <Text
                 style={[styles.autoPlayPillText, autoPlay && { color: "#fff" }]}
               >
-                {autoPlay ? "On" : "Off"}
+                {autoPlay ? t("triage.on") : t("triage.off")}
               </Text>
             </View>
           </AnimatedPressable>
@@ -671,20 +673,25 @@ export default function SymptomCheckerScreen() {
             ) : (
               <>
                 <Ionicons name="sparkles" size={16} color="#fff" />
-                <Text style={styles.startText}>Start</Text>
+                <Text style={styles.startText}>{t("triage.setup.start")}</Text>
               </>
             )}
           </AnimatedPressable>
           {quota ? (
             <Text style={styles.quotaLine}>
               {quota.unlimited
-                ? "Unlimited with your DoctiumPlus plan ✦"
-                : `${Math.max(0, quota.dailyLimit - quota.used[mode])} of ${quota.dailyLimit} ${mode === "QA" ? "questions" : "checks"} left today · unlimited with DoctiumPlus`}
+                ? t("triage.setup.quotaUnlimited")
+                : t("triage.setup.quotaLeft", {
+                    remaining: Math.max(0, quota.dailyLimit - quota.used[mode]),
+                    limit: quota.dailyLimit,
+                    unit:
+                      mode === "QA"
+                        ? t("triage.setup.unitQuestions")
+                        : t("triage.setup.unitChecks"),
+                  })}
             </Text>
           ) : null}
-          <Text style={styles.disclaimer}>
-            Health guidance, not a diagnosis. In an emergency call 112.
-          </Text>
+          <Text style={styles.disclaimer}>{t("triage.disclaimer")}</Text>
         </ScrollView>
       ) : (
         <KeyboardAvoidingView
@@ -735,7 +742,7 @@ export default function SymptomCheckerScreen() {
               <View style={[styles.bubble, styles.bubbleBot, styles.thinking]}>
                 <ActivityIndicator size="small" color={colors.navyMid} />
                 <Text style={styles.thinkingText}>
-                  {ASSISTANT_NAME} is thinking…
+                  {t("triage.chat.thinking", { name: ASSISTANT_NAME })}
                 </Text>
               </View>
             ) : null}
@@ -749,7 +756,7 @@ export default function SymptomCheckerScreen() {
               >
                 <Ionicons name="medkit" size={14} color={colors.teal} />
                 <Text style={styles.qaChipText}>
-                  Talk to a doctor about this
+                  {t("triage.chat.talkToDoctor")}
                   {qaSuggestion.specialty &&
                   qaSuggestion.specialty !== "General practice"
                     ? ` · ${qaSuggestion.specialty}`
@@ -772,7 +779,9 @@ export default function SymptomCheckerScreen() {
                 verdict.urgency !== "EMERGENCY" &&
                 verdict.urgency !== "SELF_CARE" ? (
                   <Text style={styles.verdictSpecialty}>
-                    Suggested: {verdict.specialty}
+                    {t("triage.verdict.suggested", {
+                      specialty: verdict.specialty,
+                    })}
                   </Text>
                 ) : null}
 
@@ -806,7 +815,9 @@ export default function SymptomCheckerScreen() {
                         style={[styles.cta, { backgroundColor: colors.error }]}
                       >
                         <Ionicons name="call" size={16} color="#fff" />
-                        <Text style={styles.ctaText}>Call 112 now</Text>
+                        <Text style={styles.ctaText}>
+                          {t("triage.verdict.call112")}
+                        </Text>
                       </AnimatedPressable>
                       {verdict.crisis ? (
                         <AnimatedPressable
@@ -817,7 +828,7 @@ export default function SymptomCheckerScreen() {
                           <Text
                             style={[styles.ctaText, { color: colors.navy }]}
                           >
-                            Talk to a doctor today
+                            {t("triage.verdict.talkToDoctorToday")}
                           </Text>
                         </AnimatedPressable>
                       ) : null}
@@ -831,7 +842,9 @@ export default function SymptomCheckerScreen() {
                       style={[styles.cta, { backgroundColor: colors.navy }]}
                     >
                       <Ionicons name="flash" size={15} color="#fff" />
-                      <Text style={styles.ctaText}>Start instant consult</Text>
+                      <Text style={styles.ctaText}>
+                        {t("triage.verdict.startInstantConsult")}
+                      </Text>
                     </AnimatedPressable>
                   ) : verdict.urgency === "SELF_CARE" ? (
                     <AnimatedPressable
@@ -840,7 +853,7 @@ export default function SymptomCheckerScreen() {
                       style={[styles.cta, styles.ctaOutline]}
                     >
                       <Text style={[styles.ctaText, { color: colors.navy }]}>
-                        Book a doctor anyway
+                        {t("triage.verdict.bookAnyway")}
                       </Text>
                     </AnimatedPressable>
                   ) : (
@@ -851,11 +864,12 @@ export default function SymptomCheckerScreen() {
                     >
                       <Ionicons name="calendar" size={15} color="#fff" />
                       <Text style={styles.ctaText}>
-                        Book{" "}
                         {verdict.specialty &&
                         verdict.specialty !== "General practice"
-                          ? verdict.specialty
-                          : "a doctor"}
+                          ? t("triage.verdict.bookSpecialty", {
+                              specialty: verdict.specialty,
+                            })
+                          : t("triage.verdict.bookDoctor")}
                       </Text>
                     </AnimatedPressable>
                   )}
@@ -879,14 +893,18 @@ export default function SymptomCheckerScreen() {
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.programLabel}>
-                          {ASSISTANT_NAME} suggests
+                          {t("triage.verdict.programLabel", {
+                            name: ASSISTANT_NAME,
+                          })}
                         </Text>
                         <Text style={styles.programName}>
                           {verdict.programSuggestion.name}
                         </Text>
                         <Text style={styles.programSub}>
-                          Ongoing tracking & check-ins for{" "}
-                          {verdict.programSuggestion.condition.toLowerCase()}
+                          {t("triage.verdict.programSub", {
+                            condition:
+                              verdict.programSuggestion.condition.toLowerCase(),
+                          })}
                         </Text>
                       </View>
                       <Ionicons
@@ -901,7 +919,9 @@ export default function SymptomCheckerScreen() {
                     onPress={dismiss}
                     style={styles.dismissBtn}
                   >
-                    <Text style={styles.dismissText}>Close</Text>
+                    <Text style={styles.dismissText}>
+                      {t("triage.verdict.close")}
+                    </Text>
                   </AnimatedPressable>
                 </View>
               </View>
@@ -921,7 +941,7 @@ export default function SymptomCheckerScreen() {
             >
               <Ionicons name="send" size={13} color={colors.teal} />
               <Text style={styles.autoSendText}>
-                Sending in {autoSendIn}s · tap to edit
+                {t("triage.voice.autoSend", { seconds: autoSendIn })}
               </Text>
             </AnimatedPressable>
           ) : null}
@@ -933,10 +953,14 @@ export default function SymptomCheckerScreen() {
                 <View style={styles.recBar}>
                   <View style={styles.recDot} />
                   <Text style={styles.recText}>
-                    Recording… 0:{String(recSeconds).padStart(2, "0")}
+                    {t("triage.voice.recording", {
+                      seconds: String(recSeconds).padStart(2, "0"),
+                    })}
                   </Text>
                   <Text style={styles.recHint}>
-                    {voiceMode ? "auto-sends when you pause" : "up to 1 min"}
+                    {voiceMode
+                      ? t("triage.voice.hintAutoSend")
+                      : t("triage.voice.hintMax")}
                   </Text>
                 </View>
                 <AnimatedPressable
@@ -964,15 +988,15 @@ export default function SymptomCheckerScreen() {
                   style={styles.input}
                   placeholder={
                     transcribing
-                      ? "Transcribing your voice note…"
+                      ? t("triage.chat.transcribing")
                       : session.mode === "QA"
-                        ? "Ask a health question…"
-                        : "Describe how you're feeling…"
+                        ? t("triage.chat.placeholderQa")
+                        : t("triage.chat.placeholderTriage")
                   }
                   placeholderTextColor={colors.text.tertiary}
                   value={input}
-                  onChangeText={(t) => {
-                    setInput(t);
+                  onChangeText={(val) => {
+                    setInput(val);
                     cancelAutoSend();
                   }}
                   onFocus={cancelAutoSend}
@@ -1011,9 +1035,7 @@ export default function SymptomCheckerScreen() {
               </View>
             )
           ) : null}
-          <Text style={styles.disclaimer}>
-            Health guidance, not a diagnosis. In an emergency call 112.
-          </Text>
+          <Text style={styles.disclaimer}>{t("triage.disclaimer")}</Text>
         </KeyboardAvoidingView>
       )}
     </View>

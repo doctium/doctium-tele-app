@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   Palette,
   Fonts,
@@ -53,31 +55,40 @@ interface Referral {
 
 const makeStatusMeta = (
   c: Palette,
+  t: TFunction,
 ): Record<Status, { label: string; color: string; bg: string }> => ({
   PENDING: {
-    label: "Ready to book",
+    label: t("referrals.statusPending"),
     color: c.tealDeep,
     bg: c.tealSoft,
   },
   ACCEPTED: {
-    label: "Accepted — book now",
+    label: t("referrals.statusAccepted"),
     color: c.tealDeep,
     bg: c.tealSoft,
   },
-  DECLINED: { label: "Declined", color: "#B42318", bg: "rgba(217,45,32,0.1)" },
-  BOOKED: { label: "Booked", color: "#067647", bg: "rgba(6,118,71,0.12)" },
+  DECLINED: {
+    label: t("referrals.statusDeclined"),
+    color: "#B42318",
+    bg: "rgba(217,45,32,0.1)",
+  },
+  BOOKED: {
+    label: t("referrals.statusBooked"),
+    color: "#067647",
+    bg: "rgba(6,118,71,0.12)",
+  },
   COMPLETED: {
-    label: "Completed",
+    label: t("referrals.statusCompleted"),
     color: "#067647",
     bg: "rgba(6,118,71,0.12)",
   },
   CANCELLED: {
-    label: "Cancelled",
+    label: t("referrals.statusCancelled"),
     color: c.text.tertiary,
     bg: c.surfaceAlt,
   },
   EXPIRED: {
-    label: "Expired",
+    label: t("referrals.statusExpired"),
     color: c.text.tertiary,
     bg: c.surfaceAlt,
   },
@@ -89,7 +100,8 @@ export default function MyReferralsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
-  const STATUS_META = makeStatusMeta(colors);
+  const { t } = useTranslation();
+  const STATUS_META = makeStatusMeta(colors, t);
 
   const load = useCallback(() => {
     referralsApi
@@ -125,7 +137,7 @@ export default function MyReferralsScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="My referrals" />
+      <AppHeader title={t("referrals.title")} />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -149,11 +161,8 @@ export default function MyReferralsScreen() {
                 color={colors.teal}
               />
             </View>
-            <Text style={styles.emptyTitle}>No referrals yet</Text>
-            <Text style={styles.emptyText}>
-              If a doctor refers you to a specialist, it'll appear here so you
-              can book in one tap.
-            </Text>
+            <Text style={styles.emptyTitle}>{t("referrals.emptyTitle")}</Text>
+            <Text style={styles.emptyText}>{t("referrals.emptyText")}</Text>
           </View>
         ) : (
           items.map((r) => {
@@ -169,16 +178,22 @@ export default function MyReferralsScreen() {
                   />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.specName}>
-                      Dr. {r.specialist?.name ?? "Specialist"}
+                      {t("referrals.drName", {
+                        name: r.specialist?.name ?? t("referrals.specialist"),
+                      })}
                     </Text>
                     <Text style={styles.spec}>
-                      {r.specialist?.designation || r.specialty || "Specialist"}
+                      {r.specialist?.designation ||
+                        r.specialty ||
+                        t("referrals.specialist")}
                     </Text>
                   </View>
                   {r.urgency === "URGENT" && bookable(r.status) ? (
                     <View style={styles.urgentTag}>
                       <Ionicons name="alert-circle" size={12} color="#B42318" />
-                      <Text style={styles.urgentText}>Urgent</Text>
+                      <Text style={styles.urgentText}>
+                        {t("referrals.urgent")}
+                      </Text>
                     </View>
                   ) : (
                     <View style={[styles.statusTag, { backgroundColor: m.bg }]}>
@@ -196,20 +211,24 @@ export default function MyReferralsScreen() {
                     color={colors.text.tertiary}
                   />
                   <Text style={styles.refFrom}>
-                    Referred by Dr. {r.referringDoctor?.name ?? "—"}
+                    {t("referrals.referredBy", {
+                      name: r.referringDoctor?.name ?? "—",
+                    })}
                   </Text>
                 </View>
 
                 {r.reason ? (
                   <View style={styles.block}>
-                    <Text style={styles.blockLabel}>Reason</Text>
+                    <Text style={styles.blockLabel}>
+                      {t("referrals.reason")}
+                    </Text>
                     <Text style={styles.blockText}>{r.reason}</Text>
                   </View>
                 ) : null}
                 {r.clinicalSummary ? (
                   <View style={styles.block}>
                     <Text style={styles.blockLabel}>
-                      Clinical summary shared
+                      {t("referrals.clinicalSummary")}
                     </Text>
                     <Text style={styles.blockText}>{r.clinicalSummary}</Text>
                   </View>
@@ -226,7 +245,7 @@ export default function MyReferralsScreen() {
                     color={colors.tealDeep}
                   />
                   <Text style={styles.letterText}>
-                    View referral letter (PDF)
+                    {t("referrals.viewLetter")}
                   </Text>
                   <Ionicons
                     name="download-outline"
@@ -237,7 +256,11 @@ export default function MyReferralsScreen() {
 
                 {bookable(r.status) ? (
                   <Button
-                    label={`Book with Dr. ${r.specialist?.name?.split(" ")[0] ?? "specialist"}`}
+                    label={t("referrals.bookWith", {
+                      name:
+                        r.specialist?.name?.split(" ")[0] ??
+                        t("referrals.specialistLower"),
+                    })}
                     onPress={() => book(r)}
                     style={{ marginTop: 12 }}
                     icon={
@@ -256,7 +279,7 @@ export default function MyReferralsScreen() {
                       color="#067647"
                     />
                     <Text style={styles.bookedText}>
-                      Appointment booked — see your appointments.
+                      {t("referrals.bookedNote")}
                     </Text>
                   </View>
                 ) : null}

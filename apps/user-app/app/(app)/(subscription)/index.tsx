@@ -10,6 +10,8 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
 import {
@@ -66,27 +68,34 @@ interface Me {
   entitlements: { consultsRemaining: number; memberDiscountPercent: number };
 }
 
-function benefitLines(b: Benefits): string[] {
+function benefitLines(b: Benefits, t: TFunction): string[] {
   const out: string[] = [];
   if (b.consultsPerCycle)
     out.push(
-      `${b.consultsPerCycle} consult${b.consultsPerCycle === 1 ? "" : "s"} included / month`,
+      b.consultsPerCycle === 1
+        ? t("subscription.benefitConsultsOne", { count: b.consultsPerCycle })
+        : t("subscription.benefitConsultsMany", { count: b.consultsPerCycle }),
     );
   if (b.memberDiscountPercent)
-    out.push(`${b.memberDiscountPercent}% off all other consults`);
+    out.push(
+      t("subscription.benefitDiscount", { percent: b.memberDiscountPercent }),
+    );
   if (b.familyCap)
     out.push(
-      `Up to ${b.familyCap} family member${b.familyCap === 1 ? "" : "s"}`,
+      b.familyCap === 1
+        ? t("subscription.benefitFamilyOne", { count: b.familyCap })
+        : t("subscription.benefitFamilyMany", { count: b.familyCap }),
     );
-  if (b.unlimitedChat) out.push("Unlimited chat with doctors");
-  if (b.priorityBooking) out.push("Priority booking");
-  if (b.freeRxDelivery) out.push("Free prescription delivery");
-  if (b.waivedBookingFee) out.push("No booking fees");
-  if (b.recordingPlayback) out.push("Secure consultation playback");
+  if (b.unlimitedChat) out.push(t("subscription.benefitUnlimitedChat"));
+  if (b.priorityBooking) out.push(t("subscription.benefitPriorityBooking"));
+  if (b.freeRxDelivery) out.push(t("subscription.benefitFreeRxDelivery"));
+  if (b.waivedBookingFee) out.push(t("subscription.benefitWaivedBookingFee"));
+  if (b.recordingPlayback) out.push(t("subscription.benefitRecordingPlayback"));
   return out;
 }
 
 export default function SubscriptionScreen() {
+  const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -141,15 +150,15 @@ export default function SubscriptionScreen() {
         setCheckoutUrl(data.authorizationUrl);
       } else {
         Alert.alert(
-          "You’re in! 🎉",
-          `Your ${plan.name} membership is now active.`,
+          t("subscription.activatedTitle"),
+          t("subscription.activatedBody", { plan: plan.name }),
         );
         await load();
       }
     } catch (e) {
       Alert.alert(
-        "Could not subscribe",
-        (e as { message?: string })?.message ?? "Please try again.",
+        t("subscription.subscribeErrorTitle"),
+        (e as { message?: string })?.message ?? t("subscription.tryAgain"),
       );
     } finally {
       setSubmitting(false);
@@ -158,12 +167,12 @@ export default function SubscriptionScreen() {
 
   const onCancel = () => {
     Alert.alert(
-      "Cancel membership",
-      "Your benefits stay active until the end of the current period. Continue?",
+      t("subscription.cancelTitle"),
+      t("subscription.cancelMessage"),
       [
-        { text: "Keep membership", style: "cancel" },
+        { text: t("subscription.keepMembership"), style: "cancel" },
         {
-          text: "Cancel it",
+          text: t("subscription.cancelConfirm"),
           style: "destructive",
           onPress: async () => {
             try {
@@ -171,8 +180,9 @@ export default function SubscriptionScreen() {
               await load();
             } catch (e) {
               Alert.alert(
-                "Error",
-                (e as { message?: string })?.message ?? "Could not cancel.",
+                t("subscription.errorTitle"),
+                (e as { message?: string })?.message ??
+                  t("subscription.cancelError"),
               );
             }
           },
@@ -233,21 +243,25 @@ export default function SubscriptionScreen() {
             <View style={styles.cardTop}>
               <View style={styles.crownChip}>
                 <Ionicons name="star" size={13} color={colors.navy} />
-                <Text style={styles.crownTxt}>MEMBER</Text>
+                <Text style={styles.crownTxt}>{t("subscription.member")}</Text>
               </View>
               {active.status === "PAST_DUE" ? (
-                <Text style={styles.pastDue}>Payment due</Text>
+                <Text style={styles.pastDue}>
+                  {t("subscription.paymentDue")}
+                </Text>
               ) : null}
             </View>
             <Text style={styles.memberPlan}>{active.plan.name}</Text>
             <Text style={styles.memberMeta}>
               {total > 0
-                ? `${remaining} of ${total} consults left`
-                : "Member benefits active"}
+                ? t("subscription.consultsLeft", { remaining, total })
+                : t("subscription.benefitsActive")}
             </Text>
             {active.currentPeriodEnd ? (
               <Text style={styles.memberRenew}>
-                {active.cancelAtPeriodEnd ? "Ends" : "Renews"}{" "}
+                {active.cancelAtPeriodEnd
+                  ? t("subscription.ends")
+                  : t("subscription.renews")}{" "}
                 {new Date(active.currentPeriodEnd).toLocaleDateString("en-NG", {
                   day: "numeric",
                   month: "short",
@@ -262,22 +276,23 @@ export default function SubscriptionScreen() {
                 onPress={onCancel}
                 style={styles.cancelChip}
               >
-                <Text style={styles.cancelTxt}>Cancel membership</Text>
+                <Text style={styles.cancelTxt}>
+                  {t("subscription.cancelMembership")}
+                </Text>
               </AnimatedPressable>
             ) : null}
           </LinearGradient>
         ) : (
           <View style={styles.intro}>
-            <Text style={styles.introTitle}>Health, on your terms.</Text>
-            <Text style={styles.introBody}>
-              Join DoctiumPlus for included consults, member discounts and
-              priority care for you and your family.
+            <Text style={styles.introTitle}>
+              {t("subscription.introTitle")}
             </Text>
+            <Text style={styles.introBody}>{t("subscription.introBody")}</Text>
           </View>
         )}
 
         <Text style={styles.sectionTitle}>
-          {active ? "Switch plan" : "Choose a plan"}
+          {active ? t("subscription.switchPlan") : t("subscription.choosePlan")}
         </Text>
 
         {plans.map((plan) => {
@@ -294,11 +309,13 @@ export default function SubscriptionScreen() {
                 </View>
                 <View style={styles.priceWrap}>
                   <Text style={styles.price}>{formatMoney(plan.price)}</Text>
-                  <Text style={styles.priceUnit}>/mo</Text>
+                  <Text style={styles.priceUnit}>
+                    {t("subscription.perMonthShort")}
+                  </Text>
                 </View>
               </View>
               <View style={styles.benefits}>
-                {benefitLines(plan.benefits).map((line) => (
+                {benefitLines(plan.benefits, t).map((line) => (
                   <View key={line} style={styles.benefitRow}>
                     <Ionicons
                       name="checkmark-circle"
@@ -316,11 +333,17 @@ export default function SubscriptionScreen() {
                     size={15}
                     color={colors.tealDeep}
                   />
-                  <Text style={styles.currentTxt}>Your current plan</Text>
+                  <Text style={styles.currentTxt}>
+                    {t("subscription.currentPlan")}
+                  </Text>
                 </View>
               ) : (
                 <Button
-                  label={active ? "Switch to this plan" : "Subscribe"}
+                  label={
+                    active
+                      ? t("subscription.switchToThisPlan")
+                      : t("subscription.subscribe")
+                  }
                   onPress={() => choosePayment(plan)}
                 />
               )}
@@ -328,9 +351,7 @@ export default function SubscriptionScreen() {
           );
         })}
 
-        <Text style={styles.footNote}>
-          You can cancel anytime. Renews automatically each month.
-        </Text>
+        <Text style={styles.footNote}>{t("subscription.footNote")}</Text>
       </ScrollView>
 
       {/* Payment-source chooser */}
@@ -344,10 +365,12 @@ export default function SubscriptionScreen() {
           <View style={styles.sheet}>
             <View style={styles.handle} />
             <Txt variant="h2" style={{ marginBottom: 4 }}>
-              Pay for {payFor?.name}
+              {t("subscription.payForPlan", { plan: payFor?.name })}
             </Txt>
             <Text style={styles.sheetSub}>
-              {formatMoney(payFor?.price)} / month
+              {t("subscription.pricePerMonth", {
+                price: formatMoney(payFor?.price),
+              })}
             </Text>
             <AnimatedPressable
               haptic="medium"
@@ -359,9 +382,11 @@ export default function SubscriptionScreen() {
                 <Ionicons name="card-outline" size={20} color={colors.navy} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.payOptTitle}>Pay with card</Text>
+                <Text style={styles.payOptTitle}>
+                  {t("subscription.payWithCard")}
+                </Text>
                 <Text style={styles.payOptSub}>
-                  Auto-renews each month · secured by Paystack
+                  {t("subscription.payWithCardSub")}
                 </Text>
               </View>
               <Ionicons
@@ -380,9 +405,11 @@ export default function SubscriptionScreen() {
                 <Ionicons name="wallet-outline" size={20} color={colors.navy} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.payOptTitle}>Pay from wallet</Text>
+                <Text style={styles.payOptTitle}>
+                  {t("subscription.payFromWallet")}
+                </Text>
                 <Text style={styles.payOptSub}>
-                  Uses your Doctium wallet balance
+                  {t("subscription.payFromWalletSub")}
                 </Text>
               </View>
               <Ionicons
@@ -402,7 +429,9 @@ export default function SubscriptionScreen() {
               onPress={() => setPayFor(null)}
               style={styles.sheetCancel}
             >
-              <Text style={styles.sheetCancelTxt}>Not now</Text>
+              <Text style={styles.sheetCancelTxt}>
+                {t("subscription.notNow")}
+              </Text>
             </AnimatedPressable>
           </View>
         </View>
@@ -416,7 +445,9 @@ export default function SubscriptionScreen() {
       >
         <View style={styles.webRoot}>
           <View style={styles.webHeader}>
-            <Text style={styles.webTitle}>Secure payment</Text>
+            <Text style={styles.webTitle}>
+              {t("subscription.securePayment")}
+            </Text>
             <AnimatedPressable
               haptic="light"
               onPress={() => {

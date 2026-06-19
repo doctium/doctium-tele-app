@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Palette,
@@ -41,6 +42,7 @@ const makeMeta = (
 });
 
 export default function NotificationsScreen() {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -57,13 +59,13 @@ export default function NotificationsScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Notifications" />
+      <AppHeader title={t("notifications.title")} />
       {notifications.length === 0 ? (
         <View style={{ flex: 1 }}>
           <EmptyState
             icon="notifications-outline"
-            title="No notifications"
-            description="Updates about your appointments and care will appear here."
+            title={t("notifications.emptyTitle")}
+            description={t("notifications.emptyDesc")}
           />
         </View>
       ) : (

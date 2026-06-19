@@ -174,5 +174,22 @@
     "signOut": "Fita",
     "signOutConfirm": "Ka tabbata kana son fita?",
     "version": "Doctium · v1.0.0"
+  },
+  "onboarding": {
+    "slide1": {
+      "title": "Nemo likitocin da aka tabbatar",
+      "subtitle": "Bincika kwararru masu lasisi kuma ka yi shawara cikin mintuna."
+    },
+    "slide2": {
+      "title": "Yi shawara yadda kake so",
+      "subtitle": "Yi hira ko kiran bidiyo da amintattun likitoci daga gidanka."
+    },
+    "slide3": {
+      "title": "Kulawar da ke bin ka",
+      "subtitle": "Takardun magani, bayanan lafiya da tunatarwa, duka a wuri ɗaya."
+    },
+    "skip": "Tsallake",
+    "next": "Na gaba",
+    "getStarted": "Fara"
   }
 }

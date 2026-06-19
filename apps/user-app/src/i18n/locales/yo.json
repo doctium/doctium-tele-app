@@ -174,5 +174,22 @@
     "signOut": "Jáde",
     "signOutConfirm": "Ṣé o dájú pé o fẹ́ jáde?",
     "version": "Doctium · v1.0.0"
+  },
+  "onboarding": {
+    "slide1": {
+      "title": "Wá àwọn dókítà tí a fọwọ́sí",
+      "subtitle": "Wo àwọn ọ̀mọ̀ràn tó ní ìwé àṣẹ kí o sì ṣe ìpàdé láàrín ìṣẹ́jú."
+    },
+    "slide2": {
+      "title": "Gbìmọ̀ràn lọ́nà tí o fẹ́",
+      "subtitle": "Bá àwọn dókítà tó ṣeé gbẹ́kẹ̀lé sọ̀rọ̀ tàbí pè wọ́n nípasẹ̀ fídíò láti ilé rẹ."
+    },
+    "slide3": {
+      "title": "Ìtọ́jú tó ń tẹ̀lé ọ",
+      "subtitle": "Àwọn ìwé òògùn, àkọsílẹ̀ ìṣègùn àti ìránnilétí, gbogbo rẹ̀ ní ibìkan."
+    },
+    "skip": "Fò ó",
+    "next": "Tókàn",
+    "getStarted": "Bẹ̀rẹ̀"
   }
 }

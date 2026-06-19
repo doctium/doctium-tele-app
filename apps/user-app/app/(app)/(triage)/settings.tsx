@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import {
   Fonts,
@@ -28,6 +29,7 @@ import {
  * pre-chat setup screen. Preferences persist via leenahPrefs.
  */
 export default function LeenahSettingsScreen() {
+  const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const [autoPlay, setAutoPlay] = useState(false);
@@ -53,7 +55,7 @@ export default function LeenahSettingsScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title={`${ASSISTANT_NAME} settings`} />
+      <AppHeader title={t("triage.settings.title", { name: ASSISTANT_NAME })} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
@@ -67,17 +69,16 @@ export default function LeenahSettingsScreen() {
             <Ionicons name="sparkles" size={22} color={colors.teal} />
           </View>
           <Text style={styles.introTitle}>
-            Your {ASSISTANT_NAME} experience
+            {t("triage.settings.introTitle", { name: ASSISTANT_NAME })}
           </Text>
           <Text style={styles.introSub}>
-            These preferences are saved and used every time you chat with{" "}
-            {ASSISTANT_NAME}.
+            {t("triage.settings.introSub", { name: ASSISTANT_NAME })}
           </Text>
         </Animated.View>
 
         {/* Voice replies */}
         <Animated.View entering={FadeInDown.delay(70).springify().damping(18)}>
-          <Text style={styles.groupLabel}>Voice</Text>
+          <Text style={styles.groupLabel}>{t("triage.settings.voice")}</Text>
           <AnimatedPressable
             haptic="light"
             onPress={toggleAutoPlay}
@@ -97,26 +98,26 @@ export default function LeenahSettingsScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.rowTitle}>
-                Let {ASSISTANT_NAME} speak back
+                {t("triage.settings.speakBack", { name: ASSISTANT_NAME })}
               </Text>
               <Text style={styles.rowSub}>
-                She reads every reply aloud — helpful if reading is hard.
+                {t("triage.settings.speakBackSub")}
               </Text>
             </View>
             <View style={[styles.pill, autoPlay && styles.pillOn]}>
               <Text style={[styles.pillText, autoPlay && { color: "#fff" }]}>
-                {autoPlay ? "On" : "Off"}
+                {autoPlay ? t("triage.settings.on") : t("triage.settings.off")}
               </Text>
             </View>
           </AnimatedPressable>
-          <Text style={styles.hint}>
-            You can also tap the speaker on any reply to hear just that message.
-          </Text>
+          <Text style={styles.hint}>{t("triage.settings.voiceHint")}</Text>
         </Animated.View>
 
         {/* Default language */}
         <Animated.View entering={FadeInDown.delay(140).springify().damping(18)}>
-          <Text style={styles.groupLabel}>Default language</Text>
+          <Text style={styles.groupLabel}>
+            {t("triage.settings.defaultLanguage")}
+          </Text>
           <View style={styles.langRow}>
             {LEENAH_LANGUAGES.map((l) => {
               const active = language === l.code;
@@ -135,8 +136,7 @@ export default function LeenahSettingsScreen() {
             })}
           </View>
           <Text style={styles.hint}>
-            {ASSISTANT_NAME} starts each chat in this language. “Auto” lets her
-            match the language you write in.
+            {t("triage.settings.languageHint", { name: ASSISTANT_NAME })}
           </Text>
         </Animated.View>
       </ScrollView>

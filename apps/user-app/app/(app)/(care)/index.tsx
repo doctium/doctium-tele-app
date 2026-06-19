@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Fonts,
@@ -74,6 +75,7 @@ const safeIcon = (name: string): IoniconName =>
   (name && name in Ionicons.glyphMap ? name : "medkit") as IoniconName;
 
 export default function CareHubScreen() {
+  const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -141,17 +143,17 @@ export default function CareHubScreen() {
     } catch (e: unknown) {
       const msg =
         (e as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Could not enroll. Please try again.";
+          ?.message ?? t("care.list.enrollError");
       if (msg.toLowerCase().includes("insufficient")) {
-        Alert.alert("Top up needed", msg, [
-          { text: "Not now", style: "cancel" },
+        Alert.alert(t("care.list.topUpNeeded"), msg, [
+          { text: t("care.list.notNow"), style: "cancel" },
           {
-            text: "Top up wallet",
+            text: t("care.list.topUpWallet"),
             onPress: () => router.push("/(app)/(wallet)"),
           },
         ]);
       } else {
-        Alert.alert("Enrollment", msg);
+        Alert.alert(t("care.list.enrollmentTitle"), msg);
       }
     } finally {
       setEnrolling(null);
@@ -227,7 +229,7 @@ export default function CareHubScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Care programs" />
+      <AppHeader title={t("care.list.title")} />
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.navyMid} />
@@ -239,7 +241,9 @@ export default function CareHubScreen() {
         >
           {enrollments.length > 0 ? (
             <>
-              <Text style={styles.sectionTitle}>My programs</Text>
+              <Text style={styles.sectionTitle}>
+                {t("care.list.myPrograms")}
+              </Text>
               {enrollments.map((e) => (
                 <AnimatedPressable
                   key={e.id}
@@ -258,13 +262,15 @@ export default function CareHubScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.progName}>{e.program.name}</Text>
                       <Text style={styles.progMeta}>
-                        {e.subPatient ? `For ${e.subPatient.name} · ` : ""}
+                        {e.subPatient
+                          ? `${t("care.list.forMember", { name: e.subPatient.name })} · `
+                          : ""}
                         {e.sponsorship
-                          ? `Sponsored by ${e.sponsorship.organization.name} · `
+                          ? `${t("care.list.sponsoredBy", { org: e.sponsorship.organization.name })} · `
                           : ""}
                         {e.doctor
-                          ? `Care lead · Dr. ${e.doctor.name}`
-                          : "No care lead yet"}
+                          ? t("care.list.careLead", { name: e.doctor.name })
+                          : t("care.list.noCareLead")}
                       </Text>
                     </View>
                     {e.openAlerts > 0 ? (
@@ -297,12 +303,12 @@ export default function CareHubScreen() {
                     </View>
                   ) : (
                     <Text style={styles.noReadings}>
-                      No readings yet — tap to log your first one
+                      {t("care.list.noReadings")}
                     </Text>
                   )}
                   {e.adherence?.percent != null ? (
                     <Text style={styles.adherenceLine}>
-                      This week ·{" "}
+                      {t("care.list.thisWeek")} ·{" "}
                       <Text
                         style={{
                           fontFamily: Fonts.bold,
@@ -314,10 +320,14 @@ export default function CareHubScreen() {
                                 : colors.error,
                         }}
                       >
-                        {e.adherence.percent}% on track
+                        {t("care.list.onTrack", {
+                          percent: e.adherence.percent,
+                        })}
                       </Text>{" "}
-                      ({e.adherence.readings7d}/{e.adherence.expectedPerWeek}{" "}
-                      readings)
+                      {t("care.list.readingsCount", {
+                        done: e.adherence.readings7d,
+                        expected: e.adherence.expectedPerWeek,
+                      })}
                     </Text>
                   ) : null}
                 </AnimatedPressable>
@@ -329,8 +339,8 @@ export default function CareHubScreen() {
             <>
               <Text style={styles.sectionTitle}>
                 {enrollments.length
-                  ? "Explore more programs"
-                  : "Programs for you"}
+                  ? t("care.list.exploreMore")
+                  : t("care.list.programsForYou")}
               </Text>
               {explore.map((p) => (
                 <View key={p.id} style={styles.card}>
@@ -360,10 +370,14 @@ export default function CareHubScreen() {
                         <Ionicons name="add-circle" size={16} color="#fff" />
                         <Text style={styles.enrollText}>
                           {sponsorOf(p.id)
-                            ? `Join — covered by ${sponsorOf(p.id)}`
+                            ? t("care.list.joinCovered", {
+                                org: sponsorOf(p.id),
+                              })
                             : p.price > 0
-                              ? `Join — ${formatMoney(p.price)} from wallet`
-                              : "Join program — free"}
+                              ? t("care.list.joinPaid", {
+                                  price: formatMoney(p.price),
+                                })
+                              : t("care.list.joinFree")}
                         </Text>
                       </>
                     )}
@@ -373,10 +387,7 @@ export default function CareHubScreen() {
             </>
           ) : null}
 
-          <Text style={styles.disclaimer}>
-            Care programs support — but don't replace — your doctor. If you feel
-            unwell, book a consultation or seek urgent care immediately.
-          </Text>
+          <Text style={styles.disclaimer}>{t("care.list.disclaimer")}</Text>
 
           {/* ── Who is this for? (family picker) ── */}
           <Modal
@@ -389,7 +400,7 @@ export default function CareHubScreen() {
               <View style={styles.sheet}>
                 <View style={styles.handle} />
                 <Txt variant="h2" style={{ marginBottom: 4 }}>
-                  Who is this program for?
+                  {t("care.list.whoFor")}
                 </Txt>
                 <Txt
                   variant="body"
@@ -398,10 +409,10 @@ export default function CareHubScreen() {
                 >
                   {pickerProgram?.name}
                   {pickerProgram && sponsorOf(pickerProgram.id)
-                    ? ` · covered by ${sponsorOf(pickerProgram.id)}`
+                    ? ` · ${t("care.list.coveredBy", { org: sponsorOf(pickerProgram.id) })}`
                     : pickerProgram && pickerProgram.price > 0
-                      ? ` · ${formatMoney(pickerProgram.price)} from wallet`
-                      : " · free"}
+                      ? ` · ${t("care.list.fromWallet", { price: formatMoney(pickerProgram.price) })}`
+                      : ` · ${t("care.list.free")}`}
                 </Txt>
                 <AnimatedPressable
                   haptic="light"
@@ -411,7 +422,7 @@ export default function CareHubScreen() {
                   <View style={styles.memberIcon}>
                     <Ionicons name="person" size={17} color={colors.navyMid} />
                   </View>
-                  <Text style={styles.memberName}>Myself</Text>
+                  <Text style={styles.memberName}>{t("care.list.myself")}</Text>
                   <Ionicons
                     name="chevron-forward"
                     size={17}
@@ -433,7 +444,7 @@ export default function CareHubScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.memberName}>{m.name}</Text>
                       <Text style={styles.memberRelation}>
-                        {m.relation || "Family member"}
+                        {m.relation || t("care.list.familyMember")}
                       </Text>
                     </View>
                     <Ionicons
@@ -458,15 +469,16 @@ export default function CareHubScreen() {
               <View style={styles.sheet}>
                 <View style={styles.handle} />
                 <Txt variant="h2" style={{ marginBottom: 4 }}>
-                  What's the genotype?
+                  {t("care.list.genotypeTitle")}
                 </Txt>
                 <Txt
                   variant="body"
                   color={colors.text.secondary}
                   style={{ marginBottom: 16 }}
                 >
-                  {genotypeAsk?.program.name} personalizes targets and check-ins
-                  by genotype. It's saved to the medical record too.
+                  {t("care.list.genotypeBody", {
+                    program: genotypeAsk?.program.name,
+                  })}
                 </Txt>
                 <View style={styles.genotypeGrid}>
                   {GENOTYPES.map((g) => (
@@ -492,7 +504,7 @@ export default function CareHubScreen() {
                   style={styles.genotypeSkip}
                 >
                   <Text style={styles.genotypeSkipText}>
-                    I'm not sure — continue without it
+                    {t("care.list.genotypeSkip")}
                   </Text>
                 </AnimatedPressable>
               </View>

@@ -174,5 +174,22 @@
     "signOut": "Sign out",
     "signOutConfirm": "You sure say you wan sign out?",
     "version": "Doctium · v1.0.0"
+  },
+  "onboarding": {
+    "slide1": {
+      "title": "See doctors wey we don verify",
+      "subtitle": "Check licensed specialists and book consultation sharp-sharp."
+    },
+    "slide2": {
+      "title": "Consult the way wey you like",
+      "subtitle": "Chat or video-call doctors wey you fit trust from your house."
+    },
+    "slide3": {
+      "title": "Care wey dey follow you",
+      "subtitle": "Prescriptions, medical records and reminders, all for one place."
+    },
+    "skip": "Skip",
+    "next": "Next",
+    "getStarted": "Make we start"
   }
 }

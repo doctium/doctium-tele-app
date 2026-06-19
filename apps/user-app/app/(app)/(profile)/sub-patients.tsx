@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FlatList, Modal, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import {
   Fonts,
   Palette,
@@ -31,6 +32,7 @@ interface SubPatient {
 export default function SubPatientsScreen() {
   const dispatch = useAppDispatch();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const { subPatients } = useAppSelector((s) => s.user);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({
@@ -68,7 +70,7 @@ export default function SubPatientsScreen() {
   return (
     <View style={styles.root}>
       <AppHeader
-        title="Family members"
+        title={t("subPatients.title")}
         right={
           <AnimatedPressable
             haptic="light"
@@ -89,9 +91,9 @@ export default function SubPatientsScreen() {
           <View style={{ marginTop: 60 }}>
             <EmptyState
               icon="people-outline"
-              title="No family members"
-              description="Add family members to book appointments on their behalf."
-              actionLabel="Add member"
+              title={t("subPatients.emptyTitle")}
+              description={t("subPatients.emptyDescription")}
+              actionLabel={t("subPatients.addMember")}
               onAction={() => setShowAdd(true)}
             />
           </View>
@@ -103,7 +105,7 @@ export default function SubPatientsScreen() {
               <Text style={styles.name}>{p.name}</Text>
               <Text style={styles.meta}>
                 {p.gender}
-                {p.age ? ` · ${p.age} yrs` : ""}
+                {p.age ? ` · ${t("subPatients.years", { count: p.age })}` : ""}
               </Text>
             </View>
             <View style={styles.relPill}>
@@ -123,42 +125,42 @@ export default function SubPatientsScreen() {
           <View style={styles.sheet}>
             <View style={styles.handle} />
             <Txt variant="h2" style={{ marginBottom: 18 }}>
-              Add family member
+              {t("subPatients.addTitle")}
             </Txt>
             <Input
-              label="Full name"
+              label={t("subPatients.fullNameLabel")}
               value={form.name}
               onChangeText={set("name")}
-              placeholder="e.g. Chidi Nwosu"
+              placeholder={t("subPatients.fullNamePlaceholder")}
             />
             <Input
-              label="Relationship"
+              label={t("subPatients.relationshipLabel")}
               value={form.relation}
               onChangeText={set("relation")}
-              placeholder="e.g. Son, Mother, Spouse"
+              placeholder={t("subPatients.relationshipPlaceholder")}
             />
             <Input
-              label="Age"
+              label={t("subPatients.ageLabel")}
               value={form.age}
               onChangeText={set("age")}
-              placeholder="Age in years"
+              placeholder={t("subPatients.agePlaceholder")}
               keyboardType="number-pad"
             />
             <Input
-              label="Gender"
+              label={t("subPatients.genderLabel")}
               value={form.gender}
               onChangeText={set("gender")}
-              placeholder="Male / Female"
+              placeholder={t("subPatients.genderPlaceholder")}
             />
             <View style={styles.sheetBtns}>
               <Button
-                label="Cancel"
+                label={t("common.cancel")}
                 onPress={() => setShowAdd(false)}
                 variant="outline"
                 style={{ flex: 1 }}
               />
               <Button
-                label="Add"
+                label={t("subPatients.add")}
                 onPress={handleAdd}
                 loading={loading}
                 style={{ flex: 1 }}

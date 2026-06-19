@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Fonts,
@@ -118,22 +119,27 @@ interface Detail {
   risk?: Risk | null;
 }
 
-const RISK_META: Record<Risk["level"], { label: string; tip: string }> = {
-  LOW: { label: "Low", tip: "Keep doing what you're doing." },
+// Risk levels map to translation keys; display text is resolved at render time.
+const RISK_META: Record<Risk["level"], { labelKey: string; tipKey: string }> = {
+  LOW: {
+    labelKey: "care.detail.riskLowLabel",
+    tipKey: "care.detail.riskLowTip",
+  },
   MODERATE: {
-    label: "Moderate",
-    tip: "Stay on top of water, warmth and your medications today.",
+    labelKey: "care.detail.riskModerateLabel",
+    tipKey: "care.detail.riskModerateTip",
   },
   HIGH: {
-    label: "High",
-    tip: "Drink water steadily, rest and keep warm. Your care lead can see this too.",
+    labelKey: "care.detail.riskHighLabel",
+    tipKey: "care.detail.riskHighTip",
   },
   CRITICAL: {
-    label: "Very high",
-    tip: "Take extra care today. If pain starts, or you have chest pain or trouble breathing, seek care immediately.",
+    labelKey: "care.detail.riskCriticalLabel",
+    tipKey: "care.detail.riskCriticalTip",
   },
 };
 
+// Stable codes (stored on the crisis record); display labels resolved via t().
 const CRISIS_SITES = [
   "Chest",
   "Back",
@@ -143,6 +149,15 @@ const CRISIS_SITES = [
   "Abdomen",
   "Head",
 ];
+const CRISIS_SITE_KEY: Record<string, string> = {
+  Chest: "care.detail.siteChest",
+  Back: "care.detail.siteBack",
+  Arms: "care.detail.siteArms",
+  Legs: "care.detail.siteLegs",
+  Joints: "care.detail.siteJoints",
+  Abdomen: "care.detail.siteAbdomen",
+  Head: "care.detail.siteHead",
+};
 const CRISIS_TRIGGERS = [
   "Dehydration",
   "Infection/fever",
@@ -153,6 +168,16 @@ const CRISIS_TRIGGERS = [
   "Poor sleep",
   "Unknown",
 ];
+const CRISIS_TRIGGER_KEY: Record<string, string> = {
+  Dehydration: "care.detail.triggerDehydration",
+  "Infection/fever": "care.detail.triggerInfection",
+  "Cold weather": "care.detail.triggerCold",
+  Stress: "care.detail.triggerStress",
+  Overexertion: "care.detail.triggerOverexertion",
+  "Missed medication": "care.detail.triggerMissedMed",
+  "Poor sleep": "care.detail.triggerPoorSleep",
+  Unknown: "care.detail.triggerUnknown",
+};
 type Banner = { status: "OK" | "WARNING" | "CRITICAL"; message: string };
 
 const makeBannerStyle = (c: Palette) => ({
@@ -174,6 +199,7 @@ const makeBannerStyle = (c: Palette) => ({
 });
 
 export default function EnrollmentScreen() {
+  const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const BANNER_STYLE = makeBannerStyle(colors);
@@ -285,8 +311,8 @@ export default function EnrollmentScreen() {
         status: sev === "CRITICAL" ? "CRITICAL" : "WARNING",
         message:
           sev === "CRITICAL"
-            ? "Crisis logged — your care lead has been alerted. If your pain is severe, or you have chest pain or trouble breathing, seek urgent care now."
-            : "Crisis logged — your care lead has been notified. Take care of yourself.",
+            ? t("care.detail.crisisLoggedCritical")
+            : t("care.detail.crisisLoggedWarning"),
       });
       load();
     } catch {
@@ -318,14 +344,14 @@ export default function EnrollmentScreen() {
       setBanner({
         status: flagged ? "WARNING" : "OK",
         message: flagged
-          ? "Results saved — some values need your doctor's attention, and your care lead has been alerted. Don't change your medication dose yourself."
-          : "Lab results saved and shared with your care lead.",
+          ? t("care.detail.labSavedFlagged")
+          : t("care.detail.labSaved"),
       });
       load();
     } catch (e) {
       Alert.alert(
-        "Couldn't save results",
-        (e as { message?: string })?.message ?? "Please try again.",
+        t("care.detail.labSaveErrorTitle"),
+        (e as { message?: string })?.message ?? t("care.detail.tryAgain"),
       );
     } finally {
       setLabSaving(false);
@@ -344,10 +370,10 @@ export default function EnrollmentScreen() {
       .join(" · ");
 
   const markCrisisOver = (crisisId: string) => {
-    Alert.alert("Glad it's over", "Mark this crisis as resolved?", [
-      { text: "Not yet", style: "cancel" },
+    Alert.alert(t("care.detail.gladItsOver"), t("care.detail.markResolved"), [
+      { text: t("care.detail.notYet"), style: "cancel" },
       {
-        text: "It's over",
+        text: t("care.detail.itsOver"),
         onPress: async () => {
           try {
             await careApi.resolveCrisis(crisisId);
@@ -359,24 +385,20 @@ export default function EnrollmentScreen() {
   };
 
   const withdraw = () => {
-    Alert.alert(
-      "Leave program",
-      "You can re-join any time. Your readings stay in your records.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Leave",
-          style: "destructive",
-          onPress: async () => {
-            if (!id) return;
-            try {
-              await careApi.withdraw(id);
-              router.back();
-            } catch {}
-          },
+    Alert.alert(t("care.detail.leaveTitle"), t("care.detail.leaveMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("care.detail.leave"),
+        style: "destructive",
+        onPress: async () => {
+          if (!id) return;
+          try {
+            await careApi.withdraw(id);
+            router.back();
+          } catch {}
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const fmt = (type: string, p: { value: number; value2: number | null }) => {
@@ -391,17 +413,29 @@ export default function EnrollmentScreen() {
   const targetLine = (cfg: VitalConfig) => {
     const meta = detail?.vitalCatalog[cfg.type];
     if (cfg.min != null && cfg.max != null)
-      return `Target ${cfg.min}–${cfg.max}${meta?.hasSecond && cfg.max2 != null ? `/${cfg.max2}` : ""} ${meta?.unit ?? ""}`;
-    if (cfg.max != null) return `Target ≤ ${cfg.max} ${meta?.unit ?? ""}`;
-    if (cfg.min != null) return `Target ≥ ${cfg.min} ${meta?.unit ?? ""}`;
-    return "Tracked for your records";
+      return t("care.detail.targetRange", {
+        min: cfg.min,
+        max: `${cfg.max}${meta?.hasSecond && cfg.max2 != null ? `/${cfg.max2}` : ""}`,
+        unit: meta?.unit ?? "",
+      });
+    if (cfg.max != null)
+      return t("care.detail.targetMax", {
+        max: cfg.max,
+        unit: meta?.unit ?? "",
+      });
+    if (cfg.min != null)
+      return t("care.detail.targetMin", {
+        min: cfg.min,
+        unit: meta?.unit ?? "",
+      });
+    return t("care.detail.trackedForRecords");
   };
 
   const logMeta = logType ? detail?.vitalCatalog[logType] : null;
 
   return (
     <View style={styles.root}>
-      <AppHeader title={detail?.program.name ?? "Care program"} />
+      <AppHeader title={detail?.program.name ?? t("care.detail.title")} />
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.navyMid} />
@@ -435,12 +469,20 @@ export default function EnrollmentScreen() {
               <Ionicons name="medkit" size={14} color={colors.navyMid} />
               <Text style={styles.leadText}>
                 {[
-                  detail.subPatient ? `For ${detail.subPatient.name}` : null,
+                  detail.subPatient
+                    ? t("care.detail.forMember", {
+                        name: detail.subPatient.name,
+                      })
+                    : null,
                   detail.sponsorship
-                    ? `Sponsored by ${detail.sponsorship.organization.name}`
+                    ? t("care.detail.sponsoredBy", {
+                        org: detail.sponsorship.organization.name,
+                      })
                     : null,
                   detail.doctor
-                    ? `Care lead · Dr. ${detail.doctor.name}${detail.doctor.designation ? ` (${detail.doctor.designation})` : ""}`
+                    ? t("care.detail.careLead", {
+                        name: `${detail.doctor.name}${detail.doctor.designation ? ` (${detail.doctor.designation})` : ""}`,
+                      })
                     : null,
                 ]
                   .filter(Boolean)
@@ -452,10 +494,14 @@ export default function EnrollmentScreen() {
           {detail.adherence && detail.adherence.expectedPerWeek > 0 ? (
             <View style={styles.adherenceCard}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.adherenceTitle}>This week</Text>
+                <Text style={styles.adherenceTitle}>
+                  {t("care.detail.thisWeek")}
+                </Text>
                 <Text style={styles.adherenceSub}>
-                  {detail.adherence.readings7d} of{" "}
-                  {detail.adherence.expectedPerWeek} expected readings logged
+                  {t("care.detail.expectedReadings", {
+                    done: detail.adherence.readings7d,
+                    expected: detail.adherence.expectedPerWeek,
+                  })}
                 </Text>
               </View>
               <Text
@@ -480,7 +526,9 @@ export default function EnrollmentScreen() {
           {detail.risk ? (
             <View style={styles.riskCard}>
               <View style={styles.riskHead}>
-                <Text style={styles.riskTitle}>Crisis risk today</Text>
+                <Text style={styles.riskTitle}>
+                  {t("care.detail.crisisRiskToday")}
+                </Text>
                 <View
                   style={[
                     styles.riskPill,
@@ -507,8 +555,8 @@ export default function EnrollmentScreen() {
                       },
                     ]}
                   >
-                    {RISK_META[detail.risk.level].label} · {detail.risk.score}
-                    /100
+                    {t(RISK_META[detail.risk.level].labelKey)} ·{" "}
+                    {t("care.detail.riskScore", { score: detail.risk.score })}
                   </Text>
                 </View>
               </View>
@@ -524,7 +572,7 @@ export default function EnrollmentScreen() {
                 </View>
               ))}
               <Text style={styles.riskTip}>
-                {RISK_META[detail.risk.level].tip}
+                {t(RISK_META[detail.risk.level].tipKey)}
               </Text>
             </View>
           ) : null}
@@ -532,7 +580,9 @@ export default function EnrollmentScreen() {
           {/* ── Goals ── */}
           {detail.goals.filter((g) => g.status !== "CANCELLED").length > 0 ? (
             <>
-              <Text style={styles.sectionTitle}>My goals</Text>
+              <Text style={styles.sectionTitle}>
+                {t("care.detail.myGoals")}
+              </Text>
               {detail.goals
                 .filter((g) => g.status !== "CANCELLED")
                 .map((g) => (
@@ -554,7 +604,7 @@ export default function EnrollmentScreen() {
                               { color: colors.teal },
                             ]}
                           >
-                            Achieved 🎉
+                            {t("care.detail.goalAchieved")}
                           </Text>
                         </View>
                       ) : g.status === "MISSED" ? (
@@ -570,15 +620,16 @@ export default function EnrollmentScreen() {
                               { color: colors.warning },
                             ]}
                           >
-                            Missed
+                            {t("care.detail.goalMissed")}
                           </Text>
                         </View>
                       ) : g.dueDate ? (
                         <Text style={styles.goalDue}>
-                          by{" "}
-                          {new Date(g.dueDate).toLocaleDateString("en-NG", {
-                            day: "numeric",
-                            month: "short",
+                          {t("care.detail.goalDueBy", {
+                            date: new Date(g.dueDate).toLocaleDateString(
+                              "en-NG",
+                              { day: "numeric", month: "short" },
+                            ),
                           })}
                         </Text>
                       ) : null}
@@ -601,8 +652,8 @@ export default function EnrollmentScreen() {
                     </View>
                     <Text style={styles.goalPct}>
                       {g.progress != null
-                        ? `${g.progress}% there`
-                        : "Log a reading to start tracking"}
+                        ? t("care.detail.goalProgress", { percent: g.progress })
+                        : t("care.detail.goalStartTracking")}
                     </Text>
                   </View>
                 ))}
@@ -631,7 +682,9 @@ export default function EnrollmentScreen() {
                     style={styles.logBtn}
                   >
                     <Ionicons name="add" size={15} color="#fff" />
-                    <Text style={styles.logBtnText}>Log</Text>
+                    <Text style={styles.logBtnText}>
+                      {t("care.detail.log")}
+                    </Text>
                   </AnimatedPressable>
                 </View>
 
@@ -647,7 +700,9 @@ export default function EnrollmentScreen() {
                     </Text>
                   </Text>
                 ) : (
-                  <Text style={styles.noData}>No readings yet</Text>
+                  <Text style={styles.noData}>
+                    {t("care.detail.noReadingsYet")}
+                  </Text>
                 )}
 
                 {recent.length > 1 ? (
@@ -688,7 +743,7 @@ export default function EnrollmentScreen() {
             <>
               <View style={styles.crisisHead}>
                 <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
-                  Crisis diary
+                  {t("care.detail.crisisDiary")}
                 </Text>
                 <AnimatedPressable
                   haptic="medium"
@@ -696,24 +751,35 @@ export default function EnrollmentScreen() {
                   style={styles.crisisBtn}
                 >
                   <Ionicons name="flame" size={13} color="#fff" />
-                  <Text style={styles.crisisBtnText}>Log crisis</Text>
+                  <Text style={styles.crisisBtnText}>
+                    {t("care.detail.logCrisis")}
+                  </Text>
                 </AnimatedPressable>
               </View>
               {detail.crisisStats && detail.crisisStats.count90d > 0 ? (
                 <Text style={styles.crisisSummary}>
-                  {detail.crisisStats.count90d} in the last 90 days
+                  {t("care.detail.crisisCount90d", {
+                    count: detail.crisisStats.count90d,
+                  })}
                   {detail.crisisStats.hospitalizations90d > 0
-                    ? ` · ${detail.crisisStats.hospitalizations90d} hospital visit${detail.crisisStats.hospitalizations90d === 1 ? "" : "s"}`
+                    ? ` · ${
+                        detail.crisisStats.hospitalizations90d === 1
+                          ? t("care.detail.hospitalVisitOne", {
+                              count: detail.crisisStats.hospitalizations90d,
+                            })
+                          : t("care.detail.hospitalVisitMany", {
+                              count: detail.crisisStats.hospitalizations90d,
+                            })
+                      }`
                     : ""}
                   {detail.crisisStats.topTriggers[0]
-                    ? ` · top trigger: ${detail.crisisStats.topTriggers[0].trigger}`
+                    ? ` · ${t("care.detail.topTrigger", { trigger: detail.crisisStats.topTriggers[0].trigger })}`
                     : ""}
                 </Text>
               ) : null}
               {(detail.crises ?? []).length === 0 ? (
                 <Text style={styles.crisisEmpty}>
-                  No crises logged. If one happens, log it here — your trigger
-                  history helps your care lead personalize your plan.
+                  {t("care.detail.crisisEmpty")}
                 </Text>
               ) : (
                 (detail.crises ?? []).slice(0, 5).map((cr) => (
@@ -731,9 +797,13 @@ export default function EnrollmentScreen() {
                     />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.alertMsg}>
-                        Pain {cr.painScore}/10
-                        {cr.hospitalized ? " · hospitalized" : ""}
-                        {!cr.resolvedAt ? " · ongoing" : ""}
+                        {t("care.detail.painScore", { score: cr.painScore })}
+                        {cr.hospitalized
+                          ? ` · ${t("care.detail.hospitalizedTag")}`
+                          : ""}
+                        {!cr.resolvedAt
+                          ? ` · ${t("care.detail.ongoingTag")}`
+                          : ""}
                       </Text>
                       <Text style={styles.alertMeta}>
                         {new Date(cr.startedAt).toLocaleDateString("en-NG", {
@@ -741,7 +811,13 @@ export default function EnrollmentScreen() {
                           month: "short",
                         })}
                         {(cr.triggers ?? []).length
-                          ? ` · ${(cr.triggers ?? []).join(", ")}`
+                          ? ` · ${(cr.triggers ?? [])
+                              .map((tr) =>
+                                CRISIS_TRIGGER_KEY[tr]
+                                  ? t(CRISIS_TRIGGER_KEY[tr])
+                                  : tr,
+                              )
+                              .join(", ")}`
                           : ""}
                       </Text>
                     </View>
@@ -751,7 +827,9 @@ export default function EnrollmentScreen() {
                         onPress={() => markCrisisOver(cr.id)}
                         style={styles.resolveBtn}
                       >
-                        <Text style={styles.resolveBtnText}>It's over</Text>
+                        <Text style={styles.resolveBtnText}>
+                          {t("care.detail.itsOver")}
+                        </Text>
                       </AnimatedPressable>
                     ) : null}
                   </View>
@@ -765,7 +843,7 @@ export default function EnrollmentScreen() {
             <>
               <View style={styles.crisisHead}>
                 <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
-                  Labs & medication
+                  {t("care.detail.labsMedication")}
                 </Text>
                 <AnimatedPressable
                   haptic="medium"
@@ -773,20 +851,21 @@ export default function EnrollmentScreen() {
                   style={styles.labBtn}
                 >
                   <Ionicons name="water" size={13} color="#fff" />
-                  <Text style={styles.crisisBtnText}>Add lab result</Text>
+                  <Text style={styles.crisisBtnText}>
+                    {t("care.detail.addLabResult")}
+                  </Text>
                 </AnimatedPressable>
               </View>
               {titration.currentDose ? (
                 <Text style={styles.crisisSummary}>
-                  Hydroxyurea {titration.currentDose.doseMgPerDay} mg/day — take
-                  it exactly as prescribed.
+                  {t("care.detail.hydroxyureaDose", {
+                    dose: titration.currentDose.doseMgPerDay,
+                  })}
                 </Text>
               ) : null}
               {(titration.labs ?? []).length === 0 ? (
                 <Text style={styles.crisisEmpty}>
-                  No lab results yet. After your next blood test (CBC), enter
-                  the results here so your care lead can monitor your medication
-                  safely.
+                  {t("care.detail.labsEmpty")}
                 </Text>
               ) : (
                 (titration.labs ?? []).slice(0, 3).map((l) => (
@@ -809,8 +888,8 @@ export default function EnrollmentScreen() {
                           month: "short",
                         })}
                         {(l.flags ?? []).length
-                          ? " · shared with your care lead"
-                          : " · within expected range"}
+                          ? ` · ${t("care.detail.labSharedTag")}`
+                          : ` · ${t("care.detail.labInRangeTag")}`}
                       </Text>
                     </View>
                   </View>
@@ -822,7 +901,7 @@ export default function EnrollmentScreen() {
           {/* ── Alerts ── */}
           {detail.alerts.length > 0 ? (
             <>
-              <Text style={styles.sectionTitle}>Alerts</Text>
+              <Text style={styles.sectionTitle}>{t("care.detail.alerts")}</Text>
               {detail.alerts.map((a) => (
                 <View key={a.id} style={styles.alertRow}>
                   <View
@@ -847,8 +926,8 @@ export default function EnrollmentScreen() {
                       })}{" "}
                       ·{" "}
                       {a.acknowledgedAt
-                        ? "Seen by your care lead"
-                        : "Awaiting review"}
+                        ? t("care.detail.alertSeen")
+                        : t("care.detail.alertAwaiting")}
                     </Text>
                   </View>
                 </View>
@@ -861,7 +940,9 @@ export default function EnrollmentScreen() {
             onPress={withdraw}
             style={styles.leave}
           >
-            <Text style={styles.leaveText}>Leave this program</Text>
+            <Text style={styles.leaveText}>
+              {t("care.detail.leaveThisProgram")}
+            </Text>
           </AnimatedPressable>
         </ScrollView>
       )}
@@ -877,7 +958,9 @@ export default function EnrollmentScreen() {
           <View style={styles.sheet}>
             <View style={styles.handle} />
             <Txt variant="h2" style={{ marginBottom: 4 }}>
-              Log {logMeta?.label.toLowerCase()}
+              {t("care.detail.logVital", {
+                vital: logMeta?.label.toLowerCase(),
+              })}
             </Txt>
             <Txt
               variant="body"
@@ -885,14 +968,16 @@ export default function EnrollmentScreen() {
               style={{ marginBottom: 16 }}
             >
               {logMeta?.hasSecond
-                ? "Enter both numbers, e.g. 120 and 80."
-                : `Measured in ${logMeta?.unit}.`}
+                ? t("care.detail.enterBothNumbers")
+                : t("care.detail.measuredIn", { unit: logMeta?.unit })}
             </Txt>
             <View style={{ flexDirection: "row", gap: 10 }}>
               <TextInput
                 style={[styles.input, { flex: 1 }]}
                 placeholder={
-                  logMeta?.hasSecond ? "Systolic" : `Value (${logMeta?.unit})`
+                  logMeta?.hasSecond
+                    ? t("care.detail.systolic")
+                    : t("care.detail.valueUnit", { unit: logMeta?.unit })
                 }
                 placeholderTextColor={colors.text.tertiary}
                 value={value}
@@ -903,7 +988,7 @@ export default function EnrollmentScreen() {
               {logMeta?.hasSecond ? (
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
-                  placeholder="Diastolic"
+                  placeholder={t("care.detail.diastolic")}
                   placeholderTextColor={colors.text.tertiary}
                   value={value2}
                   onChangeText={setValue2}
@@ -913,7 +998,7 @@ export default function EnrollmentScreen() {
             </View>
             <TextInput
               style={[styles.input, { height: 48, fontSize: 14 }]}
-              placeholder="Note (optional)"
+              placeholder={t("care.detail.noteOptional")}
               placeholderTextColor={colors.text.tertiary}
               value={note}
               onChangeText={setNote}
@@ -921,13 +1006,13 @@ export default function EnrollmentScreen() {
             />
             <View style={{ flexDirection: "row", gap: 12, marginTop: 6 }}>
               <Button
-                label="Cancel"
+                label={t("common.cancel")}
                 onPress={() => setLogType(null)}
                 variant="outline"
                 style={{ flex: 1 }}
               />
               <Button
-                label="Save reading"
+                label={t("care.detail.saveReading")}
                 onPress={submit}
                 loading={saving}
                 disabled={
@@ -956,18 +1041,19 @@ export default function EnrollmentScreen() {
               keyboardShouldPersistTaps="handled"
             >
               <Txt variant="h2" style={{ marginBottom: 4 }}>
-                Log a crisis
+                {t("care.detail.logACrisis")}
               </Txt>
               <Txt
                 variant="body"
                 color={colors.text.secondary}
                 style={{ marginBottom: 16 }}
               >
-                Sorry you're going through this. A quick log alerts your care
-                lead and builds your personal trigger picture.
+                {t("care.detail.crisisIntro")}
               </Txt>
 
-              <Text style={styles.fieldLabel}>Pain at its worst (0–10)</Text>
+              <Text style={styles.fieldLabel}>
+                {t("care.detail.painWorst")}
+              </Text>
               <View style={styles.chipRow}>
                 {Array.from({ length: 11 }, (_, i) => i).map((n) => (
                   <AnimatedPressable
@@ -991,7 +1077,9 @@ export default function EnrollmentScreen() {
                 ))}
               </View>
 
-              <Text style={styles.fieldLabel}>Where does it hurt?</Text>
+              <Text style={styles.fieldLabel}>
+                {t("care.detail.whereHurt")}
+              </Text>
               <View style={styles.chipRow}>
                 {CRISIS_SITES.map((s) => (
                   <AnimatedPressable
@@ -1006,30 +1094,33 @@ export default function EnrollmentScreen() {
                         sites.includes(s) && styles.chipTextOn,
                       ]}
                     >
-                      {s}
+                      {CRISIS_SITE_KEY[s] ? t(CRISIS_SITE_KEY[s]) : s}
                     </Text>
                   </AnimatedPressable>
                 ))}
               </View>
 
               <Text style={styles.fieldLabel}>
-                What do you think triggered it?
+                {t("care.detail.whatTriggered")}
               </Text>
               <View style={styles.chipRow}>
-                {CRISIS_TRIGGERS.map((t) => (
+                {CRISIS_TRIGGERS.map((tr) => (
                   <AnimatedPressable
-                    key={t}
+                    key={tr}
                     haptic="light"
-                    onPress={() => setTriggers((l) => toggleIn(l, t))}
-                    style={[styles.chip, triggers.includes(t) && styles.chipOn]}
+                    onPress={() => setTriggers((l) => toggleIn(l, tr))}
+                    style={[
+                      styles.chip,
+                      triggers.includes(tr) && styles.chipOn,
+                    ]}
                   >
                     <Text
                       style={[
                         styles.chipText,
-                        triggers.includes(t) && styles.chipTextOn,
+                        triggers.includes(tr) && styles.chipTextOn,
                       ]}
                     >
-                      {t}
+                      {CRISIS_TRIGGER_KEY[tr] ? t(CRISIS_TRIGGER_KEY[tr]) : tr}
                     </Text>
                   </AnimatedPressable>
                 ))}
@@ -1046,7 +1137,7 @@ export default function EnrollmentScreen() {
                   color={hospitalized ? colors.teal : colors.text.tertiary}
                 />
                 <Text style={styles.toggleLabel}>
-                  I went to a hospital or clinic
+                  {t("care.detail.wentToHospital")}
                 </Text>
               </AnimatedPressable>
               <AnimatedPressable
@@ -1059,12 +1150,14 @@ export default function EnrollmentScreen() {
                   size={20}
                   color={ongoing ? colors.teal : colors.text.tertiary}
                 />
-                <Text style={styles.toggleLabel}>It's still ongoing</Text>
+                <Text style={styles.toggleLabel}>
+                  {t("care.detail.stillOngoing")}
+                </Text>
               </AnimatedPressable>
 
               <TextInput
                 style={[styles.input, { height: 48, fontSize: 14 }]}
-                placeholder="What helped? e.g. fluids, painkillers (optional)"
+                placeholder={t("care.detail.whatHelped")}
                 placeholderTextColor={colors.text.tertiary}
                 value={treatment}
                 onChangeText={setTreatment}
@@ -1073,13 +1166,13 @@ export default function EnrollmentScreen() {
 
               <View style={{ flexDirection: "row", gap: 12, marginTop: 6 }}>
                 <Button
-                  label="Cancel"
+                  label={t("common.cancel")}
                   onPress={() => setCrisisOpen(false)}
                   variant="outline"
                   style={{ flex: 1 }}
                 />
                 <Button
-                  label="Log crisis"
+                  label={t("care.detail.logCrisis")}
                   onPress={submitCrisis}
                   loading={crisisSaving}
                   disabled={painScore == null}
@@ -1102,15 +1195,14 @@ export default function EnrollmentScreen() {
           <View style={styles.sheet}>
             <View style={styles.handle} />
             <Txt variant="h2" style={{ marginBottom: 4 }}>
-              Add lab result
+              {t("care.detail.addLabResult")}
             </Txt>
             <Txt
               variant="body"
               color={colors.text.secondary}
               style={{ marginBottom: 16 }}
             >
-              Copy the values from your blood test (CBC) report — fill in
-              whichever ones you have.
+              {t("care.detail.labCopyValues")}
             </Txt>
             <View style={{ flexDirection: "row", gap: 10 }}>
               <TextInput
@@ -1159,18 +1251,17 @@ export default function EnrollmentScreen() {
               />
             </View>
             <Text style={styles.labSafetyNote}>
-              Never change your medication dose based on results alone — your
-              care lead reviews every entry.
+              {t("care.detail.labSafetyNote")}
             </Text>
             <View style={{ flexDirection: "row", gap: 12, marginTop: 6 }}>
               <Button
-                label="Cancel"
+                label={t("common.cancel")}
                 onPress={() => setLabOpen(false)}
                 variant="outline"
                 style={{ flex: 1 }}
               />
               <Button
-                label="Save results"
+                label={t("care.detail.saveResults")}
                 onPress={submitLab}
                 loading={labSaving}
                 style={{ flex: 1 }}

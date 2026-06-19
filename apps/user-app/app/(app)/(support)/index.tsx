@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -68,6 +69,7 @@ function fmtDur(s?: number | null) {
 }
 
 export default function SupportChatScreen() {
+  const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -215,10 +217,8 @@ export default function SupportChatScreen() {
           <Ionicons name="chatbubbles" size={20} color="#fff" />
         </View>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerName}>Doctium Support</Text>
-          <Text style={styles.headerStatus}>
-            We typically reply within a day
-          </Text>
+          <Text style={styles.headerName}>{t("support.title")}</Text>
+          <Text style={styles.headerStatus}>{t("support.replyTime")}</Text>
         </View>
       </View>
 
@@ -247,10 +247,7 @@ export default function SupportChatScreen() {
                   size={40}
                   color={colors.text.tertiary}
                 />
-                <Text style={styles.emptyText}>
-                  Send us a message — questions, issues, anything. We&apos;re
-                  here to help.
-                </Text>
+                <Text style={styles.emptyText}>{t("support.empty")}</Text>
               </View>
             }
             renderItem={({ item: m }) => {
@@ -329,13 +326,15 @@ export default function SupportChatScreen() {
         {recording ? (
           <View style={styles.recBar}>
             <View style={styles.recDot} />
-            <Text style={styles.recText}>Recording… {fmtDur(recSeconds)}</Text>
+            <Text style={styles.recText}>
+              {t("support.recording", { time: fmtDur(recSeconds) })}
+            </Text>
             <AnimatedPressable
               haptic="light"
               onPress={() => stopRecording(false)}
               style={styles.recCancel}
             >
-              <Text style={styles.recCancelText}>Cancel</Text>
+              <Text style={styles.recCancelText}>{t("common.cancel")}</Text>
             </AnimatedPressable>
             <AnimatedPressable
               haptic="medium"
@@ -364,7 +363,7 @@ export default function SupportChatScreen() {
             </AnimatedPressable>
             <TextInput
               style={styles.textInput}
-              placeholder="Type a message…"
+              placeholder={t("support.inputPlaceholder")}
               placeholderTextColor={colors.text.tertiary}
               value={input}
               onChangeText={setInput}

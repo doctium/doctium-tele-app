@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Palette,
@@ -49,14 +50,15 @@ interface Insights {
   bySpecialty: { specialty: string; count: number; spent: number }[];
 }
 
-const scoreTone = (score: number, c: Palette) =>
+const scoreTone = (score: number, c: Palette, t: (k: string) => string) =>
   score >= 75
-    ? { word: "Great", color: c.success }
+    ? { word: t("insights.toneGreat"), color: c.success }
     : score >= 50
-      ? { word: "Good", color: c.teal }
-      : { word: "Needs attention", color: c.warning };
+      ? { word: t("insights.toneGood"), color: c.teal }
+      : { word: t("insights.toneNeedsAttention"), color: c.warning };
 
 export default function HealthInsightsScreen() {
+  const { t } = useTranslation();
   const [data, setData] = useState<Insights | null>(null);
   const [loading, setLoading] = useState(true);
   const [selMonth, setSelMonth] = useState(11);
@@ -72,7 +74,7 @@ export default function HealthInsightsScreen() {
   }, []);
 
   const score = data?.summary.healthScore ?? 0;
-  const tone = scoreTone(score, colors);
+  const tone = scoreTone(score, colors, t);
   const monthly = data?.monthly ?? [];
   const maxSpent = Math.max(...monthly.map((m) => m.spent), 1);
   const selected = monthly[selMonth] ?? monthly.at(-1);
@@ -84,7 +86,7 @@ export default function HealthInsightsScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Health insights" />
+      <AppHeader title={t("insights.title")} />
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.navyMid} />
@@ -106,7 +108,9 @@ export default function HealthInsightsScreen() {
               <Text style={styles.scoreValue}>{score}</Text>
               <Text style={styles.scoreMax}>/ 100</Text>
             </View>
-            <Text style={styles.scoreTitle}>Health engagement score</Text>
+            <Text style={styles.scoreTitle}>
+              {t("insights.engagementScore")}
+            </Text>
             <View
               style={[
                 styles.toneChip,
@@ -138,7 +142,9 @@ export default function HealthInsightsScreen() {
 
           {/* ── Score factors ── */}
           <View style={styles.sectionCard}>
-            <Text style={styles.sectionLabel}>What makes up your score</Text>
+            <Text style={styles.sectionLabel}>
+              {t("insights.scoreBreakdown")}
+            </Text>
             {(data?.healthScoreFactors ?? []).map((f, i) => (
               <View
                 key={f.key}
@@ -176,13 +182,15 @@ export default function HealthInsightsScreen() {
               <Text style={styles.statValue}>
                 {data?.summary.completedConsultations ?? 0}
               </Text>
-              <Text style={styles.statLabel}>Consultations</Text>
+              <Text style={styles.statLabel}>
+                {t("insights.consultations")}
+              </Text>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statValue}>
                 {data?.summary.distinctDoctors ?? 0}
               </Text>
-              <Text style={styles.statLabel}>Doctors seen</Text>
+              <Text style={styles.statLabel}>{t("insights.doctorsSeen")}</Text>
             </View>
             <View style={styles.statCard}>
               <Text
@@ -192,21 +200,25 @@ export default function HealthInsightsScreen() {
               >
                 {formatMoney(data?.summary.totalSpent ?? 0)}
               </Text>
-              <Text style={styles.statLabel}>Total spent</Text>
+              <Text style={styles.statLabel}>{t("insights.totalSpent")}</Text>
             </View>
           </View>
 
           {/* ── 12-month activity & spending ── */}
           <View style={styles.sectionCard}>
             <View style={styles.chartHeader}>
-              <Text style={styles.sectionLabel}>Care activity · 12 months</Text>
+              <Text style={styles.sectionLabel}>
+                {t("insights.careActivity")}
+              </Text>
               <View style={{ alignItems: "flex-end" }}>
                 <Text style={styles.chartAmount}>
                   {formatMoney(selected?.spent ?? 0)}
                 </Text>
                 <Text style={styles.chartSub}>
-                  {selected?.label ?? ""} · {selected?.consultations ?? 0}{" "}
-                  visits
+                  {selected?.label ?? ""} ·{" "}
+                  {t("insights.visits", {
+                    count: selected?.consultations ?? 0,
+                  })}
                 </Text>
               </View>
             </View>
@@ -244,15 +256,18 @@ export default function HealthInsightsScreen() {
               })}
             </View>
             <Text style={styles.avgNote}>
-              Average {formatMoney(data?.summary.avgPerConsult ?? 0)} per
-              consultation
+              {t("insights.avgPerConsult", {
+                amount: formatMoney(data?.summary.avgPerConsult ?? 0),
+              })}
             </Text>
           </View>
 
           {/* ── By specialty ── */}
           {(data?.bySpecialty ?? []).length > 0 ? (
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionLabel}>Care by specialty</Text>
+              <Text style={styles.sectionLabel}>
+                {t("insights.careBySpecialty")}
+              </Text>
               {(data?.bySpecialty ?? []).map((s, i) => (
                 <View
                   key={s.specialty}
@@ -279,7 +294,9 @@ export default function HealthInsightsScreen() {
                     />
                   </View>
                   <Text style={styles.factorHint}>
-                    {s.count} consultation{s.count === 1 ? "" : "s"}
+                    {s.count === 1
+                      ? t("insights.consultationCountOne", { count: s.count })
+                      : t("insights.consultationCountMany", { count: s.count })}
                   </Text>
                 </View>
               ))}
@@ -291,11 +308,8 @@ export default function HealthInsightsScreen() {
                 size={28}
                 color={colors.text.tertiary}
               />
-              <Text style={styles.emptyTitle}>No consultations yet</Text>
-              <Text style={styles.emptyText}>
-                Your health trends will appear here after your first
-                consultation.
-              </Text>
+              <Text style={styles.emptyTitle}>{t("insights.emptyTitle")}</Text>
+              <Text style={styles.emptyText}>{t("insights.emptyDesc")}</Text>
             </View>
           )}
         </ScrollView>

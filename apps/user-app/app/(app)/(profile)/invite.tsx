@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import {
   Palette,
   Gradients,
@@ -30,6 +31,7 @@ export default function InviteFriendsScreen() {
   const { profile } = useAppSelector((s) => s.user);
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const code =
     (profile as { referralCode?: string } | null)?.referralCode ?? "";
   const referral =
@@ -46,13 +48,13 @@ export default function InviteFriendsScreen() {
   const share = () => {
     if (!code) return;
     Share.share({
-      message: `Join me on Doctium — quality doctors, right from your phone! Sign up with my referral code ${code} and book your first consultation. ${shareLink}`,
+      message: t("invite.shareMessage", { code, link: shareLink }),
     }).catch(() => {});
   };
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Invite friends" />
+      <AppHeader title={t("invite.title")} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.list}
@@ -70,16 +72,18 @@ export default function InviteFriendsScreen() {
           </View>
           <Text style={styles.heroTitle}>
             {referral.bonusKobo > 0
-              ? `Earn ${formatMoney(referral.bonusKobo)} per friend`
-              : "Share Doctium with friends"}
+              ? t("invite.heroTitleEarn", {
+                  amount: formatMoney(referral.bonusKobo),
+                })
+              : t("invite.heroTitleShare")}
           </Text>
           <Text style={styles.heroSub}>
             {referral.bonusKobo > 0
-              ? "You get paid when a friend signs up with your code and books their first consultation."
-              : "Friends who sign up with your code help our community grow."}
+              ? t("invite.heroSubEarn")
+              : t("invite.heroSubShare")}
           </Text>
 
-          <Text style={styles.codeLabel}>Your referral code</Text>
+          <Text style={styles.codeLabel}>{t("invite.yourCode")}</Text>
           <View style={styles.codeBox}>
             <Text style={styles.codeText}>{code || "…"}</Text>
           </View>
@@ -90,7 +94,7 @@ export default function InviteFriendsScreen() {
             style={styles.shareBtn}
           >
             <Ionicons name="share-social" size={17} color={colors.navy} />
-            <Text style={styles.shareText}>Share my link</Text>
+            <Text style={styles.shareText}>{t("invite.shareLink")}</Text>
           </AnimatedPressable>
         </LinearGradient>
 
@@ -98,38 +102,40 @@ export default function InviteFriendsScreen() {
         <View style={styles.statRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{referral.referred}</Text>
-            <Text style={styles.statLabel}>Friends joined</Text>
+            <Text style={styles.statLabel}>{t("invite.friendsJoined")}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{referral.rewarded}</Text>
-            <Text style={styles.statLabel}>Bonuses earned</Text>
+            <Text style={styles.statLabel}>{t("invite.bonusesEarned")}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.teal }]}>
               {formatMoney(referral.rewarded * referral.bonusKobo)}
             </Text>
-            <Text style={styles.statLabel}>Total earned</Text>
+            <Text style={styles.statLabel}>{t("invite.totalEarned")}</Text>
           </View>
         </View>
 
         {/* ── How it works ── */}
         <View style={styles.howCard}>
-          <Text style={styles.howTitle}>How it works</Text>
+          <Text style={styles.howTitle}>{t("invite.howItWorks")}</Text>
           {[
             {
               icon: "share-social-outline" as const,
-              text: "Share your code or link with friends and family.",
+              text: t("invite.step1"),
             },
             {
               icon: "person-add-outline" as const,
-              text: "They sign up with your code on the registration page.",
+              text: t("invite.step2"),
             },
             {
               icon: "wallet-outline" as const,
               text:
                 referral.bonusKobo > 0
-                  ? `When they book and pay for their first consultation, ${formatMoney(referral.bonusKobo)} lands in your wallet.`
-                  : "When they book and pay for their first consultation, your bonus lands in your wallet.",
+                  ? t("invite.step3Earn", {
+                      amount: formatMoney(referral.bonusKobo),
+                    })
+                  : t("invite.step3"),
             },
           ].map((s, i) => (
             <View key={i} style={styles.howRow}>

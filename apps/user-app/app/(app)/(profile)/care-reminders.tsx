@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Palette,
@@ -43,6 +44,7 @@ interface FollowUp {
 
 const makeMeta = (
   c: Palette,
+  t: (k: string) => string,
 ): Record<
   FollowUpType,
   {
@@ -56,41 +58,56 @@ const makeMeta = (
     icon: "heart-outline",
     tint: c.teal,
     bg: c.tealSoft,
-    label: "Wellbeing check-in",
+    label: t("careReminders.typeWellbeing"),
   },
   CHECK_IN_7D: {
     icon: "heart-outline",
     tint: c.teal,
     bg: c.tealSoft,
-    label: "Wellbeing check-in",
+    label: t("careReminders.typeWellbeing"),
   },
   DOCTOR_SCHEDULED: {
     icon: "calendar",
     tint: c.navy,
     bg: "rgba(19,49,87,0.08)",
-    label: "Doctor follow-up",
+    label: t("careReminders.typeDoctorFollowUp"),
   },
   MISSED_RECOVERY: {
     icon: "alert-circle",
     tint: "#B54708",
     bg: "rgba(247,144,9,0.12)",
-    label: "Missed appointment",
+    label: t("careReminders.typeMissed"),
   },
 });
 
-function whenLabel(iso: string, past: boolean): string {
+function whenLabel(
+  iso: string,
+  past: boolean,
+  t: (k: string, opts?: Record<string, unknown>) => string,
+): string {
   const diff = new Date(iso).getTime() - Date.now();
   const days = Math.round(Math.abs(diff) / 86400000);
   const hrs = Math.round(Math.abs(diff) / 3600000);
   if (past) {
-    if (hrs < 24) return hrs <= 1 ? "just now" : `${hrs}h ago`;
-    return days === 1 ? "yesterday" : `${days} days ago`;
+    if (hrs < 24)
+      return hrs <= 1
+        ? t("careReminders.justNow")
+        : t("careReminders.hoursAgo", { count: hrs });
+    return days === 1
+      ? t("careReminders.yesterday")
+      : t("careReminders.daysAgo", { count: days });
   }
-  if (hrs < 24) return hrs <= 1 ? "soon" : `in ${hrs}h`;
-  return days === 1 ? "tomorrow" : `in ${days} days`;
+  if (hrs < 24)
+    return hrs <= 1
+      ? t("careReminders.soon")
+      : t("careReminders.inHours", { count: hrs });
+  return days === 1
+    ? t("careReminders.tomorrow")
+    : t("careReminders.inDays", { count: days });
 }
 
 export default function CareRemindersScreen() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<FollowUp[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -145,7 +162,7 @@ export default function CareRemindersScreen() {
 
   return (
     <View style={styles.root}>
-      <AppHeader title="Care reminders" />
+      <AppHeader title={t("careReminders.title")} />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -169,17 +186,18 @@ export default function CareRemindersScreen() {
                 color={colors.teal}
               />
             </View>
-            <Text style={styles.emptyTitle}>You're all caught up</Text>
-            <Text style={styles.emptyText}>
-              Check-ins and follow-up reminders from your doctors will appear
-              here after a consultation.
+            <Text style={styles.emptyTitle}>
+              {t("careReminders.emptyTitle")}
             </Text>
+            <Text style={styles.emptyText}>{t("careReminders.emptyDesc")}</Text>
           </View>
         ) : (
           <>
             {upcoming.length > 0 && (
               <>
-                <Text style={styles.section}>Upcoming</Text>
+                <Text style={styles.section}>
+                  {t("careReminders.upcoming")}
+                </Text>
                 {upcoming.map((f) => (
                   <FollowUpCard
                     key={f.id}
@@ -198,7 +216,7 @@ export default function CareRemindersScreen() {
                     { marginTop: upcoming.length ? 18 : 0 },
                   ]}
                 >
-                  Earlier
+                  {t("careReminders.earlier")}
                 </Text>
                 {past.map((f) => (
                   <FollowUpCard key={f.id} f={f} onBook={() => book(f)} />
@@ -221,9 +239,10 @@ function FollowUpCard({
   onBook: () => void;
   onDismiss?: () => void;
 }) {
+  const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
-  const m = makeMeta(colors)[f.type];
+  const m = makeMeta(colors, t)[f.type];
   const pending = f.status === "PENDING";
   return (
     <Card style={styles.card}>
@@ -233,7 +252,9 @@ function FollowUpCard({
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.typeLabel}>{m.label}</Text>
-          <Text style={styles.when}>{whenLabel(f.scheduledFor, !pending)}</Text>
+          <Text style={styles.when}>
+            {whenLabel(f.scheduledFor, !pending, t)}
+          </Text>
         </View>
       </View>
 
@@ -243,7 +264,9 @@ function FollowUpCard({
       {f.doctor ? (
         <View style={styles.docRow}>
           <Avatar uri={f.doctor.image} name={f.doctor.name} size={26} />
-          <Text style={styles.docName}>Dr. {f.doctor.name}</Text>
+          <Text style={styles.docName}>
+            {t("careReminders.doctorName", { name: f.doctor.name })}
+          </Text>
           {f.doctor.designation ? (
             <Text style={styles.docSpec}>· {f.doctor.designation}</Text>
           ) : null}
@@ -252,7 +275,7 @@ function FollowUpCard({
 
       <View style={styles.actions}>
         <Button
-          label="Book appointment"
+          label={t("careReminders.bookAppointment")}
           onPress={onBook}
           style={{ flex: 1 }}
           icon={<Ionicons name="calendar-outline" size={17} color="#fff" />}
@@ -263,7 +286,7 @@ function FollowUpCard({
             onPress={onDismiss}
             style={styles.dismiss}
           >
-            <Text style={styles.dismissText}>Dismiss</Text>
+            <Text style={styles.dismissText}>{t("careReminders.dismiss")}</Text>
           </AnimatedPressable>
         ) : null}
       </View>
