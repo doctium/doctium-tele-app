@@ -6,6 +6,7 @@ import {
 import * as bcrypt from "bcrypt";
 import { prisma } from "@doctium/database";
 import { CloudinaryService } from "../prescriptions/cloudinary.service";
+import { MailerProvider } from "../notifications/channels/mailer.provider";
 import { resolveImageUrl } from "../../common/image.util";
 import {
   CreateEmployeeDto,
@@ -25,9 +26,19 @@ type EmployeeRow = Record<string, unknown> & {
   payCycle?: string;
 };
 
+function escapeHtml(s: string): string {
+  return (s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 @Injectable()
 export class HrService {
-  constructor(private readonly cloudinary: CloudinaryService) {}
+  constructor(
+    private readonly cloudinary: CloudinaryService,
+    private readonly mailer: MailerProvider,
+  ) {}
 
   /** Never leak password hashes; hide compensation unless the caller has hr.payroll. */
   private sanitize<T extends EmployeeRow>(
@@ -45,6 +56,31 @@ export class HrService {
 
   private tempPassword() {
     return Math.random().toString(36).slice(2, 10) + "A1";
+  }
+
+  /**
+   * Fire-and-forget welcome email with login credentials + panel URL.
+   * No-ops gracefully unless the mailer is configured. Never blocks or throws
+   * the create flow.
+   */
+  private sendWelcomeEmail(name: string, email: string, password: string) {
+    if (!email || !password || !this.mailer.isConfigured()) return;
+    const adminUrl = process.env.ADMIN_PANEL_URL || "http://localhost:3000";
+    const loginUrl = `${adminUrl}/login`;
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;border:1px solid #E6ECF3;border-radius:14px">
+        <h2 style="color:#133157;margin:0 0 6px">Welcome to Doctium</h2>
+        <p style="color:#5A6B82;margin:0 0 18px">Hi ${escapeHtml(name) || "there"}, an account has been created for you on the Doctium admin panel. Use the credentials below to sign in.</p>
+        <table style="width:100%;font-size:14px;color:#0F1B2D">
+          <tr><td style="padding:6px 0;color:#93A1B5">Email</td><td style="text-align:right;font-weight:bold">${escapeHtml(email)}</td></tr>
+          <tr><td style="padding:6px 0;color:#93A1B5">Temporary password</td><td style="text-align:right;font-weight:bold">${escapeHtml(password)}</td></tr>
+        </table>
+        <a href="${loginUrl}" style="display:block;text-align:center;background:#133157;color:#fff;text-decoration:none;padding:12px;border-radius:10px;margin-top:18px;font-weight:bold">Sign in to Doctium</a>
+        <p style="color:#5A6B82;font-size:13px;margin:18px 0 0">For your security, please change your password after your first login — open your profile menu (top-right) and choose <strong>Profile</strong> to update it.</p>
+      </div>`;
+    void this.mailer
+      .sendEmail(email, "Your Doctium admin account is ready", html)
+      .catch(() => undefined);
   }
 
   // ── Employees ──────────────────────────────────────────────
@@ -151,6 +187,9 @@ export class HrService {
       data.isActive = true;
     }
     const emp = await prisma.employee.create({ data: data as never });
+    // Email the new hire their credentials + login URL (only if they can log in).
+    if (dto.canLogin && tempPassword)
+      this.sendWelcomeEmail(emp.name, emp.email, tempPassword);
     return {
       id: emp.id,
       email: emp.email,
