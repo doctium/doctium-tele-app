@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { prisma, Prisma } from "@doctium/database";
 import { CloudinaryService } from "../prescriptions/cloudinary.service";
 import { resolveImageUrl } from "../../common/image.util";
+import { MailerProvider } from "../notifications/channels/mailer.provider";
 import type {
   CreateAuthorDto,
   UpdateAuthorDto,
@@ -37,9 +38,70 @@ function slugify(input: string): string {
     .slice(0, 80);
 }
 
+function escapeHtml(s: string): string {
+  return (s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 @Injectable()
 export class MediaService {
-  constructor(private readonly cloudinary: CloudinaryService) {}
+  constructor(
+    private readonly cloudinary: CloudinaryService,
+    private readonly mailer: MailerProvider,
+  ) {}
+
+  /** Fire-and-forget email alert to the team (no-op unless the mailer is configured). */
+  private alertTeam(to: string, subject: string, html: string) {
+    if (!to) return;
+    void this.mailer.sendEmail(to, subject, html).catch(() => undefined);
+  }
+
+  private alertEnquiry(dto: CreateContactEnquiryDto) {
+    const to = process.env.SALES_ALERT_EMAIL || "hello@doctiumhealth.com";
+    const rows: [string, string][] = [
+      ["Name", dto.name],
+      ["Email", dto.email],
+      ["Organization", dto.organization || "—"],
+      ["Role", dto.role || "—"],
+      ["Interested in", (dto.interests ?? []).join(", ") || "—"],
+    ];
+    const html = `
+      <div style="font-family:sans-serif;color:#111827">
+        <h2 style="color:#133157">New demo request — Doctium</h2>
+        <table style="font-size:14px;border-collapse:collapse">
+          ${rows.map(([k, v]) => `<tr><td style="padding:3px 14px 3px 0;color:#6b7280">${k}</td><td><strong>${escapeHtml(v)}</strong></td></tr>`).join("")}
+        </table>
+        <p style="font-size:14px"><strong>Message</strong><br/>${escapeHtml(dto.message).replace(/\n/g, "<br/>")}</p>
+        <p style="font-size:13px;color:#6b7280">View it in the admin → Website → Demo Requests.</p>
+      </div>`;
+    const subject = `New demo request — ${dto.name}${dto.organization ? ` (${dto.organization})` : ""}`;
+    this.alertTeam(to, subject, html);
+  }
+
+  private alertApplication(jobTitle: string, dto: CreateJobApplicationDto) {
+    const to = process.env.CAREERS_ALERT_EMAIL || "careers@doctiumhealth.com";
+    const rows: [string, string][] = [
+      ["Role", jobTitle],
+      ["Name", dto.fullName],
+      ["Email", dto.email],
+      ["Phone", dto.phone || "—"],
+      ["LinkedIn", dto.linkedinUrl || "—"],
+      ["Portfolio", dto.portfolioUrl || "—"],
+    ];
+    const html = `
+      <div style="font-family:sans-serif;color:#111827">
+        <h2 style="color:#133157">New job application — Doctium</h2>
+        <table style="font-size:14px;border-collapse:collapse">
+          ${rows.map(([k, v]) => `<tr><td style="padding:3px 14px 3px 0;color:#6b7280">${k}</td><td><strong>${escapeHtml(v)}</strong></td></tr>`).join("")}
+        </table>
+        ${dto.coverNote ? `<p style="font-size:14px"><strong>Cover note</strong><br/>${escapeHtml(dto.coverNote).replace(/\n/g, "<br/>")}</p>` : ""}
+        <p style="font-size:13px;color:#6b7280">View it (with the CV) in the admin → Website → Applications.</p>
+      </div>`;
+    const subject = `New application — ${jobTitle} — ${dto.fullName}`;
+    this.alertTeam(to, subject, html);
+  }
 
   /** Fire-and-forget: ask the website to revalidate a content tag on publish.
    *  No-op unless WEBSITE_REVALIDATE_URL + WEBSITE_REVALIDATE_SECRET are set.
@@ -257,7 +319,7 @@ export class MediaService {
     if (dto.website && dto.website.trim() !== "") return { ok: true }; // bot
     const job = await prisma.jobPosting.findFirst({
       where: { slug, status: "OPEN" },
-      select: { id: true },
+      select: { id: true, title: true },
     });
     if (!job) throw new NotFoundException("Role not found or closed");
 
@@ -285,7 +347,7 @@ export class MediaService {
         consent: dto.consent,
       },
     });
-    // TODO(comms): notify careers inbox via NotifierService / comms email.
+    this.alertApplication(job.title, dto);
     return { ok: true };
   }
 
@@ -986,7 +1048,7 @@ export class MediaService {
         message: dto.message,
       },
     });
-    // TODO(comms): alert the sales inbox via NotifierService / comms email.
+    this.alertEnquiry(dto);
     return { ok: true };
   }
 
