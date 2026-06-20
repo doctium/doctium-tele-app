@@ -22,6 +22,8 @@ const MEDIA_PERMISSIONS = [
   "media.landing.manage",
   "media.team.view",
   "media.team.manage",
+  "media.enquiries.view",
+  "media.enquiries.manage",
 ];
 
 async function main() {

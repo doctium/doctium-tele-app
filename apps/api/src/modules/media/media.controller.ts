@@ -1,7 +1,10 @@
 import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { MediaService } from "./media.service";
-import { CreateJobApplicationDto } from "./dto/media.dto";
+import {
+  CreateJobApplicationDto,
+  CreateContactEnquiryDto,
+} from "./dto/media.dto";
 
 /**
  * Public, unauthenticated read API for the website (doctiumhealth.com).
@@ -68,6 +71,12 @@ export class MediaController {
   @Get("team")
   team() {
     return this.media.publicListTeam();
+  }
+
+  // Demo request / contact enquiry (from the website /contact form)
+  @Post("contact")
+  contact(@Body() dto: CreateContactEnquiryDto) {
+    return this.media.submitEnquiry(dto);
   }
 
   // For the website's dynamic sitemap + RSS

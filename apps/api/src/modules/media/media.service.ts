@@ -21,6 +21,8 @@ import type {
   UpdateLandingPageDto,
   CreateTeamMemberDto,
   UpdateTeamMemberDto,
+  CreateContactEnquiryDto,
+  UpdateEnquiryStatusDto,
 } from "./dto/media.dto";
 
 const PAGE_SIZE = 12;
@@ -965,5 +967,57 @@ export class MediaService {
     await prisma.teamMember.delete({ where: { id } });
     this.revalidateWebsite("team");
     return { deleted: true };
+  }
+
+  // ─────────────────────────────────────────────
+  // Contact enquiries / demo requests
+  // ─────────────────────────────────────────────
+
+  /** Public: a demo request from the website /contact form. Honeypot-gated. */
+  async submitEnquiry(dto: CreateContactEnquiryDto) {
+    if (dto.website && dto.website.trim() !== "") return { ok: true }; // bot
+    await prisma.contactEnquiry.create({
+      data: {
+        name: dto.name,
+        email: dto.email,
+        organization: dto.organization ?? "",
+        role: dto.role ?? "",
+        interests: dto.interests ?? [],
+        message: dto.message,
+      },
+    });
+    // TODO(comms): alert the sales inbox via NotifierService / comms email.
+    return { ok: true };
+  }
+
+  adminListEnquiries(q: { status?: string }) {
+    return prisma.contactEnquiry.findMany({
+      where: q.status
+        ? { status: q.status as Prisma.ContactEnquiryWhereInput["status"] }
+        : {},
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  adminGetEnquiry(id: string) {
+    return prisma.contactEnquiry.findUnique({ where: { id } });
+  }
+
+  async adminUpdateEnquiryStatus(
+    id: string,
+    dto: UpdateEnquiryStatusDto,
+    reviewerId?: string,
+  ) {
+    const existing = await prisma.contactEnquiry.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException("Enquiry not found");
+    return prisma.contactEnquiry.update({
+      where: { id },
+      data: {
+        status: dto.status as Prisma.ContactEnquiryUpdateInput["status"],
+        ...(dto.adminNotes !== undefined ? { adminNotes: dto.adminNotes } : {}),
+        reviewedById: reviewerId ?? existing.reviewedById,
+        reviewedAt: new Date(),
+      },
+    });
   }
 }

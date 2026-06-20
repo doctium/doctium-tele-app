@@ -2895,6 +2895,31 @@ model TeamMember {
   @@map("team_members")
 }
 
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CLOSED
+}
+
+/// Demo requests / sales enquiries from the website /contact form.
+model ContactEnquiry {
+  id           String        @id @default(cuid())
+  name         String
+  email        String
+  organization String        @default("")
+  role         String        @default("")
+  interests    String[]      @default([])
+  message      String        @default("")
+  status       EnquiryStatus @default(NEW)
+  adminNotes   String        @default("")
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime      @default(now())
+  @@index([status])
+  @@map("contact_enquiries")
+}
+
 model Payslip {
   id          String        @id @default(cuid())
   employeeId  String

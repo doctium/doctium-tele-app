@@ -243,6 +243,11 @@ export const nav: { group: string; items: NavItem[] }[] = [
             perm: "media.applications.view",
           },
           {
+            label: "Demo Requests",
+            href: "/content/enquiries",
+            perm: "media.enquiries.view",
+          },
+          {
             label: "Authors",
             href: "/content/authors",
             perm: "media.blog.view",

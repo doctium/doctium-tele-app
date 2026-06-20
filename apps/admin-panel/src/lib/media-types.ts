@@ -180,3 +180,27 @@ export const APPLICATION_STATUSES: ApplicationStatus[] = [
   "HIRED",
   "REJECTED",
 ];
+
+export type EnquiryStatus = "NEW" | "CONTACTED" | "QUALIFIED" | "CLOSED";
+
+export interface ContactEnquiry {
+  id: string;
+  name: string;
+  email: string;
+  organization: string;
+  role: string;
+  interests: string[];
+  message: string;
+  status: EnquiryStatus;
+  adminNotes: string;
+  reviewedById: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+}
+
+export const ENQUIRY_STATUSES: EnquiryStatus[] = [
+  "NEW",
+  "CONTACTED",
+  "QUALIFIED",
+  "CLOSED",
+];

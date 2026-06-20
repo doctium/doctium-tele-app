@@ -156,6 +156,11 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
         key: "media.team.manage",
         label: "Create / edit / publish team members",
       },
+      { key: "media.enquiries.view", label: "View demo requests / enquiries" },
+      {
+        key: "media.enquiries.manage",
+        label: "Manage demo requests (status, notes)",
+      },
     ],
   },
 ];

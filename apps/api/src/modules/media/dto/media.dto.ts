@@ -242,3 +242,31 @@ export class CreateTeamMemberDto {
 export class UpdateTeamMemberDto extends CreateTeamMemberDto {
   @ApiPropertyOptional() @IsString() @IsOptional() declare name: string;
 }
+
+/* ── Contact enquiry / demo request ─────────────────── */
+export const ENQUIRY_STATUS = [
+  "NEW",
+  "CONTACTED",
+  "QUALIFIED",
+  "CLOSED",
+] as const;
+
+export class CreateContactEnquiryDto {
+  @ApiProperty() @IsString() name: string;
+  @ApiProperty() @IsEmail() email: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() organization?: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() role?: string;
+  @ApiPropertyOptional({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  interests?: string[];
+  @ApiProperty() @IsString() message: string;
+  /** Honeypot — must stay empty (bots fill it). */
+  @ApiPropertyOptional() @IsString() @IsOptional() website?: string;
+}
+
+export class UpdateEnquiryStatusDto {
+  @ApiProperty({ enum: ENQUIRY_STATUS }) @IsIn(ENQUIRY_STATUS) status: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() adminNotes?: string;
+}

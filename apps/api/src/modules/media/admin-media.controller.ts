@@ -36,6 +36,7 @@ import {
   UpdateLandingPageDto,
   CreateTeamMemberDto,
   UpdateTeamMemberDto,
+  UpdateEnquiryStatusDto,
 } from "./dto/media.dto";
 
 @ApiTags("Admin · Media")
@@ -293,5 +294,26 @@ export class AdminMediaController {
   @Delete("team-members/:id")
   deleteTeamMember(@Param("id") id: string) {
     return this.media.adminDeleteTeamMember(id);
+  }
+
+  // ── Demo requests / contact enquiries ──
+  @Permissions("media.enquiries.view")
+  @Get("enquiries")
+  enquiries(@Query() q: { status?: string }) {
+    return this.media.adminListEnquiries(q);
+  }
+  @Permissions("media.enquiries.view")
+  @Get("enquiries/:id")
+  enquiry(@Param("id") id: string) {
+    return this.media.adminGetEnquiry(id);
+  }
+  @Permissions("media.enquiries.manage")
+  @Patch("enquiries/:id/status")
+  enquiryStatus(
+    @Param("id") id: string,
+    @Body() dto: UpdateEnquiryStatusDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.media.adminUpdateEnquiryStatus(id, dto, user.sub);
   }
 }
